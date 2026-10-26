@@ -1,0 +1,27 @@
+name: Build native lucky wheel
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths: ['native-wheel/**', '.github/workflows/native-wheel.yml']
+permissions:
+  contents: read
+jobs:
+  wheel:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash native-wheel/build.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-lucky-wheel
+          path: |
+            native-wheel/build/AGWheel.dylib
+            native-wheel/build/exports.txt
+            native-wheel/build/load-commands.txt
+            native-wheel/build/SHA256.txt
+            native-wheel/build/wheel-preview.png
+          if-no-files-found: error
+          retention-days: 14
