@@ -8,7 +8,7 @@ sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
 xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=12.0 \
   -dynamiclib -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wall -Wextra \
   -Wno-unused-parameter -Wno-deprecated-declarations -Wno-unused-function \
-  -framework UIKit -framework Foundation -framework QuartzCore \
+  -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
   -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
   AGWheel.m WheelProtocol.c RoomNames.c RoomBridge.c NativeGuard.S -o build/AGWheel.dylib
 codesign --force --sign - --timestamp=none build/AGWheel.dylib
@@ -23,7 +23,7 @@ sim_arch="$(uname -m)"
 mkdir -p build/WheelPreview.app
 xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -mios-simulator-version-min=16.0 -DAG_WHEEL_PREVIEW=1 -fobjc-arc -fblocks -O1 \
-  -Wno-deprecated-declarations -framework UIKit -framework Foundation -framework QuartzCore \
+  -Wno-deprecated-declarations -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
   AGWheel.m WheelProtocol.c Preview.m -o build/WheelPreview.app/WheelPreview
 python3 - <<'PY'
 import plistlib
