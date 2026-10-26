@@ -7,7 +7,10 @@
     "service": 5247188,
     "alloc": 5215764,
     "ctor": 5215892,
-    "send": 5700544
+    "send": 5700544,
+    "room_get": 5560120,
+    "room_build_call": 5348260,
+    "room_build": 5565840
   },
   {
     "clock": 7106436,
@@ -17,7 +20,10 @@
     "service": 6223628,
     "alloc": 6192964,
     "ctor": 6193092,
-    "send": 6660468
+    "send": 6660468,
+    "room_get": 6524644,
+    "room_build_call": 6321644,
+    "room_build": 6530364
   },
   {
     "clock": 8043592,
@@ -27,7 +33,10 @@
     "service": 7160784,
     "alloc": 7130120,
     "ctor": 7130248,
-    "send": 7597624
+    "send": 7597624,
+    "room_get": 7461800,
+    "room_build_call": 7258800,
+    "room_build": 7467520
   },
   {
     "clock": 8980748,
@@ -37,7 +46,10 @@
     "service": 8097940,
     "alloc": 8067276,
     "ctor": 8067404,
-    "send": 8534780
+    "send": 8534780,
+    "room_get": 8398956,
+    "room_build_call": 8195956,
+    "room_build": 8404676
   },
   {
     "clock": 9917904,
@@ -47,7 +59,10 @@
     "service": 9035096,
     "alloc": 9004432,
     "ctor": 9004560,
-    "send": 9471936
+    "send": 9471936,
+    "room_get": 9336112,
+    "room_build_call": 9133112,
+    "room_build": 9341832
   },
   {
     "clock": 10855060,
@@ -57,6 +72,9 @@
     "service": 9972252,
     "alloc": 9941588,
     "ctor": 9941716,
-    "send": 10409092
+    "send": 10409092,
+    "room_get": 10273268,
+    "room_build_call": 10070268,
+    "room_build": 10278988
   }
 ]

@@ -53,7 +53,7 @@ def build_native(old,original,maps):
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
     symbols={};strcursor=0x3000
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','Vòng xoay may mắn'):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','Vòng xoay may mắn'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     def lookup(symbol,slot):
         # Aligned 64-bit function pointer cache. All racing resolvers write the
@@ -62,7 +62,7 @@ def build_native(old,original,maps):
         return f'''
             adrp x9, {ptr&-4096}
             ldr x10, [x9, #{ptr&4095}]
-            cbnz x10, resolved
+            cbnz x10, resolved{slot}
             mov x0, #-2
             adrp x1, {string&-4096}
             add x1, x1, #{string&4095}
@@ -70,7 +70,7 @@ def build_native(old,original,maps):
             adrp x9, {ptr&-4096}
             str x0, [x9, #{ptr&4095}]
             mov x10, x0
-          resolved:
+          resolved{slot}:
         '''
     def emit(code):
         nonlocal cursor
@@ -100,7 +100,23 @@ def build_native(old,original,maps):
             cbz x2, original
             ldrsb w9, [x2, #48]
             cmn w9, #101
+            b.eq wheel
+            cmn w9, #19
             b.ne original
+            stp x29, x30, [sp, #-48]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            str x2, [sp, #32]
+            {lookup('AGRoomReceive',3)}
+            cbz x10, fallback
+            ldr x0, [sp, #16]
+            ldr x1, [sp, #32]
+            mov w2, #{i}
+            blr x10
+            cbz w0, fallback
+            ldp x29, x30, [sp], #48
+            ret
+          wheel:
             stp x29, x30, [sp, #-48]!
             mov x29, sp
             stp x0, x1, [sp, #16]
@@ -122,7 +138,25 @@ def build_native(old,original,maps):
             b {m['controller']+4}
         ''')
         assert original[m['controller']:m['controller']+4]==asm('stp x28, x27, [sp, #-96]!',0)
-        patch(m['controller'],asm(f'b {receive_addr}',m['controller']),f'V{i+1} intercept only command -101')
+        patch(m['controller'],asm(f'b {receive_addr}',m['controller']),f'V{i+1} receive wheel -101 and cache room names -19')
+        build_addr,raw=emit(f'''
+            stp x29, x30, [sp, #-48]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            bl {m['room_build']}
+            str x0, [sp, #32]
+            {lookup('AGRoomRebuild',4)}
+            cbz x10, done
+            ldp x0, x1, [sp, #16]
+            mov w2, #{i}
+            blr x10
+          done:
+            ldr x0, [sp, #32]
+            ldp x29, x30, [sp], #48
+            ret
+        ''')
+        assert original[m['room_build_call']:m['room_build_call']+4]==asm(f"bl {m['room_build']}",m['room_build_call'])
+        patch(m['room_build_call'],asm(f'bl {build_addr}',m['room_build_call']),f'V{i+1} replay names after room list rebuild')
         tick_addr,raw=emit(f'''
             stp x29, x30, [sp, #-32]!
             mov x29, sp
@@ -140,7 +174,7 @@ def build_native(old,original,maps):
         ''')
         assert original[m['tick']:m['tick']+4]==asm(f"bl {m['speed']}",m['tick'])
         patch(m['tick'],asm(f'bl {tick_addr}',m['tick']),f'V{i+1} poll/send on original game thread')
-        hooks.append(dict(variant=i,open_hook=open_addr,receive_hook=receive_addr,tick_hook=tick_addr,**m))
+        hooks.append(dict(variant=i,open_hook=open_addr,receive_hook=receive_addr,tick_hook=tick_addr,room_build_hook=build_addr,**m))
     label=symbols['Vòng xoay may mắn']
     patch(0x5bd138,asm(f'adrp x2, {label&-4096}; add x2, x2, #{label&4095}; mov w3, #{len("Vòng xoay may mắn")}',0x5bd138),'Shared V9 menu label')
     b[rxoff:rxoff+PAGE]=rx
@@ -152,7 +186,7 @@ def build_native(old,original,maps):
         c=bytearray(old[p:p+size])
         if p==link_p:
             load.append(segment('__AGWHEEL',rxvm,rxoff,PAGE,5,[('__text',rxvm,rxoff,0x3000,0x80000400,2),('__cstring',rxvm+0x3000,rxoff+0x3000,strcursor-0x3000,2,0)]))
-            load.append(segment('__AGDATA',rwvm,rwoff,PAGE,3,[('__data',rwvm,rwoff,24,0,3)]))
+            load.append(segment('__AGDATA',rwvm,rwoff,PAGE,3,[('__data',rwvm,rwoff,40,0,3)]))
             struct.pack_into('<Q',c,24,link[1]+delta);struct.pack_into('<Q',c,40,rxoff+delta)
         for field in file_fields.get(cmd,[]):
             value=struct.unpack_from('<I',c,field)[0]
@@ -180,7 +214,7 @@ def main():
     lib=args.dylib.read_bytes();assert lib[:4]==bytes.fromhex('cffaedfe')
     assert struct.unpack_from('<I',lib,4)[0]==0x100000c
     assert struct.unpack_from('<I',lib,12)[0]==6 # MH_DYLIB
-    for name in (b'_AGWheelOpen\0',b'_AGWheelReceive\0',b'_AGWheelTick\0'):assert name in lib
+    for name in (b'_AGWheelOpen\0',b'_AGWheelReceive\0',b'_AGWheelTick\0',b'_AGRoomReceive\0',b'_AGRoomRebuild\0'):assert name in lib
     assert b'_AGWheelPreview\0'not in lib,'Simulator fixture must not enter IPA'
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(source)as src,zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED,compresslevel=6)as dst:

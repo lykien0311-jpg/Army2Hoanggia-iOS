@@ -3,13 +3,14 @@ set -euo pipefail
 cd "$(dirname "$0")"
 mkdir -p build
 python3 test_protocol.py
+python3 test_rooms.py
 sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
 xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=12.0 \
   -dynamiclib -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wall -Wextra \
   -Wno-unused-parameter -Wno-deprecated-declarations -Wno-unused-function \
   -framework UIKit -framework Foundation -framework QuartzCore \
   -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
-  AGWheel.m WheelProtocol.c NativeGuard.S -o build/AGWheel.dylib
+  AGWheel.m WheelProtocol.c RoomNames.c RoomBridge.c NativeGuard.S -o build/AGWheel.dylib
 codesign --force --sign - --timestamp=none build/AGWheel.dylib
 codesign --verify --strict --verbose=2 build/AGWheel.dylib
 xcrun nm -gU build/AGWheel.dylib > build/exports.txt

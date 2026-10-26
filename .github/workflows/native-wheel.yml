@@ -6,10 +6,13 @@ on:
     paths: ['native-wheel/**', '.github/workflows/native-wheel.yml']
 permissions:
   contents: read
+concurrency:
+  group: native-wheel-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   wheel:
-    runs-on: macos-26
-    timeout-minutes: 15
+    runs-on: macos-15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - run: bash native-wheel/build.sh

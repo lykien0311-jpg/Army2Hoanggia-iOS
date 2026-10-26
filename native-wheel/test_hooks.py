@@ -30,7 +30,7 @@ assert [(s.name,s.virtual_address,s.offset)for s in M.sections if s.segment_name
 for a,b in zip(list(M.segments)[1:],list(M.segments)[2:]):assert a.virtual_address+a.virtual_size<=b.virtual_address and a.file_offset+a.file_size<=b.file_offset
 assert all(not(s.init_protection&2 and s.init_protection&4)for s in M.segments)
 
-CALLBACKS={'AGWheelOpen':0x300000000,'AGWheelTick':0x300001000,'AGWheelReceive':0x300002000}
+CALLBACKS={'AGWheelOpen':0x300000000,'AGWheelTick':0x300001000,'AGWheelReceive':0x300002000,'AGRoomReceive':0x300006000,'AGRoomRebuild':0x300007000}
 STACK=0x700000000;SP=STACK+0x18000;ENV=0x600000000;MSG=ENV+0x1000;OBJECT=ENV+0x2000;STOP=0x300003000;GUARD=0x300004000;BODY=0x300005000
 X=[getattr(__import__('unicorn.arm64_const',fromlist=['']),f'UC_ARM64_REG_X{i}')for i in range(31)]
 U=Uc(UC_ARCH_ARM64,UC_MODE_ARM)
@@ -42,7 +42,7 @@ U.mem_map(STACK,0x20000);U.mem_map(ENV,0x10000);U.mem_map(0x300000000,0x10000)
 def readq(a):return struct.unpack('<Q',U.mem_read(a,8))[0]
 def writeq(a,v):U.mem_write(a,struct.pack('<Q',v))
 def string(a):return bytes(U.mem_read(a,100)).split(b'\0')[0].decode()
-calls=[];missing=False;speedAddr=0;continuation=0;stopKind=None;bodyRaises=False
+calls=[];missing=False;speedAddr=0;buildAddr=0;roomHandled=1;continuation=0;stopKind=None;bodyRaises=False
 def returned(value=0):U.reg_write(UC_ARM64_REG_X0,value&((1<<64)-1));U.reg_write(UC_ARM64_REG_PC,U.reg_read(UC_ARM64_REG_LR))
 def hook(uc,addr,size,data):
     global stopKind
@@ -55,9 +55,14 @@ def hook(uc,addr,size,data):
         name=next(k for k,v in CALLBACKS.items()if v==addr)
         calls.append((name,tuple(U.reg_read(r)for r in X[:3])))
         for reg in X[:18]:U.reg_write(reg,0xbeef)
-        returned()
+        returned(roomHandled if name=='AGRoomReceive' else 0)
     elif addr==speedAddr:
         assert U.reg_read(X[0])==ENV;calls.append(('speed',));returned(7)
+    elif addr==buildAddr:
+        assert tuple(U.reg_read(r)for r in X[:3])==(ENV,OBJECT,MSG)
+        calls.append(('build',))
+        for reg in X[:18]:U.reg_write(reg,0xabcd)
+        returned(123)
     elif addr in (STOP,continuation):stopKind=addr;U.emu_stop()
     elif addr==BODY:
         assert U.reg_read(X[0])==ENV and U.reg_read(X[1])==OBJECT
@@ -72,7 +77,7 @@ def reset():
     for i,r in enumerate(X):U.reg_write(r,0xc000+i)
     U.reg_write(UC_ARM64_REG_SP,SP);U.reg_write(UC_ARM64_REG_LR,STOP)
     U.reg_write(X[0],ENV);U.reg_write(X[1],OBJECT);U.reg_write(X[2],MSG)
-    U.mem_write(BASE+R['rwvm'],bytes(24));U.mem_write(MSG,bytes(0x40))
+    U.mem_write(BASE+R['rwvm'],bytes(40));U.mem_write(MSG,bytes(0x40))
 def preserved(original=False):
     assert U.reg_read(UC_ARM64_REG_SP)==SP-(96 if original else 0)
     for i in range(19,30):assert U.reg_read(X[i])==0xc000+i,(i,hex(U.reg_read(X[i])))
@@ -80,7 +85,7 @@ def preserved(original=False):
     if original:assert readq(SP-96)==0xc01c and readq(SP-88)==0xc01b
 cases=0
 for h in R['hooks']:
-    v=h['variant'];speedAddr=BASE+h['speed']
+    v=h['variant'];speedAddr=BASE+h['speed'];buildAddr=BASE+h['room_build']
     for missing in (False,True):
         continuation=0;reset();U.emu_start(BASE+h['clock'],STOP+4,count=1000);preserved()
         cb=[c for c in calls if c[0]=='AGWheelOpen'];assert bool(cb)==(not missing)
@@ -94,23 +99,28 @@ for h in R['hooks']:
             before=len([c for c in calls if c[0]=='dlsym']);U.reg_write(X[0],ENV);U.emu_start(BASE+h['tick_hook'],STOP+4,count=1000)
             assert len([c for c in calls if c[0]=='dlsym'])==before
         cases+=1
-        for command in (-101,-100,0,116,None):
+        reset();U.emu_start(BASE+h['room_build_hook'],STOP+4,count=1000);preserved()
+        assert calls[0]==('build',) and U.reg_read(X[0])==123
+        cb=[c for c in calls if c[0]=='AGRoomRebuild'];assert bool(cb)==(not missing)
+        if cb:assert cb[0][1]==(ENV,OBJECT,v)
+        cases+=1
+        for command,roomHandled in ((-101,1),(-19,1),(-19,0),(-100,1),(0,1),(116,1),(None,1)):
             reset();continuation=BASE+h['controller']+4
             if command is None:U.reg_write(X[2],0)
             else:U.mem_write(MSG+0x30,bytes([command&255]))
             U.emu_start(BASE+h['controller'],STOP+4,count=1000)
-            intercept=command==-101 and not missing
+            intercept=(command==-101 or (command==-19 and roomHandled)) and not missing
             assert stopKind==(STOP if intercept else continuation)
             preserved(not intercept)
-            cb=[c for c in calls if c[0]=='AGWheelReceive'];assert bool(cb)==intercept
+            cb=[c for c in calls if c[0] in ('AGWheelReceive','AGRoomReceive')];assert bool(cb)==(command in (-101,-19) and not missing)
             if cb:assert cb[0][1]==(ENV,MSG,v)
-            else:assert tuple(U.reg_read(r)for r in X[:3])==(ENV,OBJECT,0 if command is None else MSG)
+            if not intercept:assert tuple(U.reg_read(r)for r in X[:3])==(ENV,OBJECT,0 if command is None else MSG)
             cases+=1
 # Assemble and execute the exact catch guard with the app's actual enter/jump
 # implementation, both normal return and a simulated Java throwable.
 text=ROOT.joinpath('NativeGuard.S').read_text();code='\n'.join(l.split('//')[0]for l in text.splitlines() if not l.startswith('.'))
 raw=bytes(Ks(KS_ARCH_ARM64,KS_MODE_LITTLE_ENDIAN).asm(code,GUARD)[0]);U.mem_write(GUARD,raw)
-continuation=0;speedAddr=0
+continuation=0;speedAddr=0;buildAddr=0
 for bodyRaises in (False,True):
     reset();writeq(ENV+0x10,0);writeq(ENV+0x30,0x4444);writeq(ENV+0x38,0x5555)
     U.reg_write(X[1],BODY);U.reg_write(X[2],OBJECT);U.reg_write(X[3],BASE+0x1300d54)

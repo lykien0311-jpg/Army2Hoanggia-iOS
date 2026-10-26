@@ -19,6 +19,14 @@ spins = [a-0x7c for a in matches(0x503d08, 24)]
 clock = [0x5e21f8,0x6c6f84,0x7abc48,0x89090c,0x9755d0,0xa5a294]
 services = [0x5010d4,0x5ef70c,0x6d43d0,0x7b9094,0x89dd58,0x982a1c]
 assert len(controllers)==len(ticks)==len(spins)==6
+room_calls=[a+0x1998 for a in controllers]
+# This call sequence also occurs in other controller branches. Anchor it to
+# the exact room-list case, then verify every non-address instruction.
+for a in room_calls:
+    for offset in range(-0x40,0x20,4):
+        w,v=struct.unpack_from('<I',n.b,0x519ba4+offset)[0],struct.unpack_from('<I',n.b,a+offset)[0]
+        if w&0x7c000000!=0x14000000 and w&0x9f000000!=0x90000000:assert w==v,(hex(a),offset)
+    assert n.bounds(branch(a))[0]==branch(a)
 maps=[]
 for i in range(6):
     p=spins[i]
@@ -30,10 +38,10 @@ for i in range(6):
     alloc,ctor,send=branch(p+0x78),branch(p+0x94),branch(p+0x14c)
     assert n.b[ctor+0x30:ctor+0x3c]==n.b[0x4f96c4:0x4f96d0]
     assert n.b[controllers[i]:controllers[i]+4]==n.b[controllers[0]:controllers[0]+4]
-    maps.append(dict(clock=clock[i],controller=controllers[i],tick=ticks[i],speed=branch(ticks[i]),service=services[i],alloc=alloc,ctor=ctor,send=send))
+    maps.append(dict(clock=clock[i],controller=controllers[i],tick=ticks[i],speed=branch(ticks[i]),service=services[i],alloc=alloc,ctor=ctor,send=send,room_get=branch(room_calls[i]-0x34),room_build_call=room_calls[i],room_build=branch(room_calls[i])))
 Path('native-wheel/native-map.json').write_text(json.dumps(maps,indent=2)+'\n')
-fields=['service','alloc','ctor','send']
+fields=['service','alloc','ctor','send','room_get']
 Path('native-wheel/NativeMap.h').write_text('// Generated for the guarded native Army2Hoanggia executable only.\n'
-    'typedef struct { uintptr_t service, alloc, ctor, send; } AGNativeMap;\n'
+    'typedef struct { uintptr_t service, alloc, ctor, send, room_get; } AGNativeMap;\n'
     'static const AGNativeMap AGMaps[6] = {\n'+''.join('    {'+', '.join(hex(m[f]) for f in fields)+'},\n' for m in maps)+'};\n')
 print(json.dumps([{k:hex(v)for k,v in m.items()}for m in maps],indent=2))
