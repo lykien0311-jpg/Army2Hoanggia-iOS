@@ -44,3 +44,7 @@ subprocess.run(['xcrun','simctl','launch',device,'vn.army2hoanggia.wheelpreview'
 PY
 sleep 4
 xcrun simctl io "$(cat build/simulator-id)" screenshot build/wheel-preview.png
+xcrun simctl terminate "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview
+xcrun simctl launch "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview --show-input
+sleep 5
+xcrun simctl io "$(cat build/simulator-id)" screenshot build/wheel-input-preview.png

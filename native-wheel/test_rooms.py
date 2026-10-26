@@ -42,7 +42,7 @@ for size in range(len(wire)):
 for data in [wire+b'x',packet([(255,'header')]),packet([(3,'a'),(3,'b')]),packet([(3,'a')],0),packet([(3,'x'*257)]),b'\1\3\0\1\0\xff',b'\1\3\0\2\xc1\x81\xff',b'\1\3\0\3\xe0\x80\x80\xff',b'\1\3\0\4\xf0\x9f\x98\x80\xff']:
     assert not parse(data)[0];invalid+=1
 
-storage=[];strings={};releases=[];allocated=[];fail_after=None
+storage=[];strings={0:''};releases=[];allocated=[];fail_after=None
 def buf(n):
     b=C.create_string_buffer(n);storage.append(b);return C.addressof(b)
 def put(a,fmt,*v):C.memmove(a,struct.pack(fmt,*v),struct.calcsize(fmt))
@@ -69,7 +69,9 @@ def apply(screen,names):
     return answer
 def check(rooms,expected):
     for r in rooms:
-        i=get(r+0x18,'<B');assert strings[get(r+0x10,'<Q')]==('HEADER' if i==255 else expected.get(i,''))
+        i=get(r+0x18,'<B');title=get(r+0x10,'<Q')
+        assert strings[title]==('HEADER' if i==255 else expected.get(i,''))
+        if i!=255 and not expected.get(i,''):assert title==0,'default labels require NULL, not a new empty String'
 
 # This fixture has all five reference-video groups; order is the native list
 # builder's output. Group headers never receive a custom room title.
@@ -103,4 +105,6 @@ put(vec+0x24,'<i',4);fail_after=0;assert apply(sc,high)==-1
 fail_after=1;assert apply(sc,high)==-1
 fail_after=None;ok,empty=parse(packet([]));assert ok
 sc,rooms,_,_=build(ids,stale=True);assert apply(sc,empty)==18;check(rooms,{})
+ok,empty_title=parse(packet([(3,'')]));assert ok
+assert apply(sc,empty_title)==18;check(rooms,{})
 print(f'PASS: room-name cache; {valid} valid packets, {invalid} malformed/truncated packets; names before/after list; {layouts} shuffled/rebuilt lists; video group IDs 0/1/2/3–16/17; header and room metadata preserved; JNI references released')

@@ -268,7 +268,7 @@ static UIButton *AGButton(NSString *title,id target,SEL action,BOOL filled) {
         [self.canvas update:s locked:locked&&fresh];
     }else {self.roundLabel.text=@"Đang tải vòng xoay…";self.poolLabel.text=@"Chờ dữ liệu từ máy chủ";self.balanceLabel.text=@"Số dư: —\nĐã tham gia: —";}
     self.betButton.enabled=fresh&&!m.waiting&&!locked&&s.balance>=AG_MIN_STAKE&&s.own<=AG_MAX_STAKE-AG_MIN_STAKE;
-    if(m.waiting)self.statusLabel.text=@"Lượt đặt đang chờ xác nhận. Nếu mạng chậm, game sẽ gửi lại cùng mã lượt để tránh đặt trùng.";
+    if(m.waiting)self.statusLabel.text=@"Đang chờ máy chủ xác nhận lượt đặt. Bạn chưa thể đặt thêm lượt lúc này.";
     else if(m.notice[0]&&AGNow()<m.noticeUntil)self.statusLabel.text=AGString(m.notice);
     else if(!fresh)self.statusLabel.text=AGNow()-m.openedAt>10?@"Chưa nhận được dữ liệu. Máy chủ hiện tại có thể chưa hỗ trợ vòng xoay hoặc kết nối đang gián đoạn.":@"Đang kết nối với vòng xoay…";
     else self.statusLabel.text=locked?@"Đã khóa đặt xu. Đang chờ kết quả máy chủ.":@"Chọn Tham gia bằng xu để nhập số xu.";
@@ -357,5 +357,9 @@ void AGWheelPreview(void) {
     const char *names[]={"Kiên","Hoàng Gia","Minh Anh","Ngọc"};int64_t stakes[]={5000000,10000000,3000000,7000000};
     for(int i=0;i<4;i++){snprintf(AGState.snapshot.entries[i].name,AG_NAME,"%s",names[i]);AGState.snapshot.entries[i].amount=stakes[i];AGState.snapshot.entries[i].own=i==0;}
     snprintf(AGState.snapshot.winner,AG_NAME,"Hoàng Gia");pthread_mutex_unlock(&AGMutex);
+    [NSTimer scheduledTimerWithTimeInterval:2 repeats:YES block:^(NSTimer *timer){
+        pthread_mutex_lock(&AGMutex);AGState.snapshot.serverTime+=2000;AGState.receivedAt=AGNow();pthread_mutex_unlock(&AGMutex);
+    }];
 }
+void AGWheelPreviewShowInput(void) { [AGController bet]; }
 #endif

@@ -34,15 +34,18 @@ int AGRoomApply(void *screen,const AGRoomNames *names,AGMakeString make,AGReleas
     uint8_t *array=*(uint8_t **)(vector+0x18);if(!array)return 0;
     int32_t count=*(int32_t *)(vector+0x24),capacity=*(int32_t *)(array+0x10);
     if(count<0||capacity<0||count>capacity||count>4096)return 0;
-    void *empty=make(context,(const uint16_t[]){0},0);if(!empty)return -1;
     int changed=0;
     for(int32_t i=0;i<count;i++){
         uint8_t *room=*(uint8_t **)(array+0x18+(size_t)i*8);if(!room)continue;
         unsigned id=room[0x18];if(id==255)continue;
-        void *title=names->present[id]?make(context,names->text[id],names->length[id]):empty;
-        if(!title){release(context,empty);return -1;}
+        // The legacy renderer compares the empty-string constant by identity,
+        // not by length. A freshly allocated empty String would render a blank
+        // row. NULL explicitly selects its built-in "Phòng <id>" fallback.
+        int custom=names->present[id]&&names->length[id]>0;
+        void *title=custom?make(context,names->text[id],names->length[id]):NULL;
+        if(custom&&!title)return -1;
         *(void **)(room+0x10)=title;changed++;
-        if(title!=empty)release(context,title);
+        if(title)release(context,title);
     }
-    release(context,empty);return changed;
+    return changed;
 }
