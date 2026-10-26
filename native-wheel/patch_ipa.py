@@ -198,7 +198,9 @@ def build_native(old,original,maps):
                 if reloc:assert reloc>=rxoff;struct.pack_into('<I',c,q+56,reloc+delta)
         load.append(bytes(c))
     dylib=b'@executable_path/Frameworks/AGWheel.dylib\0';sz=align(24+len(dylib))
-    load.append(struct.pack('<6I',12,sz,24,0,0x10000,0x10000)+dylib+bytes(sz-24-len(dylib)))
+    # clang's default LC_ID_DYLIB version is 0.0.0. Do not demand 1.0.0
+    # here: dyld would reject the correctly built module as incompatible.
+    load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
     return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta)
@@ -214,8 +216,10 @@ def main():
     lib=args.dylib.read_bytes();assert lib[:4]==bytes.fromhex('cffaedfe')
     assert struct.unpack_from('<I',lib,4)[0]==0x100000c
     assert struct.unpack_from('<I',lib,12)[0]==6 # MH_DYLIB
+    versions=[struct.unpack_from('<II',lib,p+8)for p,c,s in commands(lib)if c==0x32]
+    assert versions and all(platform==2 and minimum<=0xc0000 for platform,minimum in versions),'Require device iOS dylib supporting iOS 12'
     for name in (b'_AGWheelOpen\0',b'_AGWheelReceive\0',b'_AGWheelTick\0',b'_AGRoomReceive\0',b'_AGRoomRebuild\0'):assert name in lib
-    assert b'_AGWheelPreview\0'not in lib,'Simulator fixture must not enter IPA'
+    assert b'_AGWheelPreview'not in lib,'Simulator fixture must not enter IPA'
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(source)as src,zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED,compresslevel=6)as dst:
         for info in src.infolist():

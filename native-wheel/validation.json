@@ -1,0 +1,16 @@
+{
+  "ipa": "Army2Hoanggia-V9-Wheel-RoomFix.ipa",
+  "size_bytes": 16519153,
+  "sha256": "82802ce256e4a96daca59f4c4ffd784e33b28171af2a70a5f1fee5549c8df8c6",
+  "dylib_sha256": "9fac50bbc4da985c12b572d20bf8e2012e401a20cfc152aedadd0046bf621658",
+  "device_platform": "iOS arm64",
+  "minimum_ios": "12.0",
+  "source_commit": "3de2ccf7707e5cf2959e821df80769bd010d02d9",
+  "build_run": 40419576327,
+  "artifact_id": 12696207572,
+  "dyld_required_version": 0,
+  "dyld_provided_version": 0,
+  "prior_resources_unchanged": true,
+  "physical_device_tested": false,
+  "live_server_tested": false
+}
