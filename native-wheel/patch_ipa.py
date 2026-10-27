@@ -14,6 +14,15 @@ EXPECTED_IPA='8c4779afad7981f4bf8cf5e756bdf03450437cc4e56cf949c805e2d2affc636d'
 EXPECTED_ORIGINAL='34778a89dac9103a1fd62a6e712dce1bedd012da3bbb47c7ce908724b1d4c7d6'
 PAGE=0x4000
 KS=Ks(KS_ARCH_ARM64,KS_MODE_LITTLE_ENDIAN)
+# Exact text read from the user's seven-second reference video (video 2).
+# IDs are the protocol IDs stored in each room, never their display row.
+REFERENCE_TITLES = {
+    3:'Phòng 3: Bom',4:'Phòng 4: Bom 2',5:'Phòng 5: Nhện máy',
+    6:'Phòng 6: Người máy',7:'Phòng 7: T-rex máy',8:'Phòng 8: UFO',
+    9:'Phòng 9: UFO',10:'Phòng 10: Khí cầu',11:'Phòng 11: Nhện độc',
+    12:'Phòng 12: Ma',13:'Phòng 13: Ma 2',14:'Phòng 14: Trùm liên hoàn',
+    15:'Phòng 15: Trùm liên hoàn',16:'Phòng 16: Super Boss',
+}
 def asm(text,address):return bytes(KS.asm(text,address)[0])
 def align(n,a=8):return (n+a-1)&-a
 def cstr(b,offset):return bytes(b[offset:]).split(b'\0',1)[0].decode()
@@ -53,8 +62,12 @@ def build_native(old,original,maps):
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
     symbols={};strcursor=0x3000
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','Vòng xoay may mắn'):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values()):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
+    strcursor=align(strcursor,16);room_table=rxvm+strcursor
+    for title in REFERENCE_TITLES.values():
+        rx[strcursor:strcursor+8]=struct.pack('<iI',symbols[title]-(rxvm+strcursor),len(title.encode('utf-16-le'))//2)
+        strcursor+=8
     def lookup(symbol,slot):
         # Aligned 64-bit function pointer cache. All racing resolvers write the
         # same address. Cache pages are RW, never executable.
@@ -80,6 +93,84 @@ def build_native(old,original,maps):
         assert old[at:at+len(raw)]==original[at:at+len(raw)],(hex(at),label)
         records.append(dict(offset=at,label=label,before=b[at:at+len(raw)].hex(),after=raw.hex()))
         b[at:at+len(raw)]=raw
+    # Match the app's literal-string getters. RoboVM registers the stable
+    # cache slot itself; it must never point to a temporary stack location.
+    label=symbols['VÒNG XOAY MAY MẮN'];label_cache=rwvm+40
+    label_addr,_=emit(f'''
+        stp x29, x30, [sp, #-16]!
+        mov x29, sp
+        adrp x1, {label_cache&-4096}
+        add x1, x1, #{label_cache&4095}
+        adrp x2, {label&-4096}
+        add x2, x2, #{label&4095}
+        mov w3, #{len('VÒNG XOAY MAY MẮN')}
+        bl {0x12e8038}
+        ldp x29, x30, [sp], #16
+        ret
+    ''')
+    # Resolve the displayed title at the native paint site, so neither an
+    # absent/late name packet nor a legacy shifted packet can repaint the
+    # reference room IDs with the wrong label. Keep actual IDs, groups,
+    # occupancy and enter-room dispatch untouched. Unknown IDs retain server
+    # titles. Stable per-literal caches are registered by RoboVM itself.
+    room_cache=rwvm+48
+    room_title_addr,_=emit(f'''
+        stp x29, x30, [sp, #-176]!
+        mov x29, sp
+        stp x0, x1, [sp, #16]
+        stp x2, x3, [sp, #32]
+        stp x4, x5, [sp, #48]
+        stp x6, x7, [sp, #64]
+        str x9, [sp, #80]
+        stp x10, x11, [sp, #96]
+        stp x12, x13, [sp, #112]
+        stp x14, x15, [sp, #128]
+        stp x16, x17, [sp, #144]
+        mrs x10, nzcv
+        str x10, [sp, #160]
+        ldrb w9, [x8, #24]
+        cmp w9, #18
+        b.hs original
+        cmp w9, #3
+        b.lo plain
+        cmp w9, #17
+        b.eq plain
+        sub w9, w9, #3
+        adrp x1, {room_cache&-4096}
+        add x1, x1, #{room_cache&4095}
+        add x1, x1, x9, lsl #3
+        ldr x8, [x1]
+        cbnz x8, done
+        adrp x10, {room_table&-4096}
+        add x10, x10, #{room_table&4095}
+        add x10, x10, x9, lsl #3
+        ldrsw x2, [x10]
+        add x2, x10, x2
+        ldr w3, [x10, #4]
+        mov x0, x19
+        bl {0x12e8038}
+        mov x8, x0
+        b done
+      plain:
+        mov x8, xzr
+        b done
+      original:
+        ldr x8, [x8, #16]
+      done:
+        ldr x10, [sp, #160]
+        msr nzcv, x10
+        ldp x0, x1, [sp, #16]
+        ldp x2, x3, [sp, #32]
+        ldp x4, x5, [sp, #48]
+        ldp x6, x7, [sp, #64]
+        ldr x9, [sp, #80]
+        ldp x10, x11, [sp, #96]
+        ldp x12, x13, [sp, #112]
+        ldp x14, x15, [sp, #128]
+        ldp x16, x17, [sp, #144]
+        ldp x29, x30, [sp], #176
+        ret
+    ''')
     hooks=[]
     for i,m in enumerate(maps):
         open_addr,raw=emit(f'''
@@ -95,7 +186,164 @@ def build_native(old,original,maps):
             ldp x29, x30, [sp], #32
             ret
         ''')
-        patch(m['clock'],asm(f'b {open_addr}',m['clock']),f'V{i+1} clock action opens native wheel')
+        # A dedicated callback instance in the existing clock callback class
+        # adds an independent command without changing the real clock command.
+        # The menu owns the live callback; its identity is retained per variant.
+        callback_slot=rwvm+160+i*8
+        v9_addr,_=emit(f'''
+            stp x29, x30, [sp, #-64]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            bl {0xbe6b7c}
+            ldr x0, [sp, #16]
+            bl {m['command_alloc']}
+            str x0, [sp, #32]
+            ldr x0, [sp, #16]
+            bl {m['clock_alloc']}
+            str x0, [sp, #40]
+            mov x1, x0
+            ldr x0, [sp, #16]
+            bl {m['clock_ctor']}
+            ldr x0, [sp, #16]
+            bl {label_addr}
+            mov x2, x0
+            ldr x0, [sp, #16]
+            ldr x1, [sp, #32]
+            ldr x3, [sp, #40]
+            bl {m['command_ctor']}
+            ldp x0, x1, [sp, #16]
+            ldr x2, [sp, #32]
+            bl {0x1dfcac}
+            ldr x8, [sp, #40]
+            adrp x9, {callback_slot&-4096}
+            str x8, [x9, #{callback_slot&4095}]
+            ldp x29, x30, [sp], #64
+            ret
+        ''')
+        assert original[m['v9_ctor_call']:m['v9_ctor_call']+4]==asm(f'bl {0xbe6b7c}',m['v9_ctor_call'])
+        patch(m['v9_ctor_call'],asm(f'bl {v9_addr}',m['v9_ctor_call']),f'V{i+1} prepend wheel to in-battle V9')
+        clock_addr,_=emit(f'''
+            adrp x9, {callback_slot&-4096}
+            ldr x9, [x9, #{callback_slot&4095}]
+            cmp x1, x9
+            b.ne original
+            cbz x1, original
+            stp x29, x30, [sp, #-32]!
+            str x0, [sp, #16]
+            bl {m['key_reset']}
+            ldr x0, [sp, #16]
+            bl {open_addr}
+            ldp x29, x30, [sp], #32
+            ret
+          original:
+            stp x22, x21, [sp, #-48]!
+            b {m['clock']+4}
+        ''')
+        assert original[m['clock']:m['clock']+4]==asm('stp x22, x21, [sp, #-48]!',0)
+        patch(m['clock'],asm(f'b {clock_addr}',m['clock']),f'V{i+1} distinguish new wheel action from unchanged clock action')
+        move_addr,_=emit(f'''
+            stp x29, x30, [sp, #-48]!
+            stp x0, x1, [sp, #16]
+            str x2, [sp, #32]
+            {lookup('AGMoveAllow',26)}
+            cbz x10, walk
+            mov w0, #{i}
+            ldr x1, [sp, #24]
+            ldr w2, [sp, #32]
+            blr x10
+            cbz w0, done
+          walk:
+            ldp x0, x1, [sp, #16]
+            ldr x2, [sp, #32]
+            bl {m['walk']}
+          done:
+            ldp x29, x30, [sp], #48
+            ret
+        ''')
+        for site in m['walk_input_calls']:
+            assert original[site:site+4]==asm(f"bl {m['walk']}",site)
+            patch(site,asm(f'bl {move_addr}',site),f'V{i+1} pace local left/right input independently of speed')
+        # Home menu category 0 ends with Quay số at index 5. Extend only
+        # this array and add the new action at index 6, preserving both
+        # the existing lottery and V9's original Xem giờ action/label.
+        assert original[m['home_count']:m['home_count']+4]==original[0x53c0c8:0x53c0cc]
+        patch(m['home_count'],asm('mov w1, #7',0),f'V{i+1} home menu has seven entries')
+        append_addr,_=emit(f'''
+            stp x29, x30, [sp, #-32]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            bl {0x12e7f74}
+            ldr x0, [sp, #16]
+            bl {label_addr}
+            mov x3, x0
+            ldp x0, x1, [sp, #16]
+            mov w2, #6
+            bl {0x12e7f74}
+            ldp x29, x30, [sp], #32
+            ret
+        ''')
+        assert original[m['home_append_call']:m['home_append_call']+4]==asm(f'bl {0x12e7f74}',m['home_append_call'])
+        patch(m['home_append_call'],asm(f'bl {append_addr}',m['home_append_call']),f'V{i+1} append lucky wheel immediately after Quay số')
+        select_addr,_=emit(f'''
+            sub w16, w9, #6
+            cbnz w16, original
+            mov x0, x19
+            bl {open_addr}
+            b {m['home_after_action']}
+          original:
+            cbnz w9, nonzero
+            b {m['home_select_zero']}
+          nonzero:
+            b {m['home_select']+4}
+        ''')
+        assert original[m['home_select']:m['home_select']+4]==asm(f"cbz w9, {m['home_select_zero']}",m['home_select'])
+        patch(m['home_select'],asm(f'b {select_addr}',m['home_select']),f'V{i+1} select the new wheel row')
+        width_hooks=[];width_functions={}
+        for w in m['home_widths']:
+            key=(w['reg'],w['kind']);default=3 if w['kind']=='columns' else -152 if w['kind']=='negative' else 152
+            if key not in width_functions:
+                after='mov w%d, w17'%w['reg']
+                if w['kind']!='columns':after='lsl w17, w17, #5; add w17, w17, #56; '+('neg w17, w17; 'if w['kind']=='negative'else '')+after
+                address,_=emit(f'''
+                    stp x15, x16, [sp, #-32]!
+                    str x17, [sp, #16]
+                    mrs x15, nzcv
+                    mov w{w['reg']}, #{default}
+                    adrp x16, {m['home_class']&-4096}
+                    add x16, x16, #{m['home_class']&4095}
+                    ldr x16, [x16]
+                    ldr w17, [x16, #216]
+                    cmp w17, #1
+                    b.ne done
+                    ldr w17, [x16, #220]
+                    cbnz w17, done
+                    adrp x16, {m['width_class']&-4096}
+                    add x16, x16, #{m['width_class']&4095}
+                    ldr x16, [x16]
+                    ldr w17, [x16, #304]
+                    sub w17, w17, #64
+                    asr w17, w17, #5
+                    mov w16, #3
+                    cmp w17, #3
+                    csel w17, w17, w16, ge
+                    mov w16, #5
+                    cmp w17, #5
+                    csel w17, w17, w16, le
+                    {after}
+                  done:
+                    msr nzcv, x15
+                    ldr x17, [sp, #16]
+                    ldp x15, x16, [sp], #32
+                    ret
+                ''')
+                width_functions[key]=address
+            address=width_functions[key]
+            expected=original[0x53cb98:0x53cb9c] if w['kind']=='columns' else asm(f"mov w{w['reg']}, #{default}",0)
+            assert original[w['site']:w['site']+4]==expected
+            patch(w['site'],asm(f'bl {address}',w['site']),f'V{i+1} fit home wheel label ({w["kind"]}, w{w["reg"]})')
+            width_hooks.append(dict(**w,hook=address))
+        assert original[m['room_title_site']:m['room_title_site']+4]==asm('ldr x8, [x8, #16]',0)
+        patch(m['room_title_site'],asm(f'bl {room_title_addr}',m['room_title_site']),f'V{i+1} display exact reference-video title by actual room ID')
         receive_addr,raw=emit(f'''
             cbz x2, original
             ldrsb w9, [x2, #48]
@@ -174,9 +422,7 @@ def build_native(old,original,maps):
         ''')
         assert original[m['tick']:m['tick']+4]==asm(f"bl {m['speed']}",m['tick'])
         patch(m['tick'],asm(f'bl {tick_addr}',m['tick']),f'V{i+1} poll/send on original game thread')
-        hooks.append(dict(variant=i,open_hook=open_addr,receive_hook=receive_addr,tick_hook=tick_addr,room_build_hook=build_addr,**m))
-    label=symbols['Vòng xoay may mắn']
-    patch(0x5bd138,asm(f'adrp x2, {label&-4096}; add x2, x2, #{label&4095}; mov w3, #{len("Vòng xoay may mắn")}',0x5bd138),'Shared V9 menu label')
+        hooks.append(dict(variant=i,open_hook=open_addr,receive_hook=receive_addr,tick_hook=tick_addr,room_build_hook=build_addr,home_append_hook=append_addr,home_select_hook=select_addr,width_hooks=width_hooks,v9_hook=v9_addr,clock_hook=clock_addr,move_hook=move_addr,callback_slot=callback_slot,**m))
     b[rxoff:rxoff+PAGE]=rx
     # Relocate only link-edit FILE offsets; no original text/data VM address
     # changes. Existing rebases/bindings target segment 1/2, never LINKEDIT.
@@ -186,7 +432,7 @@ def build_native(old,original,maps):
         c=bytearray(old[p:p+size])
         if p==link_p:
             load.append(segment('__AGWHEEL',rxvm,rxoff,PAGE,5,[('__text',rxvm,rxoff,0x3000,0x80000400,2),('__cstring',rxvm+0x3000,rxoff+0x3000,strcursor-0x3000,2,0)]))
-            load.append(segment('__AGDATA',rwvm,rwoff,PAGE,3,[('__data',rwvm,rwoff,40,0,3)]))
+            load.append(segment('__AGDATA',rwvm,rwoff,PAGE,3,[('__data',rwvm,rwoff,216,0,3)]))
             struct.pack_into('<Q',c,24,link[1]+delta);struct.pack_into('<Q',c,40,rxoff+delta)
         for field in file_fields.get(cmd,[]):
             value=struct.unpack_from('<I',c,field)[0]
@@ -203,7 +449,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta)
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES)
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()
@@ -218,7 +464,7 @@ def main():
     assert struct.unpack_from('<I',lib,12)[0]==6 # MH_DYLIB
     versions=[struct.unpack_from('<II',lib,p+8)for p,c,s in commands(lib)if c==0x32]
     assert versions and all(platform==2 and minimum<=0xc0000 for platform,minimum in versions),'Require device iOS dylib supporting iOS 12'
-    for name in (b'_AGWheelOpen\0',b'_AGWheelReceive\0',b'_AGWheelTick\0',b'_AGRoomReceive\0',b'_AGRoomRebuild\0'):assert name in lib
+    for name in (b'_AGWheelOpen\0',b'_AGWheelReceive\0',b'_AGWheelTick\0',b'_AGRoomReceive\0',b'_AGRoomRebuild\0',b'_AGMoveAllow\0'):assert name in lib
     assert b'_AGWheelPreview'not in lib,'Simulator fixture must not enter IPA'
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(source)as src,zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED,compresslevel=6)as dst:

@@ -77,7 +77,7 @@ def reset():
     for i,r in enumerate(X):U.reg_write(r,0xc000+i)
     U.reg_write(UC_ARM64_REG_SP,SP);U.reg_write(UC_ARM64_REG_LR,STOP)
     U.reg_write(X[0],ENV);U.reg_write(X[1],OBJECT);U.reg_write(X[2],MSG)
-    U.mem_write(BASE+R['rwvm'],bytes(40));U.mem_write(MSG,bytes(0x40))
+    U.mem_write(BASE+R['rwvm'],bytes(216));U.mem_write(MSG,bytes(0x40))
 def preserved(original=False):
     assert U.reg_read(UC_ARM64_REG_SP)==SP-(96 if original else 0)
     for i in range(19,30):assert U.reg_read(X[i])==0xc000+i,(i,hex(U.reg_read(X[i])))
@@ -87,7 +87,7 @@ cases=0
 for h in R['hooks']:
     v=h['variant'];speedAddr=BASE+h['speed'];buildAddr=BASE+h['room_build']
     for missing in (False,True):
-        continuation=0;reset();U.emu_start(BASE+h['clock'],STOP+4,count=1000);preserved()
+        continuation=0;reset();U.emu_start(BASE+h['open_hook'],STOP+4,count=1000);preserved()
         cb=[c for c in calls if c[0]=='AGWheelOpen'];assert bool(cb)==(not missing)
         if cb:assert cb[0][1][:2]==(ENV,v)
         cases+=1
@@ -127,4 +127,6 @@ for bodyRaises in (False,True):
     U.emu_start(GUARD,STOP+4,count=1000);preserved()
     assert readq(ENV+0x10)==0 and readq(ENV+0x30)==0x4444 and readq(ENV+0x38)==0x5555
     assert U.reg_read(UC_ARM64_REG_W0)==(0xffffffff if bodyRaises else 42);cases+=1
-print(f'PASS: {cases} ARM64 hook/exception cases; all 6 variants; exact prior-patch preservation; unchanged symbols/function starts, {len(bindings(M))} bindings, {len(rebases(M))} rebases; ordered W^X segments; LINKEDIT last')
+assert B[0x5bd128:0x5bd150]==ORIG[0x5bd128:0x5bd150], 'Xem giờ label must be restored'
+for h in R['hooks']:assert B[h['clock']+4:h['clock']+0x22c]==ORIG[h['clock']+4:h['clock']+0x22c], 'Original clock body must remain intact after dispatch'
+print(f'PASS: {cases} ARM64 hook/exception cases; all 6 variants; clock restored; exact prior-patch preservation; unchanged symbols/function starts, {len(bindings(M))} bindings, {len(rebases(M))} rebases; ordered W^X segments; LINKEDIT last')

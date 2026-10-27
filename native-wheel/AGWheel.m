@@ -131,159 +131,57 @@ __attribute__((visibility("default"))) void AGWheelReceive(void *env, void *mess
     pthread_mutex_unlock(&AGMutex);
 }
 
-static UIColor *AGGold(void){return [UIColor colorWithRed:1 green:.79 blue:.29 alpha:1];}
-static UIColor *AGBlue(void){return [UIColor colorWithRed:.035 green:.095 blue:.18 alpha:1];}
-static UIColor *AGColour(int i){return [UIColor colorWithHue:fmod(.53+i*.137,1) saturation:.63 brightness:.85 alpha:1];}
-
-@interface AGWheelCanvas : UIView {
-    AGSnapshot _current,_shown;
-    CADisplayLink *_display;
-    double _rotation,_from,_to,_animationStart,_lastFrame;
-    int64_t _seenResult;
-    BOOL _initialized,_settling,_locked;
-}
-- (void)update:(AGSnapshot)s locked:(BOOL)locked;
-@end
-@implementation AGWheelCanvas
-- (instancetype)initWithFrame:(CGRect)frame {
-    if((self=[super initWithFrame:frame])){self.opaque=NO;self.accessibilityLabel=@"Vòng xoay theo tỷ lệ xu tham gia";self.isAccessibilityElement=YES;}
-    return self;
-}
-- (void)didMoveToWindow {
-    [super didMoveToWindow];[_display invalidate];_display=nil;
-    if(self.window){_display=[CADisplayLink displayLinkWithTarget:self selector:@selector(frame:)];_display.preferredFramesPerSecond=30;[_display addToRunLoop:NSRunLoop.mainRunLoop forMode:NSRunLoopCommonModes];}
-}
-- (void)frame:(CADisplayLink *)link {
-    double now=AGNow(),dt=_lastFrame?fmin(.1,now-_lastFrame):0;_lastFrame=now;
-    if(_settling){double t=fmin(1,(now-_animationStart)/3.2);_rotation=_from+(_to-_from)*(1-pow(1-t,3));if(t>=1){_settling=NO;_shown=_current;_rotation=0;}}
-    else if(_locked)_rotation=fmod(_rotation+dt*3,M_PI*2);
-    [self setNeedsDisplay];
-}
-- (void)update:(AGSnapshot)s locked:(BOOL)locked {
-    _locked=locked;
-    if(!_initialized){_seenResult=s.resultRound;_initialized=YES;}
-    if(s.hasResult && s.resultRound>_seenResult && _current.round==s.resultRound && _current.total>0) {
-        _shown=_current;double start=0,mid=-1;
-        for(int i=0;i<_shown.rows;i++){double share=(double)_shown.entries[i].amount/_shown.total;if(strcmp(_shown.entries[i].name,s.winner)==0)mid=start+share/2;start+=share;}
-        if(mid<0 && start<1)mid=start+(1-start)/2;
-        if(mid>=0){_from=_rotation;double target=fmod(-mid*M_PI*2+M_PI*4,M_PI*2);_to=_from+M_PI*8+fmod(target-fmod(_from,M_PI*2)+M_PI*2,M_PI*2);_animationStart=AGNow();_settling=YES;}
-    }
-    if(s.hasResult)_seenResult=s.resultRound;
-    _current=s;if(!_settling)_shown=s;[self setNeedsDisplay];
-}
-- (void)drawRect:(CGRect)rect {
-    CGContextRef c=UIGraphicsGetCurrentContext();CGFloat radius=fmin(self.bounds.size.width,self.bounds.size.height)/2-15;
-    CGPoint center=CGPointMake(CGRectGetMidX(self.bounds),CGRectGetMidY(self.bounds)+4);
-    double a=-M_PI_2+_rotation,used=0;
-    int sectors=_shown.total>0?_shown.rows:8;
-    for(int i=0;i<=sectors;i++) {
-        double share;
-        if(_shown.total<=0){if(i==sectors)break;share=1.0/sectors;}
-        else {share=i<sectors?(double)_shown.entries[i].amount/_shown.total:fmax(0,1-used);if(share<=0)continue;}
-        double b=a+share*M_PI*2;
-        UIColor *colour=(i==sectors)?[UIColor colorWithWhite:.33 alpha:1]:AGColour(i);
-        CGContextSetFillColorWithColor(c,colour.CGColor);CGContextMoveToPoint(c,center.x,center.y);CGContextAddArc(c,center.x,center.y,radius,a,b,0);CGContextClosePath(c);CGContextFillPath(c);
-        CGContextSetStrokeColorWithColor(c,[UIColor colorWithWhite:1 alpha:.3].CGColor);CGContextSetLineWidth(c,1);CGContextMoveToPoint(c,center.x,center.y);CGContextAddLineToPoint(c,center.x+cos(a)*radius,center.y+sin(a)*radius);CGContextStrokePath(c);
-        if(share>.035 && _shown.total>0){NSString *label=i<sectors?[NSString stringWithFormat:@"%d",i+1]:@"+";NSDictionary *attrs=@{NSFontAttributeName:[UIFont boldSystemFontOfSize:13],NSForegroundColorAttributeName:UIColor.whiteColor};CGSize sz=[label sizeWithAttributes:attrs];double mid=(a+b)/2;[label drawAtPoint:CGPointMake(center.x+cos(mid)*radius*.73-sz.width/2,center.y+sin(mid)*radius*.73-sz.height/2) withAttributes:attrs];}
-        used+=share;a=b;
-    }
-    CGContextSetStrokeColorWithColor(c,AGGold().CGColor);CGContextSetLineWidth(c,5);CGContextStrokeEllipseInRect(c,CGRectMake(center.x-radius,center.y-radius,radius*2,radius*2));
-    [AGBlue()setFill];UIBezierPath *hub=[UIBezierPath bezierPathWithOvalInRect:CGRectMake(center.x-39,center.y-39,78,78)];[hub fill];
-    NSString *title=_settling?@"KẾT QUẢ":(_locked?@"ĐANG QUAY":@"MAY MẮN");NSDictionary *at=@{NSFontAttributeName:[UIFont boldSystemFontOfSize:10],NSForegroundColorAttributeName:AGGold()};CGSize z=[title sizeWithAttributes:at];[title drawAtPoint:CGPointMake(center.x-z.width/2,center.y-z.height/2) withAttributes:at];
-    [AGGold()setFill];UIBezierPath *pointer=[UIBezierPath bezierPath];[pointer moveToPoint:CGPointMake(center.x-10,center.y-radius-10)];[pointer addLineToPoint:CGPointMake(center.x+10,center.y-radius-10)];[pointer addLineToPoint:CGPointMake(center.x,center.y-radius+12)];[pointer closePath];[pointer fill];
-}
-@end
-
+#include "ClassicWheelUI.inc"
 @interface AGWheelController : UIViewController
-@property(nonatomic,strong) UIScrollView *scroll;
-@property(nonatomic,strong) UIStackView *stack,*body,*left,*right;
-@property(nonatomic,strong) AGWheelCanvas *canvas;
-@property(nonatomic,strong) UILabel *roundLabel,*poolLabel,*balanceLabel,*statusLabel,*playersLabel,*resultLabel,*pageLabel;
-@property(nonatomic,strong) UIButton *betButton,*previousButton,*nextButton;
+@property(nonatomic,strong) AGClassicPanel *panel;
+@property(nonatomic,strong) AGPixelButton *betButton;
+@property(nonatomic,strong) UIStackView *controls;
 @property(nonatomic,strong) NSTimer *timer;
 @end
 static UIWindow *AGWindow;
 static __weak UIWindow *AGPreviousWindow;
 static AGWheelController *AGController;
-
-static UILabel *AGLabel(CGFloat size, BOOL bold) {
-    UILabel *l=[UILabel new];l.font=bold?[UIFont boldSystemFontOfSize:size]:[UIFont systemFontOfSize:size];l.textColor=UIColor.whiteColor;l.numberOfLines=0;return l;
-}
-static UIButton *AGButton(NSString *title,id target,SEL action,BOOL filled) {
-    UIButton *b=[UIButton buttonWithType:UIButtonTypeSystem];[b setTitle:title forState:UIControlStateNormal];b.titleLabel.font=[UIFont boldSystemFontOfSize:15];b.layer.cornerRadius=10;b.contentEdgeInsets=UIEdgeInsetsMake(12,14,12,14);
-    [b setTitleColor:filled?AGBlue():AGGold() forState:UIControlStateNormal];[b setTitleColor:[UIColor colorWithWhite:.5 alpha:1]forState:UIControlStateDisabled];b.backgroundColor=filled?AGGold():[UIColor colorWithWhite:1 alpha:.08];[b addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];return b;
-}
 @implementation AGWheelController
-- (UIInterfaceOrientationMask)supportedInterfaceOrientations {return UIInterfaceOrientationMaskAllButUpsideDown;}
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations{return UIInterfaceOrientationMaskAllButUpsideDown;}
 - (BOOL)prefersStatusBarHidden{return YES;}
-- (void)viewDidLoad {
-    [super viewDidLoad];self.view.backgroundColor=AGBlue();
-    UILabel *title=AGLabel(18,YES);title.text=@"VÒNG XOAY MAY MẮN";title.textColor=AGGold();
-    UIButton *close=AGButton(@"Đóng",self,@selector(close),NO);
-    UIStackView *header=[[UIStackView alloc]initWithArrangedSubviews:@[title,close]];header.axis=UILayoutConstraintAxisHorizontal;header.spacing=12;header.alignment=UIStackViewAlignmentCenter;
-    [title setContentHuggingPriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];[close setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-    self.scroll=[UIScrollView new];self.scroll.alwaysBounceVertical=YES;
-    self.stack=[UIStackView new];self.stack.axis=UILayoutConstraintAxisVertical;self.stack.spacing=16;
-    self.body=[UIStackView new];self.body.axis=UILayoutConstraintAxisVertical;self.body.spacing=20;
-    self.left=[UIStackView new];self.left.axis=UILayoutConstraintAxisVertical;self.left.spacing=8;
-    self.right=[UIStackView new];self.right.axis=UILayoutConstraintAxisVertical;self.right.spacing=12;
-    self.canvas=[AGWheelCanvas new];[self.canvas.heightAnchor constraintEqualToConstant:238].active=YES;
-    self.roundLabel=AGLabel(16,YES);self.roundLabel.textAlignment=NSTextAlignmentCenter;
-    self.poolLabel=AGLabel(15,NO);self.poolLabel.textAlignment=NSTextAlignmentCenter;
-    [self.left addArrangedSubview:self.canvas];[self.left addArrangedSubview:self.roundLabel];[self.left addArrangedSubview:self.poolLabel];
-    self.balanceLabel=AGLabel(17,YES);self.statusLabel=AGLabel(13,NO);self.statusLabel.textColor=[UIColor colorWithWhite:.8 alpha:1];
-    self.betButton=AGButton(@"THAM GIA BẰNG XU",self,@selector(bet),YES);
-    UIButton *refresh=AGButton(@"Tải lại",self,@selector(refresh),NO);
-    UILabel *rules=AGLabel(12,NO);rules.text=@"Từ 1.000.000 xu/lượt · Tối đa 50.000.000 xu/vòng. Khóa đặt xu trong 10 giây cuối. Kết quả và phần thưởng do máy chủ trả về.";rules.textColor=[UIColor colorWithWhite:.65 alpha:1];
-    [self.right addArrangedSubview:self.balanceLabel];[self.right addArrangedSubview:self.betButton];[self.right addArrangedSubview:refresh];[self.right addArrangedSubview:self.statusLabel];[self.right addArrangedSubview:rules];
-    [self.body addArrangedSubview:self.left];[self.body addArrangedSubview:self.right];[self.stack addArrangedSubview:self.body];
-    self.resultLabel=AGLabel(14,YES);self.resultLabel.textColor=AGGold();[self.stack addArrangedSubview:self.resultLabel];
-    UILabel *playersTitle=AGLabel(16,YES);playersTitle.text=@"NGƯỜI THAM GIA";[self.stack addArrangedSubview:playersTitle];
-    self.playersLabel=AGLabel(14,NO);[self.stack addArrangedSubview:self.playersLabel];
-    self.previousButton=AGButton(@"‹ Trước",self,@selector(previous),NO);self.nextButton=AGButton(@"Sau ›",self,@selector(next),NO);self.pageLabel=AGLabel(12,NO);self.pageLabel.textAlignment=NSTextAlignmentCenter;
-    UIStackView *pages=[[UIStackView alloc]initWithArrangedSubviews:@[self.previousButton,self.pageLabel,self.nextButton]];pages.spacing=8;pages.distribution=UIStackViewDistributionFillEqually;[self.stack addArrangedSubview:pages];
-    [self.view addSubview:header];[self.view addSubview:self.scroll];[self.scroll addSubview:self.stack];
-    header.translatesAutoresizingMaskIntoConstraints=NO;self.scroll.translatesAutoresizingMaskIntoConstraints=NO;self.stack.translatesAutoresizingMaskIntoConstraints=NO;
-    UILayoutGuide *safe=self.view.safeAreaLayoutGuide;
-    [NSLayoutConstraint activateConstraints:@[
-      [header.topAnchor constraintEqualToAnchor:safe.topAnchor constant:8],[header.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor constant:14],[header.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor constant:-14],
-      [self.scroll.topAnchor constraintEqualToAnchor:header.bottomAnchor constant:10],[self.scroll.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor],[self.scroll.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor],[self.scroll.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor],
-      [self.stack.topAnchor constraintEqualToAnchor:self.scroll.contentLayoutGuide.topAnchor constant:8],[self.stack.leadingAnchor constraintEqualToAnchor:self.scroll.contentLayoutGuide.leadingAnchor constant:16],[self.stack.trailingAnchor constraintEqualToAnchor:self.scroll.contentLayoutGuide.trailingAnchor constant:-16],[self.stack.bottomAnchor constraintEqualToAnchor:self.scroll.contentLayoutGuide.bottomAnchor constant:-20],[self.stack.widthAnchor constraintEqualToAnchor:self.scroll.frameLayoutGuide.widthAnchor constant:-32]]];
+- (AGPixelButton *)button:(NSString *)text action:(SEL)action{
+    AGPixelButton *b=[AGPixelButton buttonWithType:UIButtonTypeCustom];b.accessibilityLabel=text;
+    [b addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];return b;
+}
+- (void)viewDidLoad{
+    [super viewDidLoad];self.view.backgroundColor=[UIColor colorWithRed:87/255.0 green:201/255.0 blue:239/255.0 alpha:1];
+    self.panel=[AGClassicPanel new];self.panel.opaque=NO;self.panel.isAccessibilityElement=YES;
+    self.betButton=[self button:@"Tham gia" action:@selector(bet)];
+    self.controls=[[UIStackView alloc]initWithArrangedSubviews:@[self.betButton,[self button:@"Cập nhật" action:@selector(refresh)],[self button:@"Trở ra" action:@selector(close)]]];
+    self.controls.axis=UILayoutConstraintAxisHorizontal;self.controls.distribution=UIStackViewDistributionFillEqually;self.controls.spacing=1;
+    self.controls.backgroundColor=AGInk();[self.view addSubview:self.panel];[self.view addSubview:self.controls];
     __weak AGWheelController *weakSelf=self;
-    self.timer=[NSTimer scheduledTimerWithTimeInterval:.3 repeats:YES block:^(NSTimer *t){[weakSelf render];}];[self render];
+    self.timer=[NSTimer scheduledTimerWithTimeInterval:.2 repeats:YES block:^(NSTimer *t){[weakSelf render];}];[self render];
 }
-- (void)viewDidLayoutSubviews {
-    [super viewDidLayoutSubviews];BOOL wide=self.view.bounds.size.width>650;
-    self.body.axis=wide?UILayoutConstraintAxisHorizontal:UILayoutConstraintAxisVertical;
-    self.body.distribution=wide?UIStackViewDistributionFillEqually:UIStackViewDistributionFill;
-    self.body.alignment=wide?UIStackViewAlignmentTop:UIStackViewAlignmentFill;
+- (void)viewDidLayoutSubviews{
+    [super viewDidLayoutSubviews];UIEdgeInsets safe=self.view.safeAreaInsets;
+    CGFloat width=self.view.bounds.size.width-safe.left-safe.right,height=self.view.bounds.size.height-safe.top-safe.bottom;
+    CGFloat bar=MAX(44,MIN(64,width/6)),panelHeight=height-bar-12;
+    // Keep the complete panel visible in either orientation without clipping.
+    CGFloat panelWidth=MIN(width-12,panelHeight*240/280);
+    self.panel.frame=CGRectMake(safe.left+(width-panelWidth)/2,safe.top+6,panelWidth,panelHeight);
+    self.controls.frame=CGRectMake(safe.left,safe.top+height-bar,width,bar);
+    [self.panel setNeedsDisplay];
 }
-- (void)render {
-    AGModel m=AGCopy();AGSnapshot s=m.snapshot;double age=AGNow()-m.receivedAt;BOOL fresh=m.loaded&&age<6;
-    int64_t now=AGServerNow(m),remain=s.ends>now?(s.ends-now+999)/1000:0;BOOL locked=s.ends>0&&now>=s.ends-10000;
-    if(m.loaded){
-        self.roundLabel.text=[NSString stringWithFormat:@"Vòng #%lld · %@",(long long)s.round,remain?[NSString stringWithFormat:@"%lld:%02lld",(long long)(remain/60),(long long)(remain%60)]:@"Chờ vòng mới"];
-        self.poolLabel.text=[NSString stringWithFormat:@"Tổng: %@ xu\n%d người · Phí %d%%",AGMoney(s.total),s.count,s.tax];
-        self.balanceLabel.text=[NSString stringWithFormat:@"Số dư: %@ xu\nĐã tham gia: %@ xu%@",AGMoney(s.balance),AGMoney(s.own),s.pending?[NSString stringWithFormat:@"\nChờ nhận: %@ xu",AGMoney(s.pending)]:@""];
-        [self.canvas update:s locked:locked&&fresh];
-    }else {self.roundLabel.text=@"Đang tải vòng xoay…";self.poolLabel.text=@"Chờ dữ liệu từ máy chủ";self.balanceLabel.text=@"Số dư: —\nĐã tham gia: —";}
+- (void)render{
+    AGModel m=AGCopy();AGSnapshot s=m.snapshot;BOOL fresh=m.loaded&&AGNow()-m.receivedAt<6;
+    int64_t now=AGServerNow(m),remain=s.ends>now?(s.ends-now+999)/1000:0;
+    BOOL locked=s.ends>0&&now>=s.ends-10000;
+    self.panel.snapshot=s;self.panel.loaded=m.loaded;self.panel.locked=locked;
+    self.panel.remaining=m.loaded&&s.count<2?120:remain;
     self.betButton.enabled=fresh&&!m.waiting&&!locked&&s.balance>=AG_MIN_STAKE&&s.own<=AG_MAX_STAKE-AG_MIN_STAKE;
-    if(m.waiting)self.statusLabel.text=@"Đang chờ máy chủ xác nhận lượt đặt. Bạn chưa thể đặt thêm lượt lúc này.";
-    else if(m.notice[0]&&AGNow()<m.noticeUntil)self.statusLabel.text=AGString(m.notice);
-    else if(!fresh)self.statusLabel.text=AGNow()-m.openedAt>10?@"Chưa nhận được dữ liệu. Máy chủ hiện tại có thể chưa hỗ trợ vòng xoay hoặc kết nối đang gián đoạn.":@"Đang kết nối với vòng xoay…";
-    else self.statusLabel.text=locked?@"Đã khóa đặt xu. Đang chờ kết quả máy chủ.":@"Chọn Tham gia bằng xu để nhập số xu.";
-    NSMutableAttributedString *rows=[NSMutableAttributedString new];
-    if(m.loaded){for(int i=0;i<s.rows;i++){
-        double pct=s.total>0?100.0*(double)s.entries[i].amount/s.total:0;
-        NSString *line=[NSString stringWithFormat:@"%d. %@%@ — %@ xu (%.2f%%)\n",i+1,AGString(s.entries[i].name),s.entries[i].own?@" · Bạn":@"",AGMoney(s.entries[i].amount),pct];
-        [rows appendAttributedString:[[NSAttributedString alloc]initWithString:line attributes:@{NSForegroundColorAttributeName:s.entries[i].own?AGGold():UIColor.whiteColor}]];
-    }}
-    if(!rows.length)[rows appendAttributedString:[[NSAttributedString alloc]initWithString:m.loaded?@"Chưa có người tham gia vòng này.":@"Đang tải danh sách…"]];
-    self.playersLabel.attributedText=rows;
-    self.resultLabel.hidden=!m.loaded||!s.hasResult;
-    self.resultLabel.text=s.hasResult?[NSString stringWithFormat:@"Vòng #%lld: %@ thắng %@ xu\nTổng vòng: %@ xu · Phí %d%%",(long long)s.resultRound,AGString(s.winner),AGMoney(s.resultPrize),AGMoney(s.resultPool),s.resultTax]:@"";
-    self.pageLabel.text=[NSString stringWithFormat:@"Trang %d / %d",s.page+1,MAX(1,(int)(((int64_t)s.count+19)/20))];
-    self.previousButton.enabled=fresh&&s.page>0;self.nextButton.enabled=fresh&&((int64_t)s.page+1)*20<s.count;
+    NSString *notice=@"";
+    if(m.waiting)notice=@"Đang xác nhận lượt tham gia";
+    else if(!fresh)notice=m.loaded?@"Đang cập nhật kết nối":@"Đang tải dữ liệu";
+    else if(m.notice[0]&&AGNow()<m.noticeUntil)notice=AGString(m.notice);
+    self.panel.notice=notice;
+    self.panel.accessibilityLabel=[NSString stringWithFormat:@"Vòng xoay may mắn. Quỹ %@ xu. %d người. Bạn đã tham gia %@ xu. Số dư %@ xu. %@",AGMoney(s.total),s.count,AGMoney(s.own),AGMoney(s.balance),notice];
+    [self.panel setNeedsDisplay];[self.betButton setNeedsDisplay];
 }
 - (void)alert:(NSString *)text {
     UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Vòng xoay may mắn" message:text preferredStyle:UIAlertControllerStyleAlert];[a addAction:[UIAlertAction actionWithTitle:@"Đã hiểu" style:UIAlertActionStyleDefault handler:nil]];[self presentViewController:a animated:YES completion:nil];
@@ -353,10 +251,18 @@ int AGWheelGuard(void *env,int (*fn)(void *,void *),void *ctx,void *entry){retur
 void AGWheelPreview(void) {
     AGWheelOpen(NULL,0);
     pthread_mutex_lock(&AGMutex);
-    AGState.loaded=1;AGState.receivedAt=AGNow();AGState.snapshot=(AGSnapshot){.version=2,.serverTime=1800000000000LL,.round=52,.ends=1800000090000LL,.total=25000000,.own=5000000,.balance=88000000,.count=4,.tax=5,.rows=4,.hasResult=1,.resultRound=51,.resultPool=30000000,.resultPrize=28500000,.resultTax=5};
+    AGState.loaded=1;AGState.receivedAt=AGNow();AGState.snapshot=(AGSnapshot){.version=2,.serverTime=1800000000000LL,.round=52,.ends=1800000090000LL,.total=25000000,.own=5000000,.balance=88000000,.count=4,.tax=5,.rows=4,.hasResult=1,.resultRound=51,.resultPool=30000000,.resultPrize=28500000,.resultStake=5000000,.resultTax=5};
     const char *names[]={"Kiên","Hoàng Gia","Minh Anh","Ngọc"};int64_t stakes[]={5000000,10000000,3000000,7000000};
     for(int i=0;i<4;i++){snprintf(AGState.snapshot.entries[i].name,AG_NAME,"%s",names[i]);AGState.snapshot.entries[i].amount=stakes[i];AGState.snapshot.entries[i].own=i==0;}
-    snprintf(AGState.snapshot.winner,AG_NAME,"Hoàng Gia");pthread_mutex_unlock(&AGMutex);
+    snprintf(AGState.snapshot.winner,AG_NAME,"Hoàng Gia");
+    if([NSProcessInfo.processInfo.arguments containsObject:@"--waiting"]){
+        AGState.snapshot.ends=0;AGState.snapshot.count=0;AGState.snapshot.rows=0;
+        AGState.snapshot.total=0;AGState.snapshot.own=0;AGState.snapshot.tax=0;
+        AGState.snapshot.balance=49853387624LL;
+        AGState.snapshot.resultPrize=50490000;AGState.snapshot.resultStake=50000000;
+        snprintf(AGState.snapshot.winner,AG_NAME,"hoanganhpn");
+    }
+    pthread_mutex_unlock(&AGMutex);
     [NSTimer scheduledTimerWithTimeInterval:2 repeats:YES block:^(NSTimer *timer){
         pthread_mutex_lock(&AGMutex);AGState.snapshot.serverTime+=2000;AGState.receivedAt=AGNow();pthread_mutex_unlock(&AGMutex);
     }];

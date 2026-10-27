@@ -151,3 +151,13 @@ for v in range(6):
     assert call('_AGRoomReceive',ENV,message(b'\0'),v)==1;check(rooms,{})
     roomcases+=6
 print(f'PASS: compiled iPhone dylib: {wheelcases} wheel bridge/state checks and {roomcases} room-cache/JNI checks across all six variants; exact outgoing bytes, same-nonce retry, stale ack, changed connection, real RoboVM exception recovery; no live server calls')
+
+if '_AGMoveAllow' in symbols:
+    for variant in range(6):
+        now=100.;assert call('_AGMoveAllow',variant,HEAP+0x9000,0)==1
+        now=100.01;assert call('_AGMoveAllow',variant,HEAP+0x9000,0)==0
+        now=100.06;assert call('_AGMoveAllow',variant,HEAP+0x9000,0)==1
+        assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==1
+        now=105.;assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==1
+        assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==0
+    print('PASS: compiled device movement pacing, 36 monotonic-clock checks across six variants')

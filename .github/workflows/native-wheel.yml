@@ -27,5 +27,6 @@ jobs:
             native-wheel/build/SHA256.txt
             native-wheel/build/wheel-preview.png
             native-wheel/build/wheel-input-preview.png
+            native-wheel/build/wheel-waiting-preview.png
           if-no-files-found: error
           retention-days: 14

@@ -10,7 +10,55 @@
     "send": 5700544,
     "room_get": 5560120,
     "room_build_call": 5348260,
-    "room_build": 5565840
+    "room_build": 5565840,
+    "home_build": 5488404,
+    "home_class": 34087600,
+    "width_class": 34069184,
+    "home_count": 5488840,
+    "home_append_call": 5488976,
+    "home_select": 5495896,
+    "home_select_zero": 5496232,
+    "home_after_action": 5495956,
+    "room_title_site": 5564596,
+    "v9": 6015984,
+    "v9_ctor_call": 6016040,
+    "command_alloc": 5956628,
+    "command_ctor": 5956704,
+    "clock_alloc": 6168976,
+    "clock_ctor": 6169052,
+    "walk": 5881312,
+    "walk_input_calls": [
+      5865836,
+      5866040
+    ],
+    "key_reset": 5950968,
+    "home_widths": [
+      {
+        "site": 5491608,
+        "reg": 3,
+        "kind": "columns"
+      },
+      {
+        "site": 5493032,
+        "reg": 8,
+        "kind": "width"
+      },
+      {
+        "site": 5493072,
+        "reg": 9,
+        "kind": "negative"
+      },
+      {
+        "site": 5493084,
+        "reg": 10,
+        "kind": "width"
+      },
+      {
+        "site": 5493108,
+        "reg": 10,
+        "kind": "width"
+      }
+    ]
   },
   {
     "clock": 7106436,
@@ -23,7 +71,55 @@
     "send": 6660468,
     "room_get": 6524644,
     "room_build_call": 6321644,
-    "room_build": 6530364
+    "room_build": 6530364,
+    "home_build": 6456308,
+    "home_class": 34281888,
+    "width_class": 34264896,
+    "home_count": 6456744,
+    "home_append_call": 6456880,
+    "home_select": 6463520,
+    "home_select_zero": 6463856,
+    "home_after_action": 6463580,
+    "room_title_site": 6529120,
+    "v9": 6966980,
+    "v9_ctor_call": 6967036,
+    "command_alloc": 6909064,
+    "command_ctor": 6909140,
+    "clock_alloc": 7106332,
+    "clock_ctor": 7106408,
+    "walk": 6835108,
+    "walk_input_calls": [
+      6819992,
+      6820196
+    ],
+    "key_reset": 6903404,
+    "home_widths": [
+      {
+        "site": 6459272,
+        "reg": 3,
+        "kind": "columns"
+      },
+      {
+        "site": 6460696,
+        "reg": 8,
+        "kind": "width"
+      },
+      {
+        "site": 6460736,
+        "reg": 9,
+        "kind": "negative"
+      },
+      {
+        "site": 6460748,
+        "reg": 10,
+        "kind": "width"
+      },
+      {
+        "site": 6460772,
+        "reg": 10,
+        "kind": "width"
+      }
+    ]
   },
   {
     "clock": 8043592,
@@ -36,7 +132,55 @@
     "send": 7597624,
     "room_get": 7461800,
     "room_build_call": 7258800,
-    "room_build": 7467520
+    "room_build": 7467520,
+    "home_build": 7393464,
+    "home_class": 34469520,
+    "width_class": 34452544,
+    "home_count": 7393900,
+    "home_append_call": 7394036,
+    "home_select": 7400676,
+    "home_select_zero": 7401012,
+    "home_after_action": 7400736,
+    "room_title_site": 7466276,
+    "v9": 7904136,
+    "v9_ctor_call": 7904192,
+    "command_alloc": 7846220,
+    "command_ctor": 7846296,
+    "clock_alloc": 8043488,
+    "clock_ctor": 8043564,
+    "walk": 7772264,
+    "walk_input_calls": [
+      7757148,
+      7757352
+    ],
+    "key_reset": 7840560,
+    "home_widths": [
+      {
+        "site": 7396428,
+        "reg": 3,
+        "kind": "columns"
+      },
+      {
+        "site": 7397852,
+        "reg": 8,
+        "kind": "width"
+      },
+      {
+        "site": 7397892,
+        "reg": 9,
+        "kind": "negative"
+      },
+      {
+        "site": 7397904,
+        "reg": 10,
+        "kind": "width"
+      },
+      {
+        "site": 7397928,
+        "reg": 10,
+        "kind": "width"
+      }
+    ]
   },
   {
     "clock": 8980748,
@@ -49,7 +193,55 @@
     "send": 8534780,
     "room_get": 8398956,
     "room_build_call": 8195956,
-    "room_build": 8404676
+    "room_build": 8404676,
+    "home_build": 8330620,
+    "home_class": 34657152,
+    "width_class": 34640176,
+    "home_count": 8331056,
+    "home_append_call": 8331192,
+    "home_select": 8337832,
+    "home_select_zero": 8338168,
+    "home_after_action": 8337892,
+    "room_title_site": 8403432,
+    "v9": 8841292,
+    "v9_ctor_call": 8841348,
+    "command_alloc": 8783376,
+    "command_ctor": 8783452,
+    "clock_alloc": 8980644,
+    "clock_ctor": 8980720,
+    "walk": 8709420,
+    "walk_input_calls": [
+      8694304,
+      8694508
+    ],
+    "key_reset": 8777716,
+    "home_widths": [
+      {
+        "site": 8333584,
+        "reg": 3,
+        "kind": "columns"
+      },
+      {
+        "site": 8335008,
+        "reg": 8,
+        "kind": "width"
+      },
+      {
+        "site": 8335048,
+        "reg": 9,
+        "kind": "negative"
+      },
+      {
+        "site": 8335060,
+        "reg": 10,
+        "kind": "width"
+      },
+      {
+        "site": 8335084,
+        "reg": 10,
+        "kind": "width"
+      }
+    ]
   },
   {
     "clock": 9917904,
@@ -62,7 +254,55 @@
     "send": 9471936,
     "room_get": 9336112,
     "room_build_call": 9133112,
-    "room_build": 9341832
+    "room_build": 9341832,
+    "home_build": 9267776,
+    "home_class": 34844784,
+    "width_class": 34827808,
+    "home_count": 9268212,
+    "home_append_call": 9268348,
+    "home_select": 9274988,
+    "home_select_zero": 9275324,
+    "home_after_action": 9275048,
+    "room_title_site": 9340588,
+    "v9": 9778448,
+    "v9_ctor_call": 9778504,
+    "command_alloc": 9720532,
+    "command_ctor": 9720608,
+    "clock_alloc": 9917800,
+    "clock_ctor": 9917876,
+    "walk": 9646576,
+    "walk_input_calls": [
+      9631460,
+      9631664
+    ],
+    "key_reset": 9714872,
+    "home_widths": [
+      {
+        "site": 9270740,
+        "reg": 3,
+        "kind": "columns"
+      },
+      {
+        "site": 9272164,
+        "reg": 8,
+        "kind": "width"
+      },
+      {
+        "site": 9272204,
+        "reg": 9,
+        "kind": "negative"
+      },
+      {
+        "site": 9272216,
+        "reg": 10,
+        "kind": "width"
+      },
+      {
+        "site": 9272240,
+        "reg": 10,
+        "kind": "width"
+      }
+    ]
   },
   {
     "clock": 10855060,
@@ -75,6 +315,54 @@
     "send": 10409092,
     "room_get": 10273268,
     "room_build_call": 10070268,
-    "room_build": 10278988
+    "room_build": 10278988,
+    "home_build": 10204932,
+    "home_class": 35032416,
+    "width_class": 35015440,
+    "home_count": 10205368,
+    "home_append_call": 10205504,
+    "home_select": 10212144,
+    "home_select_zero": 10212480,
+    "home_after_action": 10212204,
+    "room_title_site": 10277744,
+    "v9": 10715604,
+    "v9_ctor_call": 10715660,
+    "command_alloc": 10657688,
+    "command_ctor": 10657764,
+    "clock_alloc": 10854956,
+    "clock_ctor": 10855032,
+    "walk": 10583732,
+    "walk_input_calls": [
+      10568616,
+      10568820
+    ],
+    "key_reset": 10652028,
+    "home_widths": [
+      {
+        "site": 10207896,
+        "reg": 3,
+        "kind": "columns"
+      },
+      {
+        "site": 10209320,
+        "reg": 8,
+        "kind": "width"
+      },
+      {
+        "site": 10209360,
+        "reg": 9,
+        "kind": "negative"
+      },
+      {
+        "site": 10209372,
+        "reg": 10,
+        "kind": "width"
+      },
+      {
+        "site": 10209396,
+        "reg": 10,
+        "kind": "width"
+      }
+    ]
   }
 ]
