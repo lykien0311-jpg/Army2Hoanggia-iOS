@@ -10,28 +10,59 @@ xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=1
   -dynamiclib -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wall -Wextra \
   -Wno-unused-parameter -Wno-deprecated-declarations -Wno-unused-function \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
-  -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
-  AGWheel.m WheelProtocol.c RoomNames.c RoomBridge.c Movement.c NativeGuard.S -o build/AGWheel.dylib
+  -Wl,-headerpad,4000 -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
+  AGWheel.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c NativeGuard.S \
+  -o build/AGWheel.dylib
 codesign --force --sign - --timestamp=none build/AGWheel.dylib
-codesign --verify --strict --verbose=2 build/AGWheel.dylib
+codesign --verify --strict --verbose=2 build/AGWheel.dylib 2>build/code-signing.txt
+codesign --display --verbose=4 build/AGWheel.dylib 2>>build/code-signing.txt
+mkdir -p build/resign-check
+cp build/AGWheel.dylib build/resign-check/AGWheel.dylib
+codesign --force --sign - --timestamp=none build/resign-check/AGWheel.dylib
+codesign --verify --strict --verbose=2 build/resign-check/AGWheel.dylib 2>>build/code-signing.txt
 xcrun nm -gU build/AGWheel.dylib > build/exports.txt
 xcrun otool -l build/AGWheel.dylib > build/load-commands.txt
 shasum -a 256 build/AGWheel.dylib > build/SHA256.txt
+python3 - <<'PY'
+import hashlib,json,pathlib,subprocess
+p=pathlib.Path('build/AGWheel.dylib');exports=pathlib.Path('build/exports.txt').read_text()
+for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox'):
+    assert '_'+name in exports,name
+assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
+info={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+      'xcode':subprocess.check_output(['xcodebuild','-version'],text=True).strip(),
+      'compiler':subprocess.check_output(['xcrun','--sdk','iphoneos','clang','--version'],text=True).splitlines()[0],
+      'sdk':subprocess.check_output(['xcrun','--sdk','iphoneos','--show-sdk-version'],text=True).strip(),
+      'dylib_sha256':hashlib.sha256(p.read_bytes()).hexdigest(),
+      'apple_codesign_strict_verified':True,'apple_resign_strict_verified':True,
+      'physical_device_tested':False}
+pathlib.Path('build/build-info.json').write_text(json.dumps(info,indent=2)+'\n')
+PY
 
-# Compile a separate simulator preview. No fixture code is in AGWheel.dylib.
+# The Simulator app loads a signed embedded library built from the same sources.
+# Fixtures and their exports are excluded from the iPhone device dylib.
 sim_sdk="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 sim_arch="$(uname -m)"
-mkdir -p build/WheelPreview.app
+mkdir -p build/WheelPreview.app/Frameworks
 xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
-  -mios-simulator-version-min=16.0 -DAG_WHEEL_PREVIEW=1 -fobjc-arc -fblocks -O1 \
-  -Wno-deprecated-declarations -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
-  AGWheel.m WheelProtocol.c Preview.m -o build/WheelPreview.app/WheelPreview
+  -mios-simulator-version-min=16.0 -DAG_WHEEL_PREVIEW=1 -dynamiclib \
+  -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wno-deprecated-declarations \
+  -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
+  -Wl,-headerpad,4000 -Wl,-install_name,@rpath/libAGWheelPreview.dylib \
+  AGWheel.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c \
+  -o build/WheelPreview.app/Frameworks/libAGWheelPreview.dylib
+xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
+  -mios-simulator-version-min=16.0 -fobjc-arc -fblocks -O1 -framework UIKit \
+  -Lbuild/WheelPreview.app/Frameworks -lAGWheelPreview -Wl,-rpath,@executable_path/Frameworks \
+  Preview.m -o build/WheelPreview.app/WheelPreview
 python3 - <<'PY'
 import plistlib
-p={'CFBundleIdentifier':'vn.army2hoanggia.wheelpreview','CFBundleExecutable':'WheelPreview','CFBundleName':'WheelPreview','CFBundleVersion':'1','CFBundleShortVersionString':'1.0','CFBundlePackageType':'APPL','MinimumOSVersion':'16.0','LSRequiresIPhoneOS':True,'UILaunchScreen':{},'UIDeviceFamily':[1,2],'UISupportedInterfaceOrientations':['UIInterfaceOrientationPortrait','UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight']}
+p={'CFBundleIdentifier':'vn.army2hoanggia.wheelpreview','CFBundleExecutable':'WheelPreview','CFBundleName':'WheelPreview','CFBundleVersion':'2','CFBundleShortVersionString':'2.0','CFBundlePackageType':'APPL','MinimumOSVersion':'16.0','LSRequiresIPhoneOS':True,'UILaunchScreen':{},'UIDeviceFamily':[1,2],'UISupportedInterfaceOrientations':['UIInterfaceOrientationPortrait','UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight']}
 with open('build/WheelPreview.app/Info.plist','wb') as f:plistlib.dump(p,f)
 PY
+codesign --force --sign - --timestamp=none build/WheelPreview.app/Frameworks/libAGWheelPreview.dylib
 codesign --force --sign - --timestamp=none build/WheelPreview.app
+codesign --verify --deep --strict --verbose=2 build/WheelPreview.app 2>>build/code-signing.txt
 python3 - <<'PY'
 import json,subprocess,pathlib
 d=json.loads(subprocess.check_output(['xcrun','simctl','list','devices','available','-j']))
@@ -43,13 +74,20 @@ subprocess.run(['xcrun','simctl','bootstatus',device,'-b'],check=True)
 subprocess.run(['xcrun','simctl','install',device,'build/WheelPreview.app'],check=True)
 subprocess.run(['xcrun','simctl','launch',device,'vn.army2hoanggia.wheelpreview'],check=True)
 PY
-sleep 4
+preview_data="$(xcrun simctl get_app_container "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview data)"
+for attempt in {1..30}; do
+  if [ -s "$preview_data/Documents/ui-check.json" ]; then break; fi
+  sleep 1
+done
+cp "$preview_data/Documents/ui-check.json" build/ui-check.json
+cp "$preview_data"/Documents/wheel-layout-*.png build/
+python3 -c 'import json; assert json.load(open("build/ui-check.json"))["passed"]'
 xcrun simctl io "$(cat build/simulator-id)" screenshot build/wheel-preview.png
-xcrun simctl terminate "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview
-xcrun simctl launch "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview --show-input
-sleep 5
-xcrun simctl io "$(cat build/simulator-id)" screenshot build/wheel-input-preview.png
-xcrun simctl terminate "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview
-xcrun simctl launch "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview --waiting
-sleep 4
-xcrun simctl io "$(cat build/simulator-id)" screenshot build/wheel-waiting-preview.png
+for mode in input waiting single; do
+  xcrun simctl terminate "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview
+  argument="--$mode"
+  if [ "$mode" = input ]; then argument="--show-input"; fi
+  xcrun simctl launch "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview "$argument"
+  sleep 5
+  xcrun simctl io "$(cat build/simulator-id)" screenshot "build/wheel-$mode-preview.png"
+done
