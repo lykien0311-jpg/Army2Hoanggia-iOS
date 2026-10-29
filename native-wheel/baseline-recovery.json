@@ -1,0 +1,937 @@
+{
+  "ipa_sha256": "b5fd4e77c62bb6751f53142711588ba0646dfe73e519bf2d504d4f9010ecc7cd",
+  "main_sha256": "91a4c4289009bd91a79a25c0b99ea2317114397c27f91b3f443ca779d09af792",
+  "prewheel_sha256": "f54200c5578232951b892c2733f68d81fc9fc0601ea934b57b589c12610d4b78",
+  "original_sha256": "34778a89dac9103a1fd62a6e712dce1bedd012da3bbb47c7ce908724b1d4c7d6",
+  "rxoff": 38502400,
+  "linkedit_shift": 32768,
+  "patches": [
+    {
+      "offset": 6016040,
+      "label": "V1 prepend wheel to in-battle V9",
+      "before": "d5a71894",
+      "after": "4aed7c94"
+    },
+    {
+      "offset": 6169080,
+      "label": "V1 distinguish new wheel action from unchanged clock action",
+      "before": "f657bda9",
+      "after": "f2577c14"
+    },
+    {
+      "offset": 5865836,
+      "label": "V1 pace local left/right input independently of speed",
+      "before": "1d0f0094",
+      "after": "25807d94"
+    },
+    {
+      "offset": 5866040,
+      "label": "V1 pace local left/right input independently of speed",
+      "before": "ea0e0094",
+      "after": "f27f7d94"
+    },
+    {
+      "offset": 5488840,
+      "label": "V1 home menu has seven entries",
+      "before": "e1071f32",
+      "after": "e1008052"
+    },
+    {
+      "offset": 5488976,
+      "label": "V1 append lucky wheel immediately after Quay s\u1ed1",
+      "before": "89af3694",
+      "after": "44f07e94"
+    },
+    {
+      "offset": 5495896,
+      "label": "V1 select the new wheel row",
+      "before": "890a0034",
+      "after": "8ee97e14"
+    },
+    {
+      "offset": 5491608,
+      "label": "V1 fit home wheel label (columns, w3)",
+      "before": "e3070032",
+      "after": "c6ed7e94"
+    },
+    {
+      "offset": 5493032,
+      "label": "V1 fit home wheel label (width, w8)",
+      "before": "08138052",
+      "after": "82ec7e94"
+    },
+    {
+      "offset": 5493072,
+      "label": "V1 fit home wheel label (negative, w9)",
+      "before": "e9128012",
+      "after": "98ec7e94"
+    },
+    {
+      "offset": 5493084,
+      "label": "V1 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "b5ec7e94"
+    },
+    {
+      "offset": 5493108,
+      "label": "V1 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "afec7e94"
+    },
+    {
+      "offset": 5564596,
+      "label": "V1 display exact reference-video title by actual room ID",
+      "before": "080940f9",
+      "after": "dfa57e94"
+    },
+    {
+      "offset": 5341708,
+      "label": "V1 receive wheel -101 and cache room names -19",
+      "before": "fc6fbaa9",
+      "after": "a9807f14"
+    },
+    {
+      "offset": 5348260,
+      "label": "V1 replay names after room list rebuild",
+      "before": "7bd40094",
+      "after": "7b7a7f94"
+    },
+    {
+      "offset": 5313548,
+      "label": "V1 poll/send on original game thread",
+      "before": "327a0194",
+      "after": "799c7f94"
+    },
+    {
+      "offset": 6967036,
+      "label": "V2 prepend wheel to in-battle V9",
+      "before": "20071594",
+      "after": "e94d7994"
+    },
+    {
+      "offset": 7106436,
+      "label": "V2 distinguish new wheel action from unchanged clock action",
+      "before": "f657bda9",
+      "after": "e3c57814"
+    },
+    {
+      "offset": 6819992,
+      "label": "V2 pace local left/right input independently of speed",
+      "before": "c30e0094",
+      "after": "aedd7994"
+    },
+    {
+      "offset": 6820196,
+      "label": "V2 pace local left/right input independently of speed",
+      "before": "900e0094",
+      "after": "7bdd7994"
+    },
+    {
+      "offset": 6456744,
+      "label": "V2 home menu has seven entries",
+      "before": "e1071f32",
+      "after": "e1008052"
+    },
+    {
+      "offset": 6456880,
+      "label": "V2 append lucky wheel immediately after Quay s\u1ed1",
+      "before": "51fe3294",
+      "after": "60407b94"
+    },
+    {
+      "offset": 6463520,
+      "label": "V2 select the new wheel row",
+      "before": "890a0034",
+      "after": "f0397b14"
+    },
+    {
+      "offset": 6459272,
+      "label": "V2 fit home wheel label (columns, w3)",
+      "before": "e3070032",
+      "after": "1e3e7b94"
+    },
+    {
+      "offset": 6460696,
+      "label": "V2 fit home wheel label (width, w8)",
+      "before": "08138052",
+      "after": "da3c7b94"
+    },
+    {
+      "offset": 6460736,
+      "label": "V2 fit home wheel label (negative, w9)",
+      "before": "e9128012",
+      "after": "f03c7b94"
+    },
+    {
+      "offset": 6460748,
+      "label": "V2 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "0d3d7b94"
+    },
+    {
+      "offset": 6460772,
+      "label": "V2 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "073d7b94"
+    },
+    {
+      "offset": 6529120,
+      "label": "V2 display exact reference-video title by actual room ID",
+      "before": "080940f9",
+      "after": "f4f77a94"
+    },
+    {
+      "offset": 6315092,
+      "label": "V2 receive wheel -101 and cache room names -19",
+      "before": "fc6fbaa9",
+      "after": "6bcb7b14"
+    },
+    {
+      "offset": 6321644,
+      "label": "V2 replay names after room list rebuild",
+      "before": "d4cb0094",
+      "after": "3dc57b94"
+    },
+    {
+      "offset": 6287748,
+      "label": "V2 poll/send on original game thread",
+      "before": "416c0194",
+      "after": "6fe67b94"
+    },
+    {
+      "offset": 7904192,
+      "label": "V3 prepend wheel to in-battle V9",
+      "before": "ef731194",
+      "after": "0cbc7594"
+    },
+    {
+      "offset": 8043592,
+      "label": "V3 distinguish new wheel action from unchanged clock action",
+      "before": "f657bda9",
+      "after": "06347514"
+    },
+    {
+      "offset": 7757148,
+      "label": "V3 pace local left/right input independently of speed",
+      "before": "c30e0094",
+      "after": "d14b7694"
+    },
+    {
+      "offset": 7757352,
+      "label": "V3 pace local left/right input independently of speed",
+      "before": "900e0094",
+      "after": "9e4b7694"
+    },
+    {
+      "offset": 7393900,
+      "label": "V3 home menu has seven entries",
+      "before": "e1071f32",
+      "after": "e1008052"
+    },
+    {
+      "offset": 7394036,
+      "label": "V3 append lucky wheel immediately after Quay s\u1ed1",
+      "before": "206b2f94",
+      "after": "83ae7794"
+    },
+    {
+      "offset": 7400676,
+      "label": "V3 select the new wheel row",
+      "before": "890a0034",
+      "after": "13a87714"
+    },
+    {
+      "offset": 7396428,
+      "label": "V3 fit home wheel label (columns, w3)",
+      "before": "e3070032",
+      "after": "41ac7794"
+    },
+    {
+      "offset": 7397852,
+      "label": "V3 fit home wheel label (width, w8)",
+      "before": "08138052",
+      "after": "fdaa7794"
+    },
+    {
+      "offset": 7397892,
+      "label": "V3 fit home wheel label (negative, w9)",
+      "before": "e9128012",
+      "after": "13ab7794"
+    },
+    {
+      "offset": 7397904,
+      "label": "V3 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "30ab7794"
+    },
+    {
+      "offset": 7397928,
+      "label": "V3 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "2aab7794"
+    },
+    {
+      "offset": 7466276,
+      "label": "V3 display exact reference-video title by actual room ID",
+      "before": "080940f9",
+      "after": "c3647794"
+    },
+    {
+      "offset": 7252248,
+      "label": "V3 receive wheel -101 and cache room names -19",
+      "before": "fc6fbaa9",
+      "after": "8e397814"
+    },
+    {
+      "offset": 7258800,
+      "label": "V3 replay names after room list rebuild",
+      "before": "d4cb0094",
+      "after": "60337894"
+    },
+    {
+      "offset": 7224904,
+      "label": "V3 poll/send on original game thread",
+      "before": "416c0194",
+      "after": "92547894"
+    },
+    {
+      "offset": 8841348,
+      "label": "V4 prepend wheel to in-battle V9",
+      "before": "bee00d94",
+      "after": "2f2a7294"
+    },
+    {
+      "offset": 8980748,
+      "label": "V4 distinguish new wheel action from unchanged clock action",
+      "before": "f657bda9",
+      "after": "29a27114"
+    },
+    {
+      "offset": 8694304,
+      "label": "V4 pace local left/right input independently of speed",
+      "before": "c30e0094",
+      "after": "f4b97294"
+    },
+    {
+      "offset": 8694508,
+      "label": "V4 pace local left/right input independently of speed",
+      "before": "900e0094",
+      "after": "c1b97294"
+    },
+    {
+      "offset": 8331056,
+      "label": "V4 home menu has seven entries",
+      "before": "e1071f32",
+      "after": "e1008052"
+    },
+    {
+      "offset": 8331192,
+      "label": "V4 append lucky wheel immediately after Quay s\u1ed1",
+      "before": "efd72b94",
+      "after": "a61c7494"
+    },
+    {
+      "offset": 8337832,
+      "label": "V4 select the new wheel row",
+      "before": "890a0034",
+      "after": "36167414"
+    },
+    {
+      "offset": 8333584,
+      "label": "V4 fit home wheel label (columns, w3)",
+      "before": "e3070032",
+      "after": "641a7494"
+    },
+    {
+      "offset": 8335008,
+      "label": "V4 fit home wheel label (width, w8)",
+      "before": "08138052",
+      "after": "20197494"
+    },
+    {
+      "offset": 8335048,
+      "label": "V4 fit home wheel label (negative, w9)",
+      "before": "e9128012",
+      "after": "36197494"
+    },
+    {
+      "offset": 8335060,
+      "label": "V4 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "53197494"
+    },
+    {
+      "offset": 8335084,
+      "label": "V4 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "4d197494"
+    },
+    {
+      "offset": 8403432,
+      "label": "V4 display exact reference-video title by actual room ID",
+      "before": "080940f9",
+      "after": "92d17394"
+    },
+    {
+      "offset": 8189404,
+      "label": "V4 receive wheel -101 and cache room names -19",
+      "before": "fc6fbaa9",
+      "after": "b1a77414"
+    },
+    {
+      "offset": 8195956,
+      "label": "V4 replay names after room list rebuild",
+      "before": "d4cb0094",
+      "after": "83a17494"
+    },
+    {
+      "offset": 8162060,
+      "label": "V4 poll/send on original game thread",
+      "before": "416c0194",
+      "after": "b5c27494"
+    },
+    {
+      "offset": 9778504,
+      "label": "V5 prepend wheel to in-battle V9",
+      "before": "8d4d0a94",
+      "after": "52986e94"
+    },
+    {
+      "offset": 9917904,
+      "label": "V5 distinguish new wheel action from unchanged clock action",
+      "before": "f657bda9",
+      "after": "4c106e14"
+    },
+    {
+      "offset": 9631460,
+      "label": "V5 pace local left/right input independently of speed",
+      "before": "c30e0094",
+      "after": "17286f94"
+    },
+    {
+      "offset": 9631664,
+      "label": "V5 pace local left/right input independently of speed",
+      "before": "900e0094",
+      "after": "e4276f94"
+    },
+    {
+      "offset": 9268212,
+      "label": "V5 home menu has seven entries",
+      "before": "e1071f32",
+      "after": "e1008052"
+    },
+    {
+      "offset": 9268348,
+      "label": "V5 append lucky wheel immediately after Quay s\u1ed1",
+      "before": "be442894",
+      "after": "c98a7094"
+    },
+    {
+      "offset": 9274988,
+      "label": "V5 select the new wheel row",
+      "before": "890a0034",
+      "after": "59847014"
+    },
+    {
+      "offset": 9270740,
+      "label": "V5 fit home wheel label (columns, w3)",
+      "before": "e3070032",
+      "after": "87887094"
+    },
+    {
+      "offset": 9272164,
+      "label": "V5 fit home wheel label (width, w8)",
+      "before": "08138052",
+      "after": "43877094"
+    },
+    {
+      "offset": 9272204,
+      "label": "V5 fit home wheel label (negative, w9)",
+      "before": "e9128012",
+      "after": "59877094"
+    },
+    {
+      "offset": 9272216,
+      "label": "V5 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "76877094"
+    },
+    {
+      "offset": 9272240,
+      "label": "V5 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "70877094"
+    },
+    {
+      "offset": 9340588,
+      "label": "V5 display exact reference-video title by actual room ID",
+      "before": "080940f9",
+      "after": "613e7094"
+    },
+    {
+      "offset": 9126560,
+      "label": "V5 receive wheel -101 and cache room names -19",
+      "before": "fc6fbaa9",
+      "after": "d4157114"
+    },
+    {
+      "offset": 9133112,
+      "label": "V5 replay names after room list rebuild",
+      "before": "d4cb0094",
+      "after": "a60f7194"
+    },
+    {
+      "offset": 9099216,
+      "label": "V5 poll/send on original game thread",
+      "before": "416c0194",
+      "after": "d8307194"
+    },
+    {
+      "offset": 10715660,
+      "label": "V6 prepend wheel to in-battle V9",
+      "before": "5cba0694",
+      "after": "75066b94"
+    },
+    {
+      "offset": 10855060,
+      "label": "V6 distinguish new wheel action from unchanged clock action",
+      "before": "f657bda9",
+      "after": "6f7e6a14"
+    },
+    {
+      "offset": 10568616,
+      "label": "V6 pace local left/right input independently of speed",
+      "before": "c30e0094",
+      "after": "3a966b94"
+    },
+    {
+      "offset": 10568820,
+      "label": "V6 pace local left/right input independently of speed",
+      "before": "900e0094",
+      "after": "07966b94"
+    },
+    {
+      "offset": 10205368,
+      "label": "V6 home menu has seven entries",
+      "before": "e1071f32",
+      "after": "e1008052"
+    },
+    {
+      "offset": 10205504,
+      "label": "V6 append lucky wheel immediately after Quay s\u1ed1",
+      "before": "8db12494",
+      "after": "ecf86c94"
+    },
+    {
+      "offset": 10212144,
+      "label": "V6 select the new wheel row",
+      "before": "890a0034",
+      "after": "7cf26c14"
+    },
+    {
+      "offset": 10207896,
+      "label": "V6 fit home wheel label (columns, w3)",
+      "before": "e3070032",
+      "after": "aaf66c94"
+    },
+    {
+      "offset": 10209320,
+      "label": "V6 fit home wheel label (width, w8)",
+      "before": "08138052",
+      "after": "66f56c94"
+    },
+    {
+      "offset": 10209360,
+      "label": "V6 fit home wheel label (negative, w9)",
+      "before": "e9128012",
+      "after": "7cf56c94"
+    },
+    {
+      "offset": 10209372,
+      "label": "V6 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "99f56c94"
+    },
+    {
+      "offset": 10209396,
+      "label": "V6 fit home wheel label (width, w10)",
+      "before": "0a138052",
+      "after": "93f56c94"
+    },
+    {
+      "offset": 10277744,
+      "label": "V6 display exact reference-video title by actual room ID",
+      "before": "080940f9",
+      "after": "30ab6c94"
+    },
+    {
+      "offset": 10063716,
+      "label": "V6 receive wheel -101 and cache room names -19",
+      "before": "fc6fbaa9",
+      "after": "f7836d14"
+    },
+    {
+      "offset": 10070268,
+      "label": "V6 replay names after room list rebuild",
+      "before": "d4cb0094",
+      "after": "c97d6d94"
+    },
+    {
+      "offset": 10036372,
+      "label": "V6 poll/send on original game thread",
+      "before": "416c0194",
+      "after": "fb9e6d94"
+    }
+  ],
+  "header_zlib_base64": "eNrtl09s21Qcx20n6dq1QoEDKoJJBSE0GErawWHcGtr0D+1oRwONBsJznJfGmxNnttOmE4dKaAcEkzjtXAkOPXDogQuXqUKTmHbZzkiTkLhETIypMKlC4s97thM/x45TcUP6fqS37ffs9/H7vb/ZvT9//XtMEESBItHyMi2raUG4LrzIqoTnaFmgRZZXc/P5i/n3VoQQojAY5hlOMk8hXyxEtN+5EdR4ccorY161LNukZfuvhXw7ru/gnSmxE0u8N8lq+PaW3SxZfX0Hd6dEJjqX9mPeN+z5xgI+uUr0BjEjfEc/ur6JtB/H90+1bFOrb/Tp3/hD11eckbox317qmQfqM+qW3TffRuZNx3fpmWI3TsbMqywbpcuqXCN2ta7USMh3f/oLxzeX9OP4/m2oqkxaKmnYsq2UQvnmXd/qV34sxfavGTt+1bbr++hkMB6Qr6orlsUS7vXdPnTbT3FxfL7d8bO3G+Hxe+L5LnBxvK9Z39LqZVmrV4yIfBd+d327n/lx/PiRqlwx2dRGjl/7kxuO77bkxwmu/Sgd0t5zYM85B2ZzhVxwv7uJfR/Y/4Jwy/kz4ZWn/HVi2IF+RvuOuJjv1xAtF0W+va7I1natZOhywzZDviPPt3/Sj3nfCVq2xbh9FvTtf+76xtWPu3H8PlMr/ELu9d159NA9V0Q/ThxzHeuaZff62r+5vjQX9/jSUT7FZrZw/4483zAXH8On1ZQNwpZyaH4fB30slo6Rb2dSen3Dnm9X8uNjjJ9FdJNUrLBv79D1VUU/5n2pPuPH5oMZe33pP1zfAhcfY/zKiq1Erpei59vl4vh8u6ro/fbE9e1tyt04fj2XLCtm/+5fWZKce+1bkbsa+//mYPutVjPq/XzDE+cd3+yCv0oSMT7/d8/y4rtL+dnFzpm3syK573o3/s6SI7z/12jXw7teom9Meu8tvDUiLHxXkIr0sNg9KEjM36Z/N16geT4oSBPeeT7O7t+Zdek6FT2urEs/Peuco8Iq19dOYe9/GnNh7X+4Lt2L2BjsHJ3wssg2LTOra6VseVsve8+f9/ohTv98azE1Kd4s7n95cPjNL2e9dlJnDFJPO/1wxnLsVPK1noV4mmbOPHeuZgK9fN3zu792/N9+rD/nvGfsG1Irl2KZdvtIy9q2ZZNa5u0M7a9W8ttNcu3GJHeE+HbXMlPdJr3fcU/wE4H3NXpabGbO8p8Jt0vK9EMjgXbWVV2zyRuhdkW+nfjDCB0FMesmk13WSqZibmfn2FW7ZZhXrOyc0azTTacZ9UylU8tV+t7VQB5e3v29Kw1Sn1/Or3HWTlXUuLhMmw3FrmY3yi2uGY34eZuO6IfXbqV0mah2bpn/plcVnUdVXD81II/3F5c0mxM6sdBvvEdpf6RY34WmYtrXZgyTcFK/MtqbSD0aYpnHeFnjeVNpVDXV4sx89X+ex+CIOhV98hfaiQG+XLOsGQXD0EsGP8l8dZRXGtTP3AeRK5mvdr2XOK+YGh3knaf/mjHqtmnoOjE5c/CBPx7VQL/vJgf4zxslTSdsmtaIuamphJ+98MPoc0j45+uh3nNIPXOmexL15u2eCzcHrafIEQ0+cPtDr5ad0DlvbWkV239+urN/SYuoTfqfLp3Izq71Pxp8TzeUMjFD7zBe8c7/Fr3P2kQSXvVidp8JAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA/5R/AWUMwiw=",
+  "original_delta": [
+    {
+      "offset": 5297371,
+      "bytes": "13"
+    },
+    {
+      "offset": 5297839,
+      "bytes": "13"
+    },
+    {
+      "offset": 5298279,
+      "bytes": "13"
+    },
+    {
+      "offset": 5300311,
+      "bytes": "13"
+    },
+    {
+      "offset": 5300587,
+      "bytes": "13"
+    },
+    {
+      "offset": 5364788,
+      "bytes": "e2134fb9"
+    },
+    {
+      "offset": 5420924,
+      "bytes": "be"
+    },
+    {
+      "offset": 5420941,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 5421032,
+      "bytes": "a3"
+    },
+    {
+      "offset": 5421049,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 5422696,
+      "bytes": "03e11494e0170fb9ff3b00b9e8174fb9081d0013"
+    },
+    {
+      "offset": 5422804,
+      "bytes": "e8"
+    },
+    {
+      "offset": 5422821,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 5565748,
+      "bytes": "f44fbea9fd7b01a9fd430091ff4300d1e94340d1290140f9e20f00b9e30300f9212440f93f004039e20f40b9f30300aad543f297e10300aae00313aae701f297e80340f91f004039080800f9bf4300d1fd7b41a9f44fc2a8c0035fd6"
+    },
+    {
+      "offset": 6272331,
+      "bytes": "13"
+    },
+    {
+      "offset": 6272799,
+      "bytes": "13"
+    },
+    {
+      "offset": 6273239,
+      "bytes": "13"
+    },
+    {
+      "offset": 6275271,
+      "bytes": "13"
+    },
+    {
+      "offset": 6275547,
+      "bytes": "13"
+    },
+    {
+      "offset": 6338172,
+      "bytes": "e2134fb9"
+    },
+    {
+      "offset": 6394308,
+      "bytes": "2c"
+    },
+    {
+      "offset": 6394325,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 6394416,
+      "bytes": "112c1194e0170fb9ff3b00b9e8174fb9081d0013"
+    },
+    {
+      "offset": 6396080,
+      "bytes": "71"
+    },
+    {
+      "offset": 6396097,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 6396188,
+      "bytes": "56"
+    },
+    {
+      "offset": 6396205,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 6530272,
+      "bytes": "f44fbea9fd7b01a9fd430091ff4300d1e94340d1290140f9e20f00b9e30300f9212440f93f004039e20f40b9f30300aaea95ee97e10300aae00313aac289ee97e80340f91f004039080800f9bf4300d1fd7b41a9f44fc2a8c0035fd6"
+    },
+    {
+      "offset": 7209487,
+      "bytes": "13"
+    },
+    {
+      "offset": 7209955,
+      "bytes": "13"
+    },
+    {
+      "offset": 7210395,
+      "bytes": "13"
+    },
+    {
+      "offset": 7212427,
+      "bytes": "13"
+    },
+    {
+      "offset": 7212703,
+      "bytes": "13"
+    },
+    {
+      "offset": 7275328,
+      "bytes": "e2134fb9"
+    },
+    {
+      "offset": 7331464,
+      "bytes": "fb"
+    },
+    {
+      "offset": 7331481,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 7331572,
+      "bytes": "e0"
+    },
+    {
+      "offset": 7331589,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 7333236,
+      "bytes": "40"
+    },
+    {
+      "offset": 7333253,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 7333344,
+      "bytes": "25"
+    },
+    {
+      "offset": 7333361,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 7467428,
+      "bytes": "f44fbea9fd7b01a9fd430091ff4300d1e94340d1290140f9e20f00b9e30300f9212440f93f004039e20f40b9f30300aab902eb97e10300aae00313aaf08fea97e80340f91f004039080800f9bf4300d1fd7b41a9f44fc2a8c0035fd6"
+    },
+    {
+      "offset": 8146643,
+      "bytes": "13"
+    },
+    {
+      "offset": 8147111,
+      "bytes": "13"
+    },
+    {
+      "offset": 8147551,
+      "bytes": "13"
+    },
+    {
+      "offset": 8149583,
+      "bytes": "13"
+    },
+    {
+      "offset": 8149859,
+      "bytes": "13"
+    },
+    {
+      "offset": 8212484,
+      "bytes": "e2134fb9"
+    },
+    {
+      "offset": 8268620,
+      "bytes": "ca"
+    },
+    {
+      "offset": 8268637,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 8268728,
+      "bytes": "af"
+    },
+    {
+      "offset": 8268745,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 8270392,
+      "bytes": "0f040a94e0170fb9ff3b00b9e8174fb9081d0013"
+    },
+    {
+      "offset": 8270500,
+      "bytes": "f4"
+    },
+    {
+      "offset": 8270517,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 8404584,
+      "bytes": "f44fbea9fd7b01a9fd430091ff4300d1e94340d1290140f9e20f00b9e30300f9212440f93f004039e20f40b9f30300aa886fe797e10300aae00313aaa1fde697e80340f91f004039080800f9bf4300d1fd7b41a9f44fc2a8c0035fd6"
+    },
+    {
+      "offset": 9083799,
+      "bytes": "13"
+    },
+    {
+      "offset": 9084267,
+      "bytes": "13"
+    },
+    {
+      "offset": 9084707,
+      "bytes": "13"
+    },
+    {
+      "offset": 9086739,
+      "bytes": "13"
+    },
+    {
+      "offset": 9087015,
+      "bytes": "13"
+    },
+    {
+      "offset": 9149640,
+      "bytes": "e2134fb9"
+    },
+    {
+      "offset": 9205776,
+      "bytes": "99"
+    },
+    {
+      "offset": 9205793,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 9205884,
+      "bytes": "7e"
+    },
+    {
+      "offset": 9205901,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 9207548,
+      "bytes": "de"
+    },
+    {
+      "offset": 9207565,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 9207656,
+      "bytes": "c3"
+    },
+    {
+      "offset": 9207673,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 9341740,
+      "bytes": "f44fbea9fd7b01a9fd430091ff4300d1e94340d1290140f9e20f00b9e30300f9212440f93f004039e20f40b9f30300aa57dce397e10300aae00313aaca0ae497e80340f91f004039080800f9bf4300d1fd7b41a9f44fc2a8c0035fd6"
+    },
+    {
+      "offset": 10020955,
+      "bytes": "13"
+    },
+    {
+      "offset": 10021423,
+      "bytes": "13"
+    },
+    {
+      "offset": 10021863,
+      "bytes": "13"
+    },
+    {
+      "offset": 10023895,
+      "bytes": "13"
+    },
+    {
+      "offset": 10024171,
+      "bytes": "13"
+    },
+    {
+      "offset": 10086796,
+      "bytes": "e2134fb9"
+    },
+    {
+      "offset": 10142932,
+      "bytes": "68"
+    },
+    {
+      "offset": 10142949,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 10143040,
+      "bytes": "4d"
+    },
+    {
+      "offset": 10143057,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 10144704,
+      "bytes": "ad"
+    },
+    {
+      "offset": 10144721,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 10144812,
+      "bytes": "92"
+    },
+    {
+      "offset": 10144829,
+      "bytes": "1d0013"
+    },
+    {
+      "offset": 10278896,
+      "bytes": "f44fbea9fd7b01a9fd430091ff4300d1e94340d1290140f9e20f00b9e30300f9212440f93f004039e20f40b9f30300aa2649e097e10300aae00313aa2d78e097e80340f91f004039080800f9bf4300d1fd7b41a9f44fc2a8c0035fd6"
+    }
+  ]
+}
