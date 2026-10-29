@@ -12,7 +12,7 @@ ROOT=Path(__file__).resolve().parent
 APP='Payload/Army2Hoanggia.app/'
 EXPECTED_IPA='8c4779afad7981f4bf8cf5e756bdf03450437cc4e56cf949c805e2d2affc636d'
 EXPECTED_ORIGINAL='34778a89dac9103a1fd62a6e712dce1bedd012da3bbb47c7ce908724b1d4c7d6'
-PAGE=0x4000
+PAGE=0x8000
 KS=Ks(KS_ARCH_ARM64,KS_MODE_LITTLE_ENDIAN)
 # Exact text read from the user's seven-second reference video (video 2).
 # IDs are the protocol IDs stored in each room, never their display row.
@@ -61,8 +61,8 @@ def build_native(old,original,maps):
     assert link[3]+link[4]==len(old)
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
-    symbols={};strcursor=0x3000
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values()):
+    symbols={};strcursor=0x7000
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values()):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
     for title in REFERENCE_TITLES.values():
@@ -87,7 +87,7 @@ def build_native(old,original,maps):
         '''
     def emit(code):
         nonlocal cursor
-        addr=rxvm+cursor;raw=asm(code,addr);assert cursor+len(raw)<=0x3000
+        addr=rxvm+cursor;raw=asm(code,addr);assert cursor+len(raw)<=0x7000
         rx[cursor:cursor+len(raw)]=raw;cursor=align(cursor+len(raw),16);return addr,raw
     def patch(at,raw,label):
         assert old[at:at+len(raw)]==original[at:at+len(raw)],(hex(at),label)
@@ -171,8 +171,10 @@ def build_native(old,original,maps):
         ldp x29, x30, [sp], #176
         ret
     ''')
+    notes=json.loads((ROOT/'notes-map.json').read_text())
     hooks=[]
     for i,m in enumerate(maps):
+        n=notes[i]
         open_addr,raw=emit(f'''
             stp x29, x30, [sp, #-32]!
             mov x29, sp
@@ -349,6 +351,10 @@ def build_native(old,original,maps):
             ldrsb w9, [x2, #48]
             cmn w9, #101
             b.eq wheel
+            cmn w9, #122
+            b.eq notes77
+            cmn w9, #123
+            b.eq notes77
             cmn w9, #19
             b.ne original
             stp x29, x30, [sp, #-48]!
@@ -362,6 +368,19 @@ def build_native(old,original,maps):
             mov w2, #{i}
             blr x10
             cbz w0, fallback
+            ldp x29, x30, [sp], #48
+            ret
+          notes77:
+            stp x29, x30, [sp, #-48]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            str x2, [sp, #32]
+            {lookup('AGNotesReceive',27)}
+            cbz x10, fallback
+            ldr x0, [sp, #16]
+            ldr x1, [sp, #32]
+            mov w2, #{i}
+            blr x10
             ldp x29, x30, [sp], #48
             ret
           wheel:
@@ -422,7 +441,101 @@ def build_native(old,original,maps):
         ''')
         assert original[m['tick']:m['tick']+4]==asm(f"bl {m['speed']}",m['tick'])
         patch(m['tick'],asm(f'bl {tick_addr}',m['tick']),f'V{i+1} poll/send on original game thread')
-        hooks.append(dict(variant=i,open_hook=open_addr,receive_hook=receive_addr,tick_hook=tick_addr,room_build_hook=build_addr,home_append_hook=append_addr,home_select_hook=select_addr,width_hooks=width_hooks,v9_hook=v9_addr,clock_hook=clock_addr,move_hook=move_addr,callback_slot=callback_slot,**m))
+        # A single typed bridge adds the seventh native configuration row,
+        # without replacing the six existing setting implementations.
+        def setting_hook(stage,site):
+            trampoline,traw=emit(f"nop; b {site+4}")
+            rawfirst=original[site:site+4]
+            assert struct.unpack("<I",rawfirst)[0]&0xffc003e0==0xa98003e0, (hex(site),rawfirst.hex())
+            rx[trampoline-rxvm:trampoline-rxvm+4]=rawfirst
+            before=f"bl {trampoline}" if stage in (0,2) else ''
+            after=f"bl {trampoline}" if stage in (1,3) else ''
+            address,_=emit(f'''
+                stp x29, x30, [sp, #-48]!
+                mov x29, sp
+                stp x0, x1, [sp, #16]
+                str x2, [sp, #32]
+                {before}
+                {lookup('AGNotesSettings',29)}
+                cbz x10, fallback
+                ldp x0, x1, [sp, #16]
+                ldr x2, [sp, #32]
+                mov w3, #{i}
+                mov w4, #{stage}
+                blr x10
+
+              fallback:
+                ldp x0, x1, [sp, #16]
+                ldr x2, [sp, #32]
+                {after}
+              done:
+                ldp x29, x30, [sp], #48
+                ret
+            ''')
+            patch(site,asm(f'b {address}',site),f'V{i+1} Notes77 configuration stage {stage}')
+            return dict(stage=stage,site=site,hook=address,trampoline=trampoline)
+        config_hooks=[]
+        for stage,key in enumerate(['settings_begin','settings_input','settings_paint','settings_ok']):
+            config_hooks.append(setting_hook(stage,n[key]))
+        origin=n['settings_origin']+12
+        assert original[origin:origin+4]==asm('sub w0, w0, #94',0)
+        patch(origin,asm('sub w0, w0, #110',0),f'V{i+1} center seven configuration rows')
+        input_hooks=[]
+        for kind,site in enumerate(n['input']):
+            # Copy the exact first instruction; no PC-relative prologues.
+            first=original[site:site+4]
+            # key methods save x22/x21, pointer methods use different but
+            # non-relative stack prologues or a MOV/STR instruction.
+            trampoline,raw=emit('nop; b '+str(site+4))
+            if kind>=2:
+                page=n['canvas']&-4096
+                assert first==asm(f'adrp x8, {page}',site)
+                first=asm(f'adrp x8, {page}',trampoline)
+            rx[trampoline-rxvm:trampoline-rxvm+4]=first
+            address,_=emit(f'''
+                stp x29, x30, [sp, #-48]!
+                mov x29, sp
+                stp x0, x1, [sp, #16]
+                stp x2, x3, [sp, #32]
+                {lookup('AGNotesInput',28)}
+                cbz x10, original
+                mov w0, #{i}
+                mov w1, #{kind}
+                ldr w2, [sp, #32]
+                ldr w3, [sp, #40]
+                blr x10
+                cbnz w0, done
+              original:
+                ldp x0, x1, [sp, #16]
+                ldp x2, x3, [sp, #32]
+                bl {trampoline}
+              done:
+                ldp x29, x30, [sp], #48
+                ret
+            ''')
+            patch(site,asm(f'b {address}',site),f'V{i+1} modal input guard {kind}')
+            input_hooks.append(dict(kind=kind,site=site,hook=address,trampoline=trampoline))
+        inbox_site=n['inbox_open']
+        assert original[inbox_site:inbox_site+4]==asm(f"bl {n['dialog_show']}",inbox_site)
+        inbox_addr,_=emit(f'''
+            stp x29, x30, [sp, #-80]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            stp x2, x3, [sp, #32]
+            stp x4, x5, [sp, #48]
+            bl {n['dialog_show']}
+            {lookup('AGNotesInbox',30)}
+            cbz x10, done
+            ldp x0, x1, [sp, #16]
+            ldr x2, [sp, #32]
+            mov w3, #{i}
+            blr x10
+          done:
+            ldp x29, x30, [sp], #80
+            ret
+        ''')
+        patch(inbox_site,asm(f'bl {inbox_addr}',inbox_site),f'V{i+1} retain full inbox text and original dialog actions')
+        hooks.append(dict(notes77=n,config_hooks=config_hooks,input_hooks=input_hooks,inbox_hook=inbox_addr,variant=i,open_hook=open_addr,receive_hook=receive_addr,tick_hook=tick_addr,room_build_hook=build_addr,home_append_hook=append_addr,home_select_hook=select_addr,width_hooks=width_hooks,v9_hook=v9_addr,clock_hook=clock_addr,move_hook=move_addr,callback_slot=callback_slot,**m))
     b[rxoff:rxoff+PAGE]=rx
     # Relocate only link-edit FILE offsets; no original text/data VM address
     # changes. Existing rebases/bindings target segment 1/2, never LINKEDIT.
@@ -431,8 +544,8 @@ def build_native(old,original,maps):
     for p,cmd,size in cmds:
         c=bytearray(old[p:p+size])
         if p==link_p:
-            load.append(segment('__AGWHEEL',rxvm,rxoff,PAGE,5,[('__text',rxvm,rxoff,0x3000,0x80000400,2),('__cstring',rxvm+0x3000,rxoff+0x3000,strcursor-0x3000,2,0)]))
-            load.append(segment('__AGDATA',rwvm,rwoff,PAGE,3,[('__data',rwvm,rwoff,216,0,3)]))
+            load.append(segment('__AGWHEEL',rxvm,rxoff,PAGE,5,[('__text',rxvm,rxoff,0x7000,0x80000400,2),('__cstring',rxvm+0x7000,rxoff+0x7000,strcursor-0x7000,2,0)]))
+            load.append(segment('__AGDATA',rwvm,rwoff,PAGE,3,[('__data',rwvm,rwoff,256,0,3)]))
             struct.pack_into('<Q',c,24,link[1]+delta);struct.pack_into('<Q',c,40,rxoff+delta)
         for field in file_fields.get(cmd,[]):
             value=struct.unpack_from('<I',c,field)[0]
@@ -474,3 +587,4 @@ def main():
         info=zipfile.ZipInfo(APP+'Frameworks/AGWheel.dylib');info.create_system=3;info.external_attr=0o100755<<16;info.compress_type=zipfile.ZIP_DEFLATED;dst.writestr(info,lib)
     print(args.output,hashlib.sha256(args.output.read_bytes()).hexdigest())
 if __name__=='__main__':main()
+
