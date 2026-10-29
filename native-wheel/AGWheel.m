@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "WheelProtocol.h"
 #include "NativeMap.h"
+#include "Notes77.h"
 
 // UI work stays on UIKit's main thread. Java calls stay on the original game
 // thread with its Env, protected by RoboVM's catch-all exception context.
@@ -68,6 +69,7 @@ __attribute__((noinline,optnone)) static int AGSendNative(void *env, void *conte
 }
 
 __attribute__((visibility("default"))) void AGWheelTick(void *env, int variant) {
+    AGNotesTick(env,variant);
     if(!env || variant<0 || variant>=6 || !atomic_load(&AGInterested) || !atomic_load(&AGForeground))return;
     double now=AGNow();AGSendJob job={0};uint64_t generation;int isBet=0;
     pthread_mutex_lock(&AGMutex);
@@ -134,9 +136,14 @@ __attribute__((visibility("default"))) void AGWheelReceive(void *env, void *mess
 #include "ClassicWheelUI.inc"
 @interface AGWheelController : UIViewController
 @property(nonatomic,strong) AGClassicPanel *panel;
-@property(nonatomic,strong) AGPixelButton *betButton;
+@property(nonatomic,strong) UIScrollView *panelScroll;
+@property(nonatomic,strong) AGPixelButton *betButton,*middleButton,*exitButton;
 @property(nonatomic,strong) UIStackView *controls;
+@property(nonatomic,strong) AGAmountPanel *amountPanel;
+@property(nonatomic,strong) UITextField *amountField;
 @property(nonatomic,strong) NSTimer *timer;
+@property(nonatomic) BOOL editingAmount;
+@property(nonatomic) CGFloat keyboardInset;
 @end
 static UIWindow *AGWindow;
 static __weak UIWindow *AGPreviousWindow;
@@ -151,22 +158,54 @@ static AGWheelController *AGController;
 - (void)viewDidLoad{
     [super viewDidLoad];self.view.backgroundColor=[UIColor colorWithRed:87/255.0 green:201/255.0 blue:239/255.0 alpha:1];
     self.panel=[AGClassicPanel new];self.panel.opaque=NO;self.panel.isAccessibilityElement=YES;
-    self.betButton=[self button:@"Tham gia" action:@selector(bet)];
-    self.controls=[[UIStackView alloc]initWithArrangedSubviews:@[self.betButton,[self button:@"Cập nhật" action:@selector(refresh)],[self button:@"Trở ra" action:@selector(close)]]];
-    self.controls.axis=UILayoutConstraintAxisHorizontal;self.controls.distribution=UIStackViewDistributionFillEqually;self.controls.spacing=1;
-    self.controls.backgroundColor=AGInk();[self.view addSubview:self.panel];[self.view addSubview:self.controls];
+    self.betButton=[self button:@"Tham gia" action:@selector(primary)];self.betButton.tag=1;
+    self.middleButton=[self button:@"Cập nhật" action:@selector(secondary)];
+    self.exitButton=[self button:@"Trở ra" action:@selector(tertiary)];self.exitButton.tag=2;
+    self.controls=[[UIStackView alloc]initWithArrangedSubviews:@[self.betButton,self.middleButton,self.exitButton]];
+    self.controls.axis=UILayoutConstraintAxisHorizontal;self.controls.distribution=UIStackViewDistributionFillEqually;self.controls.spacing=0;
+    self.panelScroll=[UIScrollView new];self.panelScroll.alwaysBounceVertical=NO;
+    self.controls.backgroundColor=AGPaper();[self.panelScroll addSubview:self.panel];[self.view addSubview:self.panelScroll];[self.view addSubview:self.controls];
+    self.amountPanel=[AGAmountPanel new];self.amountPanel.opaque=NO;self.amountPanel.hidden=YES;
+    self.amountField=[UITextField new];self.amountField.keyboardType=UIKeyboardTypeNumberPad;
+    self.amountField.textColor=UIColor.whiteColor;self.amountField.tintColor=UIColor.whiteColor;
+    self.amountField.backgroundColor=[UIColor colorWithRed:66/255.0 green:107/255.0 blue:146/255.0 alpha:1];
+    self.amountField.borderStyle=UITextBorderStyleNone;self.amountField.accessibilityLabel=@"Số xu tham gia vòng xoay";
+    self.amountField.autocorrectionType=UITextAutocorrectionTypeNo;self.amountField.spellCheckingType=UITextSpellCheckingTypeNo;
+    [self.amountPanel addSubview:self.amountField];[self.view addSubview:self.amountPanel];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardChanged:) name:UIKeyboardWillChangeFrameNotification object:nil];
     __weak AGWheelController *weakSelf=self;
     self.timer=[NSTimer scheduledTimerWithTimeInterval:.2 repeats:YES block:^(NSTimer *t){[weakSelf render];}];[self render];
 }
 - (void)viewDidLayoutSubviews{
     [super viewDidLayoutSubviews];UIEdgeInsets safe=self.view.safeAreaInsets;
     CGFloat width=self.view.bounds.size.width-safe.left-safe.right,height=self.view.bounds.size.height-safe.top-safe.bottom;
-    CGFloat bar=MAX(44,MIN(64,width/6)),panelHeight=height-bar-12;
-    // Keep the complete panel visible in either orientation without clipping.
-    CGFloat panelWidth=MIN(width-12,panelHeight*240/280);
-    self.panel.frame=CGRectMake(safe.left+(width-panelWidth)/2,safe.top+6,panelWidth,panelHeight);
-    self.controls.frame=CGRectMake(safe.left,safe.top+height-bar,width,bar);
-    [self.panel setNeedsDisplay];
+    CGFloat bar=MAX(44,MIN(64,width/7)),panelHeight=MAX(1,height-bar-8),panelWidth=MAX(1,width-8),s=AGPanelScale(panelWidth,panelHeight);
+    self.panelScroll.frame=CGRectMake(safe.left+4,safe.top+4,panelWidth,panelHeight);
+    CGFloat contentHeight=MAX(panelHeight,450*s);
+    self.panel.frame=CGRectMake(0,0,panelWidth,contentHeight);self.panelScroll.contentSize=CGSizeMake(panelWidth,contentHeight);
+    CGFloat controlsY=safe.top+MAX(0,height-bar-self.keyboardInset);
+    self.controls.frame=CGRectMake(safe.left,controlsY,width,bar);
+    CGFloat inputHeight=MIN(MAX(80,75*s),MAX(0,controlsY-safe.top-4));
+    CGFloat inputScale=MIN(s,inputHeight/75),fieldY=inputHeight<66?4:36*inputScale;
+    self.amountPanel.frame=CGRectMake(safe.left+4,controlsY-inputHeight,panelWidth,inputHeight);
+    self.amountField.frame=CGRectMake(13*inputScale,fieldY,panelWidth-26*inputScale,MAX(0,MIN(MAX(28,27*inputScale),inputHeight-fieldY-4)));
+    self.amountField.font=[UIFont monospacedDigitSystemFontOfSize:MAX(17,17*inputScale) weight:UIFontWeightBold];
+    [self.panel setNeedsDisplay];[self.amountPanel setNeedsDisplay];
+}
+- (void)keyboardChanged:(NSNotification *)notification{
+    CGRect screen=[notification.userInfo[UIKeyboardFrameEndUserInfoKey]CGRectValue];
+    CGRect keyboard=[self.view convertRect:screen fromView:nil];
+    CGFloat bottom=self.view.bounds.size.height-self.view.safeAreaInsets.bottom;
+    self.keyboardInset=self.editingAmount&&CGRectIntersectsRect(self.view.bounds,keyboard)?MAX(0,bottom-CGRectGetMinY(keyboard)):0;
+    [self.view setNeedsLayout];[self.view layoutIfNeeded];
+}
+- (void)dealloc{[NSNotificationCenter.defaultCenter removeObserver:self];}
+- (void)primary{if(self.editingAmount)[self endAmountEntry];else [self bet];}
+- (void)secondary{if(self.editingAmount)[self submitAmount];else [self refresh];}
+- (void)tertiary{if(self.editingAmount)[self.amountField deleteBackward];else [self close];}
+- (void)endAmountEntry{
+    self.editingAmount=NO;self.amountPanel.hidden=YES;self.keyboardInset=0;
+    [self.amountField resignFirstResponder];[self.view setNeedsLayout];[self render];
 }
 - (void)render{
     AGModel m=AGCopy();AGSnapshot s=m.snapshot;BOOL fresh=m.loaded&&AGNow()-m.receivedAt<6;
@@ -174,31 +213,35 @@ static AGWheelController *AGController;
     BOOL locked=s.ends>0&&now>=s.ends-10000;
     self.panel.snapshot=s;self.panel.loaded=m.loaded;self.panel.locked=locked;
     self.panel.remaining=m.loaded&&s.count<2?120:remain;
-    self.betButton.enabled=fresh&&!m.waiting&&!locked&&s.balance>=AG_MIN_STAKE&&s.own<=AG_MAX_STAKE-AG_MIN_STAKE;
+    self.betButton.enabled=self.editingAmount||(fresh&&!m.waiting&&!locked&&s.balance>=AG_MIN_STAKE&&s.own<=AG_MAX_STAKE-AG_MIN_STAKE);
+    self.betButton.accessibilityLabel=self.editingAmount?@"Đóng":@"Tham gia";
+    self.middleButton.accessibilityLabel=self.editingAmount?@"OK":@"Cập nhật";
+    self.exitButton.accessibilityLabel=self.editingAmount?@"Xóa":@"Trở ra";
     NSString *notice=@"";
     if(m.waiting)notice=@"Đang xác nhận lượt tham gia";
     else if(!fresh)notice=m.loaded?@"Đang cập nhật kết nối":@"Đang tải dữ liệu";
     else if(m.notice[0]&&AGNow()<m.noticeUntil)notice=AGString(m.notice);
     self.panel.notice=notice;
     self.panel.accessibilityLabel=[NSString stringWithFormat:@"Vòng xoay may mắn. Quỹ %@ xu. %d người. Bạn đã tham gia %@ xu. Số dư %@ xu. %@",AGMoney(s.total),s.count,AGMoney(s.own),AGMoney(s.balance),notice];
-    [self.panel setNeedsDisplay];[self.betButton setNeedsDisplay];
+    [self.panel setNeedsDisplay];[self.betButton setNeedsDisplay];[self.middleButton setNeedsDisplay];[self.exitButton setNeedsDisplay];
 }
 - (void)alert:(NSString *)text {
     UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Vòng xoay may mắn" message:text preferredStyle:UIAlertControllerStyleAlert];[a addAction:[UIAlertAction actionWithTitle:@"Đã hiểu" style:UIAlertActionStyleDefault handler:nil]];[self presentViewController:a animated:YES completion:nil];
 }
 - (void)bet {
     AGModel m=AGCopy();if(!m.loaded||m.waiting||AGNow()-m.receivedAt>=6)return;
-    UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Tham gia vòng xoay" message:[NSString stringWithFormat:@"Số dư: %@ xu\nNhập số xu bạn muốn tham gia.",AGMoney(m.snapshot.balance)]preferredStyle:UIAlertControllerStyleAlert];
-    [a addTextFieldWithConfigurationHandler:^(UITextField *t){t.keyboardType=UIKeyboardTypeNumberPad;t.placeholder=@"Tối thiểu 1.000.000 xu";t.text=@"1000000";}];
-    [a addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
+    self.editingAmount=YES;self.amountPanel.hidden=NO;self.amountField.text=@"1000000";
+    [self render];[self.view setNeedsLayout];[self.view layoutIfNeeded];[self.amountField becomeFirstResponder];
+}
+- (void)submitAmount {
     __weak AGWheelController *weakSelf=self;
-    [a addAction:[UIAlertAction actionWithTitle:@"Tiếp tục" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
-        NSString *input=[a.textFields.firstObject.text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+        NSString *input=[self.amountField.text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
         if(!input.length||input.length>8||[input rangeOfCharacterFromSet:NSCharacterSet.decimalDigitCharacterSet.invertedSet].location!=NSNotFound){[weakSelf alert:@"Nhập số xu bằng chữ số, không dùng dấu chấm hoặc dấu phẩy."];return;}
         int64_t amount=input.longLongValue;AGModel current=AGCopy();const char *error=AGValidateBet(&current.snapshot,AGServerNow(current),amount);
         if(!current.loaded||current.waiting||AGNow()-current.receivedAt>=6){[weakSelf alert:@"Dữ liệu đang cập nhật. Vui lòng thử lại."];return;}
         if(error){[weakSelf alert:AGString(error)];return;}
         int64_t round=current.snapshot.round;uint64_t generation=current.generation;
+        [self endAmountEntry];
         UIAlertController *confirm=[UIAlertController alertControllerWithTitle:@"Xác nhận tham gia" message:[NSString stringWithFormat:@"Dùng %@ xu để tham gia vòng #%lld?",AGMoney(amount),(long long)round]preferredStyle:UIAlertControllerStyleAlert];
         [confirm addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
         [confirm addAction:[UIAlertAction actionWithTitle:@"Xác nhận" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
@@ -209,15 +252,13 @@ static AGWheelController *AGController;
             pthread_mutex_unlock(&AGMutex);if(failure)[weakSelf alert:AGString(failure)];[weakSelf render];
         }]];
         [weakSelf presentViewController:confirm animated:YES completion:nil];
-    }]];
-    [self presentViewController:a animated:YES completion:nil];
 }
 - (void)refresh {pthread_mutex_lock(&AGMutex);AGState.lastPoll=0;pthread_mutex_unlock(&AGMutex);}
 - (void)previous {pthread_mutex_lock(&AGMutex);if(AGState.page>0)AGState.page--;AGState.lastPoll=0;pthread_mutex_unlock(&AGMutex);}
 - (void)next {pthread_mutex_lock(&AGMutex);if(((int64_t)AGState.page+1)*20<AGState.snapshot.count)AGState.page++;AGState.lastPoll=0;pthread_mutex_unlock(&AGMutex);}
 - (void)close {
     pthread_mutex_lock(&AGMutex);AGState.visible=0;atomic_store(&AGInterested,AGState.waiting);pthread_mutex_unlock(&AGMutex);
-    [self.timer invalidate];self.timer=nil;AGWindow.hidden=YES;AGWindow.rootViewController=nil;[AGPreviousWindow makeKeyWindow];AGWindow=nil;AGController=nil;
+    [self.amountField resignFirstResponder];[self.timer invalidate];self.timer=nil;AGWindow.hidden=YES;AGWindow.rootViewController=nil;[AGPreviousWindow makeKeyWindow];AGWindow=nil;AGController=nil;
 }
 @end
 
@@ -248,7 +289,7 @@ __attribute__((visibility("default"))) void AGWheelOpen(void *env, int variant) 
 #ifdef AG_WHEEL_PREVIEW
 // Simulator-only fixture; excluded from the device dylib.
 int AGWheelGuard(void *env,int (*fn)(void *,void *),void *ctx,void *entry){return 0;}
-void AGWheelPreview(void) {
+__attribute__((visibility("default"))) void AGWheelPreview(void) {
     AGWheelOpen(NULL,0);
     pthread_mutex_lock(&AGMutex);
     AGState.loaded=1;AGState.receivedAt=AGNow();AGState.snapshot=(AGSnapshot){.version=2,.serverTime=1800000000000LL,.round=52,.ends=1800000090000LL,.total=25000000,.own=5000000,.balance=88000000,.count=4,.tax=5,.rows=4,.hasResult=1,.resultRound=51,.resultPool=30000000,.resultPrize=28500000,.resultStake=5000000,.resultTax=5};
@@ -262,10 +303,54 @@ void AGWheelPreview(void) {
         AGState.snapshot.resultPrize=50490000;AGState.snapshot.resultStake=50000000;
         snprintf(AGState.snapshot.winner,AG_NAME,"hoanganhpn");
     }
+    if([NSProcessInfo.processInfo.arguments containsObject:@"--single"]){
+        AGState.snapshot.ends=0;AGState.snapshot.count=1;AGState.snapshot.rows=1;
+        AGState.snapshot.total=1000000;AGState.snapshot.own=1000000;AGState.snapshot.tax=0;
+        AGState.snapshot.balance=8332878439LL;
+        AGState.snapshot.entries[0].amount=1000000;AGState.snapshot.entries[0].own=1;
+        AGState.snapshot.resultPrize=99000000;AGState.snapshot.resultStake=50000000;
+        snprintf(AGState.snapshot.winner,AG_NAME,"triheoi111");
+    }
     pthread_mutex_unlock(&AGMutex);
     [NSTimer scheduledTimerWithTimeInterval:2 repeats:YES block:^(NSTimer *timer){
         pthread_mutex_lock(&AGMutex);AGState.snapshot.serverTime+=2000;AGState.receivedAt=AGNow();pthread_mutex_unlock(&AGMutex);
     }];
 }
-void AGWheelPreviewShowInput(void) { [AGController bet]; }
+__attribute__((visibility("default"))) void AGWheelPreviewShowInput(void) { [AGController bet]; }
+__attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
+    UIView *view=AGController.view;CGRect original=view.frame;
+    NSArray<NSValue *> *sizes=@[[NSValue valueWithCGSize:CGSizeMake(320,480)],[NSValue valueWithCGSize:CGSizeMake(375,667)],[NSValue valueWithCGSize:CGSizeMake(390,844)],[NSValue valueWithCGSize:CGSizeMake(430,932)],[NSValue valueWithCGSize:CGSizeMake(768,1024)],[NSValue valueWithCGSize:CGSizeMake(844,390)]];
+    NSMutableArray *checked=[NSMutableArray new];
+    NSString *directory=NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject;
+    for(NSValue *value in sizes){
+        CGSize size=value.CGSizeValue;view.frame=CGRectMake(0,0,size.width,size.height);[view setNeedsLayout];[view layoutIfNeeded];
+        CGFloat width=size.width-view.safeAreaInsets.left-view.safeAreaInsets.right;
+        CGFloat s=AGPanelScale(AGController.panel.bounds.size.width,AGController.panel.bounds.size.height);
+        NSCAssert(fabs(AGController.panelScroll.bounds.size.width-(width-8))<.01,@"Full width panel");
+        NSCAssert(AGController.panel.bounds.size.height>=450*s-.01,@"Large text must scroll, never clip");
+        NSCAssert(AGController.controls.bounds.size.height>=44,@"Readable controls");
+        NSCAssert(CGRectGetMaxY(AGController.controls.frame)<=view.bounds.size.height+.01,@"Controls fit visible screen");
+        UIGraphicsBeginImageContextWithOptions(view.bounds.size,YES,2);
+        [view.layer renderInContext:UIGraphicsGetCurrentContext()];
+        UIImage *layout=UIGraphicsGetImageFromCurrentImageContext();UIGraphicsEndImageContext();
+        NSString *name=[NSString stringWithFormat:@"wheel-layout-%.0fx%.0f.png",size.width,size.height];
+        NSCAssert([UIImagePNGRepresentation(layout)writeToFile:[directory stringByAppendingPathComponent:name] atomically:YES],@"Write UIKit layout preview");
+        AGController.keyboardInset=MIN(216,size.height*.5);[view setNeedsLayout];[view layoutIfNeeded];
+        NSCAssert(CGRectGetMaxY(AGController.amountPanel.frame)<=CGRectGetMinY(AGController.controls.frame)+.01,@"Input does not overlap controls");
+        NSCAssert(CGRectGetMinY(AGController.amountPanel.frame)>=view.safeAreaInsets.top-.01,@"Input stays below safe top");
+        NSCAssert(CGRectGetMaxY(AGController.amountField.frame)<=AGController.amountPanel.bounds.size.height+.01,@"Input field remains visible with keyboard");
+        AGController.keyboardInset=0;[view setNeedsLayout];[view layoutIfNeeded];
+        [checked addObject:@{@"width":@(size.width),@"height":@(size.height),@"panel_width":@(AGController.panel.bounds.size.width),@"content_height":@(AGController.panel.bounds.size.height),@"scrolls":@(AGController.panel.bounds.size.height>AGController.panelScroll.bounds.size.height+.01)}];
+    }
+    view.frame=original;[view setNeedsLayout];[view layoutIfNeeded];
+    [AGController bet];NSCAssert(AGController.editingAmount&&!AGController.amountPanel.hidden,@"Amount panel opens");
+    NSCAssert([AGController.middleButton.accessibilityLabel isEqualToString:@"OK"],@"Amount confirm control");
+    NSCAssert(CGRectGetMaxY(AGController.amountField.frame)<=AGController.amountPanel.bounds.size.height,@"Amount text fits");
+    [AGController primary];NSCAssert(!AGController.editingAmount&&AGController.amountPanel.hidden,@"Cancel restores wheel");
+    NSCAssert([AGController.betButton.accessibilityLabel isEqualToString:@"Tham gia"],@"Wheel controls restored");
+    NSDictionary *report=@{@"passed":@YES,@"runtime":@"Apple iOS Simulator UIKit",@"sizes":checked,@"amount_open_cancel":@YES,@"keyboard_geometry":@YES,@"server_requests":@0};
+    NSData *json=[NSJSONSerialization dataWithJSONObject:report options:NSJSONWritingPrettyPrinted error:nil];
+    [json writeToFile:[directory stringByAppendingPathComponent:@"ui-check.json"] atomically:YES];
+}
 #endif
+
