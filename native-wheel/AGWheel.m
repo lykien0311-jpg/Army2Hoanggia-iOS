@@ -187,6 +187,7 @@ static AGWheelController *AGController;
     self.controls.frame=CGRectMake(safe.left,controlsY,width,bar);
     CGFloat inputHeight=MIN(MAX(80,75*s),MAX(0,controlsY-safe.top-4));
     CGFloat inputScale=MIN(s,inputHeight/75),fieldY=inputHeight<66?4:36*inputScale;
+    self.amountPanel.layoutScale=inputScale;
     self.amountPanel.frame=CGRectMake(safe.left+4,controlsY-inputHeight,panelWidth,inputHeight);
     self.amountField.frame=CGRectMake(13*inputScale,fieldY,panelWidth-26*inputScale,MAX(0,MIN(MAX(28,27*inputScale),inputHeight-fieldY-4)));
     self.amountField.font=[UIFont monospacedDigitSystemFontOfSize:MAX(17,17*inputScale) weight:UIFontWeightBold];
