@@ -42,7 +42,7 @@ static void AGPixelText(NSString *text,CGFloat cx,CGFloat y,CGFloat maxWidth,CGF
     CGContextRestoreGState(c);
 }
 @end
-static CGFloat AGPanelScale(CGFloat width,CGFloat height){(void)height;return fmin(width/320.0,1.8);}
+static CGFloat AGPanelScale(CGFloat width,CGFloat height){return fmin(width/320.0,fmin(1.8,fmax(.95,height/450.0)));}
 static UIColor *AGBorder(void){return [UIColor colorWithRed:65/255.0 green:102/255.0 blue:128/255.0 alpha:1];}
 static UIColor *AGMuted(void){return [UIColor colorWithRed:142/255.0 green:173/255.0 blue:197/255.0 alpha:1];}
 static void AGFill(CGFloat x,CGFloat y,CGFloat width,CGFloat height,UIColor *color){[color setFill];UIRectFill(CGRectMake(x,y,width,height));}
@@ -100,10 +100,11 @@ static void AGFrame(CGFloat width,CGFloat height,CGFloat scale){
 @end
 
 @interface AGAmountPanel:UIView
+@property(nonatomic) CGFloat layoutScale;
 @end
 @implementation AGAmountPanel
 - (void)drawRect:(CGRect)rect{
-    CGFloat s=MIN(AGPanelScale(rect.size.width,rect.size.height),rect.size.height/75);AGFrame(rect.size.width,rect.size.height,s);
+    CGFloat s=self.layoutScale;AGFrame(rect.size.width,rect.size.height,s);
     if(rect.size.height>=66)AGPixelText(@"Nhập xu: 1.000.000 - 50.000.000",rect.size.width/2,8*s,rect.size.width-24*s,1.25*s,NO);
 }
 @end
