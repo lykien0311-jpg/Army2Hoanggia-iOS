@@ -25,8 +25,14 @@ jobs:
             native-wheel/build/exports.txt
             native-wheel/build/load-commands.txt
             native-wheel/build/SHA256.txt
+            native-wheel/build/build-info.json
+            native-wheel/build/code-signing.txt
+            native-wheel/build/wheel-layout-*.png
             native-wheel/build/wheel-preview.png
             native-wheel/build/wheel-input-preview.png
             native-wheel/build/wheel-waiting-preview.png
+            native-wheel/build/ui-check.json
+            native-wheel/build/wheel-single-preview.png
           if-no-files-found: error
           retention-days: 14
+
