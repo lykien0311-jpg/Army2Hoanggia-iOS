@@ -8,8 +8,8 @@ from keystone import Ks,KS_ARCH_ARM64,KS_MODE_LITTLE_ENDIAN
 ROOT=Path(__file__).resolve().parent;BASE=0x100000000
 B=ROOT.joinpath('build/prepared-native').read_bytes();R=json.loads(ROOT.joinpath('build/hook-report.json').read_text())
 lief.logging.disable();M=lief.MachO.parse(str(ROOT/'build/prepared-native')).at(0)
-ORIG=Path('review/patched-native').read_bytes()
-OLD=lief.MachO.parse('review/patched-native').at(0)
+ORIG=(ROOT.parent/'validation/review/patched-native').read_bytes()
+OLD=lief.MachO.parse(str(ROOT.parent/'validation/review/patched-native')).at(0)
 # Check the file remap and complete preservation of all prior room/clan/data
 # fixes outside explicitly reported instruction/header changes.
 restored=bytearray(B);rxoff=R['rxoff'];delta=R['linkedit_shift'];del restored[rxoff:rxoff+delta]
@@ -53,9 +53,9 @@ def hook(uc,addr,size,data):
         returned(0 if missing else CALLBACKS[name])
     elif addr in CALLBACKS.values():
         name=next(k for k,v in CALLBACKS.items()if v==addr)
-        calls.append((name,tuple(U.reg_read(r)for r in X[:3])))
+        calls.append((name,tuple(U.reg_read(r)for r in X[:(8 if name.startswith('AGNotes') else 3)])))
         for reg in X[:18]:U.reg_write(reg,0xbeef)
-        returned(roomHandled if name=='AGRoomReceive' else 0)
+        returned(roomHandled if name in ('AGRoomReceive','AGNotesInput','AGNotesSettings') else 0)
     elif addr==speedAddr:
         assert U.reg_read(X[0])==ENV;calls.append(('speed',));returned(7)
     elif addr==buildAddr:
@@ -77,7 +77,7 @@ def reset():
     for i,r in enumerate(X):U.reg_write(r,0xc000+i)
     U.reg_write(UC_ARM64_REG_SP,SP);U.reg_write(UC_ARM64_REG_LR,STOP)
     U.reg_write(X[0],ENV);U.reg_write(X[1],OBJECT);U.reg_write(X[2],MSG)
-    U.mem_write(BASE+R['rwvm'],bytes(216));U.mem_write(MSG,bytes(0x40))
+    U.mem_write(BASE+R['rwvm'],bytes(256));U.mem_write(MSG,bytes(0x40))
 def preserved(original=False):
     assert U.reg_read(UC_ARM64_REG_SP)==SP-(96 if original else 0)
     for i in range(19,30):assert U.reg_read(X[i])==0xc000+i,(i,hex(U.reg_read(X[i])))
@@ -130,3 +130,4 @@ for bodyRaises in (False,True):
 assert B[0x5bd128:0x5bd150]==ORIG[0x5bd128:0x5bd150], 'Xem giờ label must be restored'
 for h in R['hooks']:assert B[h['clock']+4:h['clock']+0x22c]==ORIG[h['clock']+4:h['clock']+0x22c], 'Original clock body must remain intact after dispatch'
 print(f'PASS: {cases} ARM64 hook/exception cases; all 6 variants; clock restored; exact prior-patch preservation; unchanged symbols/function starts, {len(bindings(M))} bindings, {len(rebases(M))} rebases; ordered W^X segments; LINKEDIT last')
+
