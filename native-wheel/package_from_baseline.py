@@ -1,6 +1,6 @@
 """Package the exact Apple-built dylib into the checksum-guarded user IPA."""
 from pathlib import Path
-import argparse,base64,hashlib,json,struct,zipfile,zlib
+import argparse,base64,hashlib,json,struct,zipfile,zlib,plistlib
 from patch_ipa import build_native,commands
 
 ROOT=Path(__file__).resolve().parent
@@ -15,14 +15,16 @@ def main():
     p.add_argument('--output',type=Path,required=True)
     args=p.parse_args()
     r=json.loads((ROOT/'baseline-recovery.json').read_text())
-    assert sha(args.ipa.read_bytes())==r['ipa_sha256'],'Use the untouched user baseline IPA'
     with zipfile.ZipFile(args.ipa) as src:native=src.read(APP+'Army2Hoanggia')
-    assert sha(native)==r['main_sha256']
+    identity=sha(native)
+    assert identity in (r['main_sha256'],r['updated_main_sha256']),'Use an untouched supported IPA, before re-signing'
+    if identity==r['main_sha256']:assert sha(args.ipa.read_bytes())==r['ipa_sha256'],'Original baseline archive differs'
+    recovery=r if identity==r['main_sha256'] else r['updated_hooks']
     old=bytearray(native)
-    for c in r['patches']:
+    for c in recovery['patches']:
         a=c['offset'];after=bytes.fromhex(c['after']);assert old[a:a+len(after)]==after
         old[a:a+len(after)]=bytes.fromhex(c['before'])
-    del old[r['rxoff']:r['rxoff']+r['linkedit_shift']]
+    del old[recovery['rxoff']:recovery['rxoff']+recovery['linkedit_shift']]
     old[:0x8000]=zlib.decompress(base64.b64decode(r['header_zlib_base64']))
     assert sha(old)==r['prewheel_sha256']
     original=bytearray(old)
@@ -39,6 +41,7 @@ def main():
     (build/'prepared-native').write_bytes(patched)
     (build/'hook-report.json').write_text(json.dumps(hooks,indent=2)+'\n')
     info=json.loads(args.build_info.read_text());lib=args.dylib.read_bytes()
+    assert info['release_version']=='2.4.1' and info['login_marker']=='2.4.1-HG78-IPA'
     assert info['apple_codesign_strict_verified'] and info['apple_resign_strict_verified']
     assert sha(lib)==info['dylib_sha256'],'Dylib differs from verified GitHub output'
     assert struct.unpack_from('<I',lib)[0]==0xfeedfacf
@@ -58,14 +61,20 @@ def main():
         for zi in src.infolist():
             assert '/_CodeSignature/' not in zi.filename and not zi.filename.endswith('embedded.mobileprovision')
             data=patched if zi.filename==APP+'Army2Hoanggia' else lib if zi.filename==APP+'Frameworks/AGWheel.dylib' else src.read(zi.filename)
+            if zi.filename==APP+'Info.plist':
+                plist=plistlib.loads(data)
+                assert plist['CFBundleShortVersionString'] in ('2.4.0','2.4.1')
+                plist['CFBundleShortVersionString']='2.4.1';plist['CFBundleVersion']='242'
+                data=plistlib.dumps(plist,fmt=plistlib.FMT_BINARY,sort_keys=False)
             dst.writestr(zi,data)
     with zipfile.ZipFile(args.ipa) as src,zipfile.ZipFile(args.output) as dst:
         assert dst.testzip() is None
         assert src.namelist()==dst.namelist()
         changed=[n for n in src.namelist() if src.read(n)!=dst.read(n)]
-        assert set(changed)=={APP+'Army2Hoanggia',APP+'Frameworks/AGWheel.dylib'}
+        assert set(changed)<={APP+'Army2Hoanggia',APP+'Frameworks/AGWheel.dylib',APP+'Info.plist'}
+        if identity==r['main_sha256']:assert APP+'Army2Hoanggia' in changed
         assert dst.read(APP+'Frameworks/AGWheel.dylib')==lib
-    report={'passed':True,'input_sha256':r['ipa_sha256'],'output':args.output.name,'sha256':sha(args.output.read_bytes()),'bytes':args.output.stat().st_size,'changed_entries':changed,'other_entries_unchanged':len(src.namelist())-len(changed),'github_build':info,'physical_device_tested':False,'requires_user_certificate_resigning':True}
+    report={'passed':True,'input_sha256':sha(args.ipa.read_bytes()),'output':args.output.name,'sha256':sha(args.output.read_bytes()),'bytes':args.output.stat().st_size,'changed_entries':changed,'other_entries_unchanged':len(src.namelist())-len(changed),'github_build':info,'physical_device_tested':False,'requires_user_certificate_resigning':True}
     (build/'package-check.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))
 
