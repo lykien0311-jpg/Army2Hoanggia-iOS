@@ -54,3 +54,13 @@ t.reset();U.emu_start(B+M['literal_getter'],t.STOP+4,count=1000)
 assert objects[U.reg_read(X[0])]=='2.4.1';checks+=1
 r={'passed':True,'actual_native_login_cases':checks,'variants':6,'old_login_marker':'2.4.0','new_login_marker':'2.4.1-HG78-IPA','display_version':'2.4.1','credentials_and_platform_tail_unchanged':True,'boundary_dependencies':'JVM strings and transport simulated','live_server_login':False,'packets':packets}
 (t.ROOT/'build/login78-check.json').write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n');print('PASS',checks,'native login/version cases, all six variants')
+fixtures=t.ROOT/'build/login78-packets';fixtures.mkdir(exist_ok=True)
+def mutf(s):
+ out=bytearray()
+ raw=s.encode('utf-16-be')
+ for (c,) in struct.iter_unpack('>H',raw):
+  if 1<=c<=127:out.append(c)
+  elif c<=2047:out.extend((0xc0|(c>>6),0x80|(c&63)))
+  else:out.extend((0xe0|(c>>12),0x80|((c>>6)&63),0x80|(c&63)))
+ return struct.pack('>H',len(out))+out
+for i,p in enumerate(packets):(fixtures/f'login-{i:02}.bin').write_bytes(b''.join(mutf(s)for s in p['fields']))
