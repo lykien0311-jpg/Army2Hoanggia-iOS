@@ -933,5 +933,1026 @@
       "offset": 10278896,
       "bytes": "f44fbea9fd7b01a9fd430091ff4300d1e94340d1290140f9e20f00b9e30300f9212440f93f004039e20f40b9f30300aa2649e097e10300aae00313aa2d78e097e80340f91f004039080800f9bf4300d1fd7b41a9f44fc2a8c0035fd6"
     }
-  ]
+  ],
+  "updated_main_sha256": "add296a97e16eb7fb7ee79012a01c2b8544d417eb12ecb923f272ee347638956",
+  "updated_hooks": {
+    "rxoff": 38502400,
+    "linkedit_shift": 65536,
+    "patches": [
+      {
+        "offset": 6016040,
+        "label": "V1 prepend wheel to in-battle V9",
+        "before": "d5a71894",
+        "after": "4aed7c94"
+      },
+      {
+        "offset": 6169080,
+        "label": "V1 distinguish new wheel action from unchanged clock action",
+        "before": "f657bda9",
+        "after": "f2577c14"
+      },
+      {
+        "offset": 5865836,
+        "label": "V1 pace local left/right input independently of speed",
+        "before": "1d0f0094",
+        "after": "25807d94"
+      },
+      {
+        "offset": 5866040,
+        "label": "V1 pace local left/right input independently of speed",
+        "before": "ea0e0094",
+        "after": "f27f7d94"
+      },
+      {
+        "offset": 5488840,
+        "label": "V1 home menu has seven entries",
+        "before": "e1071f32",
+        "after": "e1008052"
+      },
+      {
+        "offset": 5488976,
+        "label": "V1 append lucky wheel immediately after Quay s\u1ed1",
+        "before": "89af3694",
+        "after": "44f07e94"
+      },
+      {
+        "offset": 5495896,
+        "label": "V1 select the new wheel row",
+        "before": "890a0034",
+        "after": "8ee97e14"
+      },
+      {
+        "offset": 5491608,
+        "label": "V1 fit home wheel label (columns, w3)",
+        "before": "e3070032",
+        "after": "c6ed7e94"
+      },
+      {
+        "offset": 5493032,
+        "label": "V1 fit home wheel label (width, w8)",
+        "before": "08138052",
+        "after": "82ec7e94"
+      },
+      {
+        "offset": 5493072,
+        "label": "V1 fit home wheel label (negative, w9)",
+        "before": "e9128012",
+        "after": "98ec7e94"
+      },
+      {
+        "offset": 5493084,
+        "label": "V1 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "b5ec7e94"
+      },
+      {
+        "offset": 5493108,
+        "label": "V1 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "afec7e94"
+      },
+      {
+        "offset": 5564596,
+        "label": "V1 display exact reference-video title by actual room ID",
+        "before": "080940f9",
+        "after": "dfa57e94"
+      },
+      {
+        "offset": 5341708,
+        "label": "V1 receive wheel -101 and cache room names -19",
+        "before": "fc6fbaa9",
+        "after": "a9807f14"
+      },
+      {
+        "offset": 5348260,
+        "label": "V1 replay names after room list rebuild",
+        "before": "7bd40094",
+        "after": "937a7f94"
+      },
+      {
+        "offset": 5313548,
+        "label": "V1 poll/send on original game thread",
+        "before": "327a0194",
+        "after": "919c7f94"
+      },
+      {
+        "offset": 5800412,
+        "label": "V1 Notes77 configuration stage 0",
+        "before": "f657bda9",
+        "after": "39c17d14"
+      },
+      {
+        "offset": 5800940,
+        "label": "V1 Notes77 configuration stage 1",
+        "before": "f85fbca9",
+        "after": "d5c07d14"
+      },
+      {
+        "offset": 5802708,
+        "label": "V1 Notes77 configuration stage 2",
+        "before": "fa67bba9",
+        "after": "3bbf7d14"
+      },
+      {
+        "offset": 5832492,
+        "label": "V1 Notes77 configuration stage 3",
+        "before": "f44fbea9",
+        "after": "45a27d14"
+      },
+      {
+        "offset": 5800400,
+        "label": "V1 center seven configuration rows",
+        "before": "00780151",
+        "after": "00b80151"
+      },
+      {
+        "offset": 5305644,
+        "label": "V1 modal input guard 0",
+        "before": "f657bda9",
+        "after": "e5a47f14"
+      },
+      {
+        "offset": 5307112,
+        "label": "V1 modal input guard 1",
+        "before": "f657bda9",
+        "after": "96a37f14"
+      },
+      {
+        "offset": 5310388,
+        "label": "V1 modal input guard 2",
+        "before": "68db00b0",
+        "after": "83a07f14"
+      },
+      {
+        "offset": 5310360,
+        "label": "V1 modal input guard 3",
+        "before": "68db00b0",
+        "after": "aaa07f14"
+      },
+      {
+        "offset": 5310444,
+        "label": "V1 modal input guard 4",
+        "before": "68db00b0",
+        "after": "b5a07f14"
+      },
+      {
+        "offset": 5995056,
+        "label": "V1 retain full inbox text and original dialog actions",
+        "before": "090cfe97",
+        "after": "40047d94"
+      },
+      {
+        "offset": 6967036,
+        "label": "V2 prepend wheel to in-battle V9",
+        "before": "20071594",
+        "after": "394f7994"
+      },
+      {
+        "offset": 7106436,
+        "label": "V2 distinguish new wheel action from unchanged clock action",
+        "before": "f657bda9",
+        "after": "33c77814"
+      },
+      {
+        "offset": 6819992,
+        "label": "V2 pace local left/right input independently of speed",
+        "before": "c30e0094",
+        "after": "fede7994"
+      },
+      {
+        "offset": 6820196,
+        "label": "V2 pace local left/right input independently of speed",
+        "before": "900e0094",
+        "after": "cbde7994"
+      },
+      {
+        "offset": 6456744,
+        "label": "V2 home menu has seven entries",
+        "before": "e1071f32",
+        "after": "e1008052"
+      },
+      {
+        "offset": 6456880,
+        "label": "V2 append lucky wheel immediately after Quay s\u1ed1",
+        "before": "51fe3294",
+        "after": "b0417b94"
+      },
+      {
+        "offset": 6463520,
+        "label": "V2 select the new wheel row",
+        "before": "890a0034",
+        "after": "403b7b14"
+      },
+      {
+        "offset": 6459272,
+        "label": "V2 fit home wheel label (columns, w3)",
+        "before": "e3070032",
+        "after": "6e3f7b94"
+      },
+      {
+        "offset": 6460696,
+        "label": "V2 fit home wheel label (width, w8)",
+        "before": "08138052",
+        "after": "2a3e7b94"
+      },
+      {
+        "offset": 6460736,
+        "label": "V2 fit home wheel label (negative, w9)",
+        "before": "e9128012",
+        "after": "403e7b94"
+      },
+      {
+        "offset": 6460748,
+        "label": "V2 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "5d3e7b94"
+      },
+      {
+        "offset": 6460772,
+        "label": "V2 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "573e7b94"
+      },
+      {
+        "offset": 6529120,
+        "label": "V2 display exact reference-video title by actual room ID",
+        "before": "080940f9",
+        "after": "f4f77a94"
+      },
+      {
+        "offset": 6315092,
+        "label": "V2 receive wheel -101 and cache room names -19",
+        "before": "fc6fbaa9",
+        "after": "bbcc7b14"
+      },
+      {
+        "offset": 6321644,
+        "label": "V2 replay names after room list rebuild",
+        "before": "d4cb0094",
+        "after": "a5c67b94"
+      },
+      {
+        "offset": 6287748,
+        "label": "V2 poll/send on original game thread",
+        "before": "416c0194",
+        "after": "d7e77b94"
+      },
+      {
+        "offset": 6757128,
+        "label": "V2 Notes77 configuration stage 0",
+        "before": "f657bda9",
+        "after": "921d7a14"
+      },
+      {
+        "offset": 6757576,
+        "label": "V2 Notes77 configuration stage 1",
+        "before": "f85fbca9",
+        "after": "421d7a14"
+      },
+      {
+        "offset": 6759344,
+        "label": "V2 Notes77 configuration stage 2",
+        "before": "fa67bba9",
+        "after": "a81b7a14"
+      },
+      {
+        "offset": 6788448,
+        "label": "V2 Notes77 configuration stage 3",
+        "before": "f44fbea9",
+        "after": "5cff7914"
+      },
+      {
+        "offset": 6757116,
+        "label": "V2 center seven configuration rows",
+        "before": "00780151",
+        "after": "00b80151"
+      },
+      {
+        "offset": 6279844,
+        "label": "V2 modal input guard 0",
+        "before": "f657bda9",
+        "after": "2bf07b14"
+      },
+      {
+        "offset": 6281312,
+        "label": "V2 modal input guard 1",
+        "before": "f657bda9",
+        "after": "dcee7b14"
+      },
+      {
+        "offset": 6284588,
+        "label": "V2 modal input guard 2",
+        "before": "68d500f0",
+        "after": "c9eb7b14"
+      },
+      {
+        "offset": 6284560,
+        "label": "V2 modal input guard 3",
+        "before": "68d500f0",
+        "after": "f0eb7b14"
+      },
+      {
+        "offset": 6284644,
+        "label": "V2 modal input guard 4",
+        "before": "68d500f0",
+        "after": "fbeb7b14"
+      },
+      {
+        "offset": 6946212,
+        "label": "V2 retain full inbox text and original dialog actions",
+        "before": "821cfe97",
+        "after": "07667994"
+      },
+      {
+        "offset": 7904192,
+        "label": "V3 prepend wheel to in-battle V9",
+        "before": "ef731194",
+        "after": "acbe7594"
+      },
+      {
+        "offset": 8043592,
+        "label": "V3 distinguish new wheel action from unchanged clock action",
+        "before": "f657bda9",
+        "after": "a6367514"
+      },
+      {
+        "offset": 7757148,
+        "label": "V3 pace local left/right input independently of speed",
+        "before": "c30e0094",
+        "after": "714e7694"
+      },
+      {
+        "offset": 7757352,
+        "label": "V3 pace local left/right input independently of speed",
+        "before": "900e0094",
+        "after": "3e4e7694"
+      },
+      {
+        "offset": 7393900,
+        "label": "V3 home menu has seven entries",
+        "before": "e1071f32",
+        "after": "e1008052"
+      },
+      {
+        "offset": 7394036,
+        "label": "V3 append lucky wheel immediately after Quay s\u1ed1",
+        "before": "206b2f94",
+        "after": "23b17794"
+      },
+      {
+        "offset": 7400676,
+        "label": "V3 select the new wheel row",
+        "before": "890a0034",
+        "after": "b3aa7714"
+      },
+      {
+        "offset": 7396428,
+        "label": "V3 fit home wheel label (columns, w3)",
+        "before": "e3070032",
+        "after": "e1ae7794"
+      },
+      {
+        "offset": 7397852,
+        "label": "V3 fit home wheel label (width, w8)",
+        "before": "08138052",
+        "after": "9dad7794"
+      },
+      {
+        "offset": 7397892,
+        "label": "V3 fit home wheel label (negative, w9)",
+        "before": "e9128012",
+        "after": "b3ad7794"
+      },
+      {
+        "offset": 7397904,
+        "label": "V3 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "d0ad7794"
+      },
+      {
+        "offset": 7397928,
+        "label": "V3 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "caad7794"
+      },
+      {
+        "offset": 7466276,
+        "label": "V3 display exact reference-video title by actual room ID",
+        "before": "080940f9",
+        "after": "c3647794"
+      },
+      {
+        "offset": 7252248,
+        "label": "V3 receive wheel -101 and cache room names -19",
+        "before": "fc6fbaa9",
+        "after": "2e3c7814"
+      },
+      {
+        "offset": 7258800,
+        "label": "V3 replay names after room list rebuild",
+        "before": "d4cb0094",
+        "after": "18367894"
+      },
+      {
+        "offset": 7224904,
+        "label": "V3 poll/send on original game thread",
+        "before": "416c0194",
+        "after": "4a577894"
+      },
+      {
+        "offset": 7694284,
+        "label": "V3 Notes77 configuration stage 0",
+        "before": "f657bda9",
+        "after": "058d7614"
+      },
+      {
+        "offset": 7694732,
+        "label": "V3 Notes77 configuration stage 1",
+        "before": "f85fbca9",
+        "after": "b58c7614"
+      },
+      {
+        "offset": 7696500,
+        "label": "V3 Notes77 configuration stage 2",
+        "before": "fa67bba9",
+        "after": "1b8b7614"
+      },
+      {
+        "offset": 7725604,
+        "label": "V3 Notes77 configuration stage 3",
+        "before": "f44fbea9",
+        "after": "cf6e7614"
+      },
+      {
+        "offset": 7694272,
+        "label": "V3 center seven configuration rows",
+        "before": "00780151",
+        "after": "00b80151"
+      },
+      {
+        "offset": 7217000,
+        "label": "V3 modal input guard 0",
+        "before": "f657bda9",
+        "after": "9e5f7814"
+      },
+      {
+        "offset": 7218468,
+        "label": "V3 modal input guard 1",
+        "before": "f657bda9",
+        "after": "4f5e7814"
+      },
+      {
+        "offset": 7221744,
+        "label": "V3 modal input guard 2",
+        "before": "c8cf0090",
+        "after": "3c5b7814"
+      },
+      {
+        "offset": 7221716,
+        "label": "V3 modal input guard 3",
+        "before": "c8cf0090",
+        "after": "635b7814"
+      },
+      {
+        "offset": 7221800,
+        "label": "V3 modal input guard 4",
+        "before": "c8cf0090",
+        "after": "6e5b7814"
+      },
+      {
+        "offset": 7883368,
+        "label": "V3 retain full inbox text and original dialog actions",
+        "before": "821cfe97",
+        "after": "7ad57594"
+      },
+      {
+        "offset": 8841348,
+        "label": "V4 prepend wheel to in-battle V9",
+        "before": "bee00d94",
+        "after": "1f2e7294"
+      },
+      {
+        "offset": 8980748,
+        "label": "V4 distinguish new wheel action from unchanged clock action",
+        "before": "f657bda9",
+        "after": "19a67114"
+      },
+      {
+        "offset": 8694304,
+        "label": "V4 pace local left/right input independently of speed",
+        "before": "c30e0094",
+        "after": "e4bd7294"
+      },
+      {
+        "offset": 8694508,
+        "label": "V4 pace local left/right input independently of speed",
+        "before": "900e0094",
+        "after": "b1bd7294"
+      },
+      {
+        "offset": 8331056,
+        "label": "V4 home menu has seven entries",
+        "before": "e1071f32",
+        "after": "e1008052"
+      },
+      {
+        "offset": 8331192,
+        "label": "V4 append lucky wheel immediately after Quay s\u1ed1",
+        "before": "efd72b94",
+        "after": "96207494"
+      },
+      {
+        "offset": 8337832,
+        "label": "V4 select the new wheel row",
+        "before": "890a0034",
+        "after": "261a7414"
+      },
+      {
+        "offset": 8333584,
+        "label": "V4 fit home wheel label (columns, w3)",
+        "before": "e3070032",
+        "after": "541e7494"
+      },
+      {
+        "offset": 8335008,
+        "label": "V4 fit home wheel label (width, w8)",
+        "before": "08138052",
+        "after": "101d7494"
+      },
+      {
+        "offset": 8335048,
+        "label": "V4 fit home wheel label (negative, w9)",
+        "before": "e9128012",
+        "after": "261d7494"
+      },
+      {
+        "offset": 8335060,
+        "label": "V4 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "431d7494"
+      },
+      {
+        "offset": 8335084,
+        "label": "V4 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "3d1d7494"
+      },
+      {
+        "offset": 8403432,
+        "label": "V4 display exact reference-video title by actual room ID",
+        "before": "080940f9",
+        "after": "92d17394"
+      },
+      {
+        "offset": 8189404,
+        "label": "V4 receive wheel -101 and cache room names -19",
+        "before": "fc6fbaa9",
+        "after": "a1ab7414"
+      },
+      {
+        "offset": 8195956,
+        "label": "V4 replay names after room list rebuild",
+        "before": "d4cb0094",
+        "after": "8ba57494"
+      },
+      {
+        "offset": 8162060,
+        "label": "V4 poll/send on original game thread",
+        "before": "416c0194",
+        "after": "bdc67494"
+      },
+      {
+        "offset": 8631440,
+        "label": "V4 Notes77 configuration stage 0",
+        "before": "f657bda9",
+        "after": "78fc7214"
+      },
+      {
+        "offset": 8631888,
+        "label": "V4 Notes77 configuration stage 1",
+        "before": "f85fbca9",
+        "after": "28fc7214"
+      },
+      {
+        "offset": 8633656,
+        "label": "V4 Notes77 configuration stage 2",
+        "before": "fa67bba9",
+        "after": "8efa7214"
+      },
+      {
+        "offset": 8662760,
+        "label": "V4 Notes77 configuration stage 3",
+        "before": "f44fbea9",
+        "after": "42de7214"
+      },
+      {
+        "offset": 8631428,
+        "label": "V4 center seven configuration rows",
+        "before": "00780151",
+        "after": "00b80151"
+      },
+      {
+        "offset": 8154156,
+        "label": "V4 modal input guard 0",
+        "before": "f657bda9",
+        "after": "11cf7414"
+      },
+      {
+        "offset": 8155624,
+        "label": "V4 modal input guard 1",
+        "before": "f657bda9",
+        "after": "c2cd7414"
+      },
+      {
+        "offset": 8158900,
+        "label": "V4 modal input guard 2",
+        "before": "08ca00d0",
+        "after": "afca7414"
+      },
+      {
+        "offset": 8158872,
+        "label": "V4 modal input guard 3",
+        "before": "08ca00d0",
+        "after": "d6ca7414"
+      },
+      {
+        "offset": 8158956,
+        "label": "V4 modal input guard 4",
+        "before": "08ca00d0",
+        "after": "e1ca7414"
+      },
+      {
+        "offset": 8820524,
+        "label": "V4 retain full inbox text and original dialog actions",
+        "before": "821cfe97",
+        "after": "ed447294"
+      },
+      {
+        "offset": 9778504,
+        "label": "V5 prepend wheel to in-battle V9",
+        "before": "8d4d0a94",
+        "after": "929d6e94"
+      },
+      {
+        "offset": 9917904,
+        "label": "V5 distinguish new wheel action from unchanged clock action",
+        "before": "f657bda9",
+        "after": "8c156e14"
+      },
+      {
+        "offset": 9631460,
+        "label": "V5 pace local left/right input independently of speed",
+        "before": "c30e0094",
+        "after": "572d6f94"
+      },
+      {
+        "offset": 9631664,
+        "label": "V5 pace local left/right input independently of speed",
+        "before": "900e0094",
+        "after": "242d6f94"
+      },
+      {
+        "offset": 9268212,
+        "label": "V5 home menu has seven entries",
+        "before": "e1071f32",
+        "after": "e1008052"
+      },
+      {
+        "offset": 9268348,
+        "label": "V5 append lucky wheel immediately after Quay s\u1ed1",
+        "before": "be442894",
+        "after": "09907094"
+      },
+      {
+        "offset": 9274988,
+        "label": "V5 select the new wheel row",
+        "before": "890a0034",
+        "after": "99897014"
+      },
+      {
+        "offset": 9270740,
+        "label": "V5 fit home wheel label (columns, w3)",
+        "before": "e3070032",
+        "after": "c78d7094"
+      },
+      {
+        "offset": 9272164,
+        "label": "V5 fit home wheel label (width, w8)",
+        "before": "08138052",
+        "after": "838c7094"
+      },
+      {
+        "offset": 9272204,
+        "label": "V5 fit home wheel label (negative, w9)",
+        "before": "e9128012",
+        "after": "998c7094"
+      },
+      {
+        "offset": 9272216,
+        "label": "V5 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "b68c7094"
+      },
+      {
+        "offset": 9272240,
+        "label": "V5 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "b08c7094"
+      },
+      {
+        "offset": 9340588,
+        "label": "V5 display exact reference-video title by actual room ID",
+        "before": "080940f9",
+        "after": "613e7094"
+      },
+      {
+        "offset": 9126560,
+        "label": "V5 receive wheel -101 and cache room names -19",
+        "before": "fc6fbaa9",
+        "after": "141b7114"
+      },
+      {
+        "offset": 9133112,
+        "label": "V5 replay names after room list rebuild",
+        "before": "d4cb0094",
+        "after": "fe147194"
+      },
+      {
+        "offset": 9099216,
+        "label": "V5 poll/send on original game thread",
+        "before": "416c0194",
+        "after": "30367194"
+      },
+      {
+        "offset": 9568596,
+        "label": "V5 Notes77 configuration stage 0",
+        "before": "f657bda9",
+        "after": "eb6b6f14"
+      },
+      {
+        "offset": 9569044,
+        "label": "V5 Notes77 configuration stage 1",
+        "before": "f85fbca9",
+        "after": "9b6b6f14"
+      },
+      {
+        "offset": 9570812,
+        "label": "V5 Notes77 configuration stage 2",
+        "before": "fa67bba9",
+        "after": "016a6f14"
+      },
+      {
+        "offset": 9599916,
+        "label": "V5 Notes77 configuration stage 3",
+        "before": "f44fbea9",
+        "after": "b54d6f14"
+      },
+      {
+        "offset": 9568584,
+        "label": "V5 center seven configuration rows",
+        "before": "00780151",
+        "after": "00b80151"
+      },
+      {
+        "offset": 9091312,
+        "label": "V5 modal input guard 0",
+        "before": "f657bda9",
+        "after": "843e7114"
+      },
+      {
+        "offset": 9092780,
+        "label": "V5 modal input guard 1",
+        "before": "f657bda9",
+        "after": "353d7114"
+      },
+      {
+        "offset": 9096056,
+        "label": "V5 modal input guard 2",
+        "before": "48c400d0",
+        "after": "223a7114"
+      },
+      {
+        "offset": 9096028,
+        "label": "V5 modal input guard 3",
+        "before": "48c400d0",
+        "after": "493a7114"
+      },
+      {
+        "offset": 9096112,
+        "label": "V5 modal input guard 4",
+        "before": "48c400d0",
+        "after": "543a7114"
+      },
+      {
+        "offset": 9757680,
+        "label": "V5 retain full inbox text and original dialog actions",
+        "before": "821cfe97",
+        "after": "60b46e94"
+      },
+      {
+        "offset": 10715660,
+        "label": "V6 prepend wheel to in-battle V9",
+        "before": "5cba0694",
+        "after": "050d6b94"
+      },
+      {
+        "offset": 10855060,
+        "label": "V6 distinguish new wheel action from unchanged clock action",
+        "before": "f657bda9",
+        "after": "ff846a14"
+      },
+      {
+        "offset": 10568616,
+        "label": "V6 pace local left/right input independently of speed",
+        "before": "c30e0094",
+        "after": "ca9c6b94"
+      },
+      {
+        "offset": 10568820,
+        "label": "V6 pace local left/right input independently of speed",
+        "before": "900e0094",
+        "after": "979c6b94"
+      },
+      {
+        "offset": 10205368,
+        "label": "V6 home menu has seven entries",
+        "before": "e1071f32",
+        "after": "e1008052"
+      },
+      {
+        "offset": 10205504,
+        "label": "V6 append lucky wheel immediately after Quay s\u1ed1",
+        "before": "8db12494",
+        "after": "7cff6c94"
+      },
+      {
+        "offset": 10212144,
+        "label": "V6 select the new wheel row",
+        "before": "890a0034",
+        "after": "0cf96c14"
+      },
+      {
+        "offset": 10207896,
+        "label": "V6 fit home wheel label (columns, w3)",
+        "before": "e3070032",
+        "after": "3afd6c94"
+      },
+      {
+        "offset": 10209320,
+        "label": "V6 fit home wheel label (width, w8)",
+        "before": "08138052",
+        "after": "f6fb6c94"
+      },
+      {
+        "offset": 10209360,
+        "label": "V6 fit home wheel label (negative, w9)",
+        "before": "e9128012",
+        "after": "0cfc6c94"
+      },
+      {
+        "offset": 10209372,
+        "label": "V6 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "29fc6c94"
+      },
+      {
+        "offset": 10209396,
+        "label": "V6 fit home wheel label (width, w10)",
+        "before": "0a138052",
+        "after": "23fc6c94"
+      },
+      {
+        "offset": 10277744,
+        "label": "V6 display exact reference-video title by actual room ID",
+        "before": "080940f9",
+        "after": "30ab6c94"
+      },
+      {
+        "offset": 10063716,
+        "label": "V6 receive wheel -101 and cache room names -19",
+        "before": "fc6fbaa9",
+        "after": "878a6d14"
+      },
+      {
+        "offset": 10070268,
+        "label": "V6 replay names after room list rebuild",
+        "before": "d4cb0094",
+        "after": "71846d94"
+      },
+      {
+        "offset": 10036372,
+        "label": "V6 poll/send on original game thread",
+        "before": "416c0194",
+        "after": "a3a56d94"
+      },
+      {
+        "offset": 10505752,
+        "label": "V6 Notes77 configuration stage 0",
+        "before": "f657bda9",
+        "after": "5edb6b14"
+      },
+      {
+        "offset": 10506200,
+        "label": "V6 Notes77 configuration stage 1",
+        "before": "f85fbca9",
+        "after": "0edb6b14"
+      },
+      {
+        "offset": 10507968,
+        "label": "V6 Notes77 configuration stage 2",
+        "before": "fa67bba9",
+        "after": "74d96b14"
+      },
+      {
+        "offset": 10537072,
+        "label": "V6 Notes77 configuration stage 3",
+        "before": "f44fbea9",
+        "after": "28bd6b14"
+      },
+      {
+        "offset": 10505740,
+        "label": "V6 center seven configuration rows",
+        "before": "00780151",
+        "after": "00b80151"
+      },
+      {
+        "offset": 10028468,
+        "label": "V6 modal input guard 0",
+        "before": "f657bda9",
+        "after": "f7ad6d14"
+      },
+      {
+        "offset": 10029936,
+        "label": "V6 modal input guard 1",
+        "before": "f657bda9",
+        "after": "a8ac6d14"
+      },
+      {
+        "offset": 10033212,
+        "label": "V6 modal input guard 2",
+        "before": "88be00f0",
+        "after": "95a96d14"
+      },
+      {
+        "offset": 10033184,
+        "label": "V6 modal input guard 3",
+        "before": "88be00f0",
+        "after": "bca96d14"
+      },
+      {
+        "offset": 10033268,
+        "label": "V6 modal input guard 4",
+        "before": "88be00f0",
+        "after": "c7a96d14"
+      },
+      {
+        "offset": 10694836,
+        "label": "V6 retain full inbox text and original dialog actions",
+        "before": "821cfe97",
+        "after": "d3236b94"
+      },
+      {
+        "offset": 5264208,
+        "label": "V1 Notes78 login build marker",
+        "before": "c77e1594",
+        "after": "44db7f94"
+      },
+      {
+        "offset": 6240288,
+        "label": "V2 Notes78 login build marker",
+        "before": "93c51194",
+        "after": "10227c94"
+      },
+      {
+        "offset": 7177444,
+        "label": "V3 Notes78 login build marker",
+        "before": "62320e94",
+        "after": "df8e7894"
+      },
+      {
+        "offset": 8114600,
+        "label": "V4 Notes78 login build marker",
+        "before": "319f0a94",
+        "after": "aefb7494"
+      },
+      {
+        "offset": 9051756,
+        "label": "V5 Notes78 login build marker",
+        "before": "000c0794",
+        "after": "7d687194"
+      },
+      {
+        "offset": 9988912,
+        "label": "V6 Notes78 login build marker",
+        "before": "cf780394",
+        "after": "4cd56d94"
+      },
+      {
+        "offset": 21346115,
+        "label": "Native version label 2.4.1",
+        "before": "322e342e30",
+        "after": "322e342e31"
+      }
+    ]
+  }
 }
