@@ -350,7 +350,7 @@ __attribute__((visibility("default"))) void AGNotesPreviewCheck(void){
         NSData *wire=[[NSData alloc]initWithBase64EncodedString:fixtures[name] options:0];AGCaptchaPacket packet;
         NSCAssert(AGNotesParse(wire.bytes,wire.length,-123,&packet),@"Server captcha packet parses");packet.expires=(uint64_t)(NSDate.date.timeIntervalSince1970*1000)+180000;
         pthread_mutex_lock(&NMutex);AGCaptchaInit(&NModels[0].cap);AGCaptchaContext(&NModels[0].cap,1,1);AGCaptchaReceive(&NModels[0].cap,&packet,NNow());atomic_store(&NCurrent,0);pthread_mutex_unlock(&NMutex);
-        NUpdateUI();[NController.view setNeedsLayout];[NController.view layoutIfNeeded];
+        NUpdateUI();NController.captcha.imageSerial=UINT64_MAX;[NController.captcha setNeedsDisplay];[NController.view setNeedsLayout];[NController.view layoutIfNeeded];
         NSCAssert(NController.mode==1&&NController.close.hidden,@"No extra back/reset overlay");
         NSCAssert(CGRectGetMaxY(NController.status.frame)<=NWindow.gameBottom,@"Countdown above game keys");
         NSCAssert(CGRectGetMaxY(NController.captcha.frame)<NWindow.gameBottom,@"Captcha fits game region");
