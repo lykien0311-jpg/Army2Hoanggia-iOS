@@ -64,7 +64,7 @@ def main():
             if zi.filename==APP+'Info.plist':
                 plist=plistlib.loads(data)
                 assert plist['CFBundleShortVersionString'] in ('2.4.0','2.4.1')
-                plist['CFBundleShortVersionString']='2.4.1';plist['CFBundleVersion']='242'
+                plist['CFBundleShortVersionString']='2.4.1';plist['CFBundleVersion']='243'
                 data=plistlib.dumps(plist,fmt=plistlib.FMT_BINARY,sort_keys=False)
             dst.writestr(zi,data)
     with zipfile.ZipFile(args.ipa) as src,zipfile.ZipFile(args.output) as dst:
@@ -79,3 +79,4 @@ def main():
     print(json.dumps(report,indent=2))
 
 if __name__=='__main__':main()
+

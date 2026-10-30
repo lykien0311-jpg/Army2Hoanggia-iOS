@@ -1,0 +1,68 @@
+[
+  {
+    "variant": 0,
+    "arena_class": 34090544,
+    "player_class": 34151296,
+    "array_class": 34074720,
+    "fire": 5862932,
+    "boss_sites": [
+      5611244,
+      5614092
+    ]
+  },
+  {
+    "variant": 1,
+    "arena_class": 34284448,
+    "player_class": 34342512,
+    "array_class": 34270320,
+    "fire": 6817128,
+    "boss_sites": [
+      6573328,
+      6576176
+    ]
+  },
+  {
+    "variant": 2,
+    "arena_class": 34472080,
+    "player_class": 34530144,
+    "array_class": 34457968,
+    "fire": 7754284,
+    "boss_sites": [
+      7510484,
+      7513332
+    ]
+  },
+  {
+    "variant": 3,
+    "arena_class": 34659712,
+    "player_class": 34717776,
+    "array_class": 34645600,
+    "fire": 8691440,
+    "boss_sites": [
+      8447640,
+      8450488
+    ]
+  },
+  {
+    "variant": 4,
+    "arena_class": 34847344,
+    "player_class": 34905408,
+    "array_class": 34833232,
+    "fire": 9628596,
+    "boss_sites": [
+      9384796,
+      9387644
+    ]
+  },
+  {
+    "variant": 5,
+    "arena_class": 35034976,
+    "player_class": 35093040,
+    "array_class": 35020864,
+    "fire": 10565752,
+    "boss_sites": [
+      10321952,
+      10324800
+    ]
+  }
+]

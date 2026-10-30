@@ -365,3 +365,6 @@ __attribute__((visibility("default"))) void AGNotesPreviewCheck(void){
     pthread_mutex_lock(&NMutex);AGCaptchaClose(&NModels[0].cap);pthread_mutex_unlock(&NMutex);NUpdateUI();
 }
 #endif
+
+
+int AGNotesBlocksAuto(int v){if(v<0||v>=6)return 1;pthread_mutex_lock(&NMutex);int blocked=NModels[v].cap.active||NModels[v].inboxVisible;pthread_mutex_unlock(&NMutex);return blocked;}

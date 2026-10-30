@@ -10,6 +10,7 @@
 #include "WheelProtocol.h"
 #include "NativeMap.h"
 #include "Notes77.h"
+#include "Turn33.h"
 #import "GameViewport.h"
 extern void AGInventoryTick(int);
 
@@ -76,6 +77,7 @@ __attribute__((noinline,optnone)) static int AGSendNative(void *env, void *conte
 __attribute__((visibility("default"))) void AGWheelTick(void *env, int variant) {
     if(env){AGViewportCapture(variant);AGInventoryTick(variant);}
     AGNotesTick(env,variant);
+    if(atomic_load(&AGForeground))AGTurnTick(env,variant);
     if(!env || variant<0 || variant>=6 || !atomic_load(&AGInterested) || !atomic_load(&AGForeground))return;
     double now=AGNow();AGSendJob job={0};uint64_t generation;int isBet=0;
     pthread_mutex_lock(&AGMutex);
@@ -398,4 +400,5 @@ __attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
     [json writeToFile:[directory stringByAppendingPathComponent:@"ui-check.json"] atomically:YES];
 }
 #endif
+
 
