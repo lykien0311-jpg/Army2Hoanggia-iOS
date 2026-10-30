@@ -54,7 +54,7 @@ def main():
     assert len(signatures)==1 and all(v>0 for v in signatures[0])
     assert signatures[0][0]+signatures[0][1]<=len(lib)
     assert b'_AGWheelPreview' not in lib
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox'):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust'):
         assert ('_'+name+'\0').encode() in lib,name
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(args.ipa) as src,zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as dst:
