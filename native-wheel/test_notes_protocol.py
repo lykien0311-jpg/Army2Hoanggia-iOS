@@ -34,7 +34,9 @@ def touch(s,cell):
 def setup(p):
  s=State();lib.AGCaptchaInit(C.byref(s));lib.AGCaptchaContext(C.byref(s),1,1);ok(lib.AGCaptchaReceive(C.byref(s),C.byref(p),1)==1);return s
 
-for f in sorted(D.glob('*.bin')):
+fixtures=sorted(D.glob('*.bin'))
+assert len(fixtures)==30, 'Generate the 30 Notes77 server fixtures before running this test'
+for f in fixtures:
  wire=f.read_bytes();valid,p=parse(wire);ok(valid==1);ok(p.kind==1 and p.type in range(1,7));s=State();lib.AGCaptchaInit(C.byref(s));ok(not lib.AGCaptchaReceive(C.byref(s),C.byref(p),1));ok(not s.active)
  lib.AGCaptchaContext(C.byref(s),1,0);ok(not lib.AGCaptchaReceive(C.byref(s),C.byref(p),1));s=setup(p)
  # Every packet must be atomic: truncated fields/images and trailing data fail.
@@ -65,5 +67,5 @@ for f in sorted(D.glob('*.bin')):
 for data,cmd in [(b'\1\1\0\0',-122),(b'\1\0\0\0',-122),(b'\2\3\0',-123),(b'\2\3\1',-123),(b'\2\0',-123),(b'\2\2\2\0\0',-123)]:ok(parse(data,cmd)[0]==1)
 for data,cmd in [(b'\1\2\0\0',-122),(b'\1\1',-122),(b'\2\3\2',-123),(b'\2\0\0',-123),(b'\2\2\2\0\5abc',-123)]:ok(parse(data,cmd)[0]==0)
 s=State();lib.AGCaptchaInit(C.byref(s));ok(send(s,0)==b'\2\0\1\xe0\2\x80')
-report={'passed':True,'assertions':checks,'server_fixtures':30,'modes':6,'viewports':5,'live_requests':0,'packet_size':C.sizeof(Packet),'state_size':C.sizeof(State)}
+report={'passed':True,'assertions':checks,'server_fixtures':len(fixtures),'modes':6,'viewports':5,'live_requests':0,'packet_size':C.sizeof(Packet),'state_size':C.sizeof(State)}
 (R/'build/notes-protocol-check.json').write_text(json.dumps(report,indent=2)+'\n');print('PASS',report)
