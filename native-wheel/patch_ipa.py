@@ -62,7 +62,7 @@ def build_native(old,original,maps):
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
     symbols={};strcursor=0x7000
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
     for title in REFERENCE_TITLES.values():
@@ -93,6 +93,27 @@ def build_native(old,original,maps):
         assert old[at:at+len(raw)]==original[at:at+len(raw)],(hex(at),label)
         records.append(dict(offset=at,label=label,before=b[at:at+len(raw)].hex(),after=raw.hex()))
         b[at:at+len(raw)]=raw
+    grid_map=json.loads((ROOT/'grid-map.json').read_text())
+    save=['sub sp, sp, #800']
+    for r in range(0,30,2):save.append(f'stp x{r}, x{r+1}, [sp, #{r*8}]')
+    save += ['str x30, [sp, #240]','mrs x9, nzcv','str x9, [sp, #248]']
+    for r in range(0,32,2):save.append(f'stp q{r}, q{r+1}, [sp, #{256+r*16}]')
+    restore=[]
+    for r in range(0,32,2):restore.append(f'ldp q{r}, q{r+1}, [sp, #{256+r*16}]')
+    restore+=['ldr x9, [sp, #248]','msr nzcv, x9']
+    for r in range(0,30,2):restore.append(f'ldp x{r}, x{r+1}, [sp, #{r*8}]')
+    restore+=['ldr x30, [sp, #240]','add sp, sp, #800','ret']
+    grid_hook,_=emit('\n'.join(save)+lookup('AGGridAdjust',32)+"""
+        cbz x10, grid_restore
+        mov x0, sp
+        ldr x1, [sp, #240]
+        sub x1, x1, #4
+        blr x10
+      grid_restore:
+    """+'\n'.join(restore))
+    for site in grid_map['sites']:
+        at=site['site'];assert struct.unpack_from('<I',original,at)[0]==site['word']
+        patch(at,asm(f'bl {grid_hook}',at),f"V{site['variant']+1} responsive inventory/shop {site['metric']}")
     # Match the app's literal-string getters. RoboVM registers the stable
     # cache slot itself; it must never point to a temporary stack location.
     label=symbols['VÒNG XOAY MAY MẮN'];label_cache=rwvm+40
@@ -571,7 +592,7 @@ def build_native(old,original,maps):
         c=bytearray(old[p:p+size])
         if p==link_p:
             load.append(segment('__AGWHEEL',rxvm,rxoff,PAGE,5,[('__text',rxvm,rxoff,0x7000,0x80000400,2),('__cstring',rxvm+0x7000,rxoff+0x7000,strcursor-0x7000,2,0)]))
-            load.append(segment('__AGDATA',rwvm,rwoff,PAGE,3,[('__data',rwvm,rwoff,256,0,3)]))
+            load.append(segment('__AGDATA',rwvm,rwoff,PAGE,3,[('__data',rwvm,rwoff,512,0,3)]))
             struct.pack_into('<Q',c,24,link[1]+delta);struct.pack_into('<Q',c,40,rxoff+delta)
         for field in file_fields.get(cmd,[]):
             value=struct.unpack_from('<I',c,field)[0]
@@ -588,7 +609,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()
