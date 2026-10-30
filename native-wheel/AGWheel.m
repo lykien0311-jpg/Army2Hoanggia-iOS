@@ -11,6 +11,7 @@
 #include "NativeMap.h"
 #include "Notes77.h"
 #import "GameViewport.h"
+extern void AGInventoryTick(int);
 
 // Exported release identity binds the Apple artifact to the native login patch.
 __attribute__((visibility("default"))) const char *AGReleaseIdentity(void) { return "2.4.1-HG78-IPA"; }
@@ -73,7 +74,7 @@ __attribute__((noinline,optnone)) static int AGSendNative(void *env, void *conte
 }
 
 __attribute__((visibility("default"))) void AGWheelTick(void *env, int variant) {
-    if(env)AGViewportCapture(variant);
+    if(env){AGViewportCapture(variant);AGInventoryTick(variant);}
     AGNotesTick(env,variant);
     if(!env || variant<0 || variant>=6 || !atomic_load(&AGInterested) || !atomic_load(&AGForeground))return;
     double now=AGNow();AGSendJob job={0};uint64_t generation;int isBet=0;
@@ -303,7 +304,7 @@ int AGWheelInput(int variant,int kind,int code,int y){
 @end
 
 __attribute__((visibility("default"))) void AGWheelOpen(void *env, int variant) {
-    if(variant<0||variant>=6)return;if(env)AGViewportCapture(variant);
+    if(variant<0||variant>=6)return;if(env){AGViewportCapture(variant);AGInventoryTick(variant);}
     pthread_mutex_lock(&AGMutex);
     if(AGState.variant!=variant){uint64_t generation=AGState.generation+1;memset(&AGState,0,sizeof AGState);AGState.generation=generation;AGState.variant=variant;}
     AGState.visible=1;AGState.loaded=0;AGState.openedAt=AGNow();AGState.lastPoll=0;atomic_store(&AGInterested,1);
