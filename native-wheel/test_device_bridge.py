@@ -18,7 +18,7 @@ u=Uc(UC_ARCH_ARM64,UC_MODE_ARM)
 for s in m.segments:
     u.mem_map(LIB+s.virtual_address,(s.virtual_size+4095)&-4096)
     u.mem_write(LIB+s.virtual_address,blob[s.file_offset:s.file_offset+s.file_size])
-main=Path('inspect-ipa/Army2Hoanggia').read_bytes()
+main=(ROOT.parent/'validation/inspect-ipa/Army2Hoanggia').read_bytes()
 u.mem_map(MAIN,(len(main)+4095)&-4096);u.mem_write(MAIN,main)
 u.mem_map(FAKE,0x40000);u.mem_map(HEAP,0x2000000);u.mem_map(STACK,0x40000)
 symbols={s.name:LIB+s.value for s in m.symbols if s.value}
@@ -161,3 +161,4 @@ if '_AGMoveAllow' in symbols:
         now=105.;assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==1
         assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==0
     print('PASS: compiled device movement pacing, 36 monotonic-clock checks across six variants')
+
