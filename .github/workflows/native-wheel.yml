@@ -31,6 +31,8 @@ jobs:
             native-wheel/build/wheel-preview.png
             native-wheel/build/wheel-input-preview.png
             native-wheel/build/wheel-waiting-preview.png
+            native-wheel/build/captcha-*.png
+            native-wheel/build/captcha-ui-check.json
             native-wheel/build/ui-check.json
             native-wheel/build/wheel-single-preview.png
           if-no-files-found: error
