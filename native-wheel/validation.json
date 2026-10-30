@@ -1,52 +1,277 @@
 {
-  "ipa": "Army2Hoanggia-V9-Wheel-Speed.ipa",
-  "size_bytes": 16521098,
-  "sha256": "08357ec70cb6c04b7bfd2278d54f79c904aa01defb5cf415e4e7fc6e17a87aa4",
-  "dylib_sha256": "362a6ca1cee2e5112cf790b15ef0b88de549d16cc005e43f6ffcea2ac05c6d49",
-  "device_platform": "iOS arm64",
-  "minimum_ios": "12.0",
-  "source_commit": "707866d166fd658da3f05129493bdd3423e9cc66",
-  "build_merge_commit": "a1bb398effcdf2bcb15ce8489a3c7e4b1776d9fa",
-  "build_run": 40531573505,
-  "artifact_id": 12746861405,
-  "dyld_required_version": [
-    0,
-    0,
-    0
-  ],
-  "dyld_provided_version": [
-    0,
-    0,
-    0
-  ],
-  "unchanged_resource_count": 523,
-  "prior_resources_unchanged": true,
+  "package-check": {
+    "passed": true,
+    "input_sha256": "b5fd4e77c62bb6751f53142711588ba0646dfe73e519bf2d504d4f9010ecc7cd",
+    "output": "Army2Hoanggia-2.4.1-Notes78-GitHub.ipa",
+    "sha256": "fc465ce2855da8d4430acaaf6fccdd67b9b4491058bfd196d5928c361a3492ba",
+    "bytes": 16548458,
+    "changed_entries": [
+      "Payload/Army2Hoanggia.app/Army2Hoanggia",
+      "Payload/Army2Hoanggia.app/Info.plist",
+      "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+    ],
+    "other_entries_unchanged": 522,
+    "github_build": {
+      "source_commit": "94bc66cbff2ac58e8caaa39ecdeba6896882748a",
+      "release_version": "2.4.1",
+      "login_marker": "2.4.1-HG78-IPA",
+      "xcode": "Xcode 16.4\nBuild version 16F6",
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+      "sdk": "18.5",
+      "dylib_sha256": "b34bc3d5851fc84782f04f3de1d6b820b2063f6d0ae33eafb0cb34f2f5f01d9c",
+      "apple_codesign_strict_verified": true,
+      "apple_resign_strict_verified": true,
+      "physical_device_tested": false
+    },
+    "physical_device_tested": false,
+    "requires_user_certificate_resigning": true
+  },
+  "server78-check": {
+    "passed": true,
+    "input_sha256": "f77a7a3e7af86323154afc4c55a5f886bb96dfeb9428082a0789bd76aa771769",
+    "server_sha256": "3413bc70a279bbee559624bc449a2b250471d0bbc49e24c9a4362b1f928c4a7c",
+    "output_sha256": "40440fbcc30fe1032474b8cc7227e3066ffd0fe63d669f7eed603f54a72bc200",
+    "changed_archive_entries": [
+      "server.jar",
+      "technical/src/army2/server/ClientBuild78.java",
+      "technical/tests/army2/server/ClientBuildProbe78.java",
+      "HUONG_DAN.txt",
+      "VALIDATION.txt",
+      "technical/README.txt"
+    ],
+    "changed_runtime_classes": [
+      "army2/server/ClientBuild78.class"
+    ],
+    "server_assertions": 100,
+    "live_vps_tested": false,
+    "test_output": "PASS 100 login78 assertions: strict JAR/APK/IPA markers, old/unknown rejection before account access, native notice framing, and unchanged new-build credential/loading validation."
+  },
+  "login78-check": {
+    "passed": true,
+    "actual_native_login_cases": 25,
+    "variants": 6,
+    "old_login_marker": "2.4.0",
+    "new_login_marker": "2.4.1-HG78-IPA",
+    "display_version": "2.4.1",
+    "credentials_and_platform_tail_unchanged": true,
+    "boundary_dependencies": "JVM strings and transport simulated",
+    "live_server_login": false,
+    "packets": [
+      {
+        "variant": 0,
+        "fields": [
+          "probeuser",
+          "pass1234",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 0,
+        "fields": [
+          "kiên",
+          "mật khẩu 78",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 1,
+        "fields": [
+          "probeuser",
+          "pass1234",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 1,
+        "fields": [
+          "kiên",
+          "mật khẩu 78",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 2,
+        "fields": [
+          "probeuser",
+          "pass1234",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 2,
+        "fields": [
+          "kiên",
+          "mật khẩu 78",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 3,
+        "fields": [
+          "probeuser",
+          "pass1234",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 3,
+        "fields": [
+          "kiên",
+          "mật khẩu 78",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 4,
+        "fields": [
+          "probeuser",
+          "pass1234",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 4,
+        "fields": [
+          "kiên",
+          "mật khẩu 78",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 5,
+        "fields": [
+          "probeuser",
+          "pass1234",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      },
+      {
+        "variant": 5,
+        "fields": [
+          "kiên",
+          "mật khẩu 78",
+          "2.4.1-HG78-IPA",
+          "z1"
+        ]
+      }
+    ]
+  },
+  "settings-exit-check": {
+    "passed": true,
+    "actual_native_screen_transitions": 12,
+    "variants": 6,
+    "waiting_for_save_ack_does_not_block_exit": true,
+    "server_requests": 0
+  },
+  "notes-device-check": {
+    "passed": true,
+    "assertions": 444,
+    "variants": 6,
+    "actual_arm64_dylib": "build/AGWheel.dylib",
+    "uikit_and_jvm_primitives": "mocked",
+    "live_requests": 0,
+    "native_model_size": 53968
+  },
+  "notes-protocol-check": {
+    "passed": true,
+    "assertions": 1507,
+    "server_fixtures": 30,
+    "modes": 6,
+    "viewports": 5,
+    "live_requests": 0,
+    "packet_size": 53224,
+    "state_size": 53872
+  },
+  "notes-hooks-check": {
+    "passed": true,
+    "assertions": 120,
+    "variants": 6,
+    "entry_hooks": 60,
+    "fallbacks": true,
+    "relocated_pointer_ADRP": true,
+    "live_requests": 0
+  },
+  "ui-check": {
+    "sizes": [
+      {
+        "scrolls": 1,
+        "panel_width": 312,
+        "width": 320,
+        "height": 480,
+        "content_height": 427.5
+      },
+      {
+        "scrolls": 0,
+        "panel_width": 367,
+        "width": 375,
+        "height": 667,
+        "content_height": 543.4285714285714
+      },
+      {
+        "scrolls": 0,
+        "panel_width": 382,
+        "width": 390,
+        "height": 844,
+        "content_height": 714.2857142857143
+      },
+      {
+        "scrolls": 0,
+        "panel_width": 422,
+        "width": 430,
+        "height": 932,
+        "content_height": 766.5714285714286
+      },
+      {
+        "scrolls": 0,
+        "panel_width": 760,
+        "width": 768,
+        "height": 1024,
+        "content_height": 856
+      },
+      {
+        "scrolls": 1,
+        "panel_width": 836,
+        "width": 844,
+        "height": 390,
+        "content_height": 427.5
+      }
+    ],
+    "passed": true,
+    "amount_open_cancel": true,
+    "keyboard_geometry": true,
+    "runtime": "Apple iOS Simulator UIKit",
+    "server_requests": 0
+  },
+  "github": {
+    "run_id": 41003030845,
+    "url": "https://github.com/lykien0311-jpg/Army2Hoanggia-iOS/actions/runs/41003030845",
+    "head_commit": "ac99b72ec367a553b754b6a1503bd23157be4291",
+    "conclusion": "success",
+    "artifact_id": 12954546137,
+    "artifact_zip_sha256": "7ddcfdce371cb474e41e6dfd3c7ff284678a0ce9d90ef30806a93be0eccfdae6"
+  },
+  "compiled_bridge": {
+    "passed": true,
+    "wheel_checks": 48,
+    "room_checks": 36,
+    "movement_checks": 36,
+    "uikit_and_jvm_boundaries_mocked": true
+  },
+  "package_reproduction": {
+    "passed": true,
+    "byte_identical": true
+  },
   "physical_device_tested": false,
-  "live_server_tested": false,
-  "menu_locations": [
-    "First row in battle V9",
-    "Immediately below Quay số in home menu"
-  ],
-  "clock_preserved": true,
-  "room_title_policy": "Exact video-2 titles at paint for IDs 0–17; unknown IDs retain server names",
-  "movement": "Only two local walk calls per variant gated to 20 original steps/second; game speed unchanged",
-  "native_hook_cases": 122,
-  "native_menu_cases": 54,
-  "native_width_cases": 900,
-  "native_room_display_cases": 612,
-  "native_font_draw_cases": 324,
-  "native_battle_cases": 48,
-  "compiled_dylib_wheel_cases": 48,
-  "compiled_dylib_room_cases": 36,
-  "compiled_dylib_movement_cases": 36,
-  "simulator_preview_checked": [
-    "active round",
-    "waiting for second player; 49.8bn balance",
-    "input dialog and keyboard"
-  ],
-  "room_reference": "upload/26938(2).mp4",
-  "wheel_reference": "upload/27450.jpg",
-  "battle_menu_reference": "upload/27451.jpg",
-  "movement_reference": "upload/27002.mp4",
-  "ipa_re_signing_required": true
+  "live_vps_tested": false
 }
