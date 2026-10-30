@@ -40,10 +40,16 @@ static void NInit(void){
 }
 static void *NCanvas(int variant){return *(void **)(NBase()+AGNotesMaps[variant].canvas);}
 static int NRoom(int variant){
+#ifdef AG_WHEEL_PREVIEW
+    return 1;
+#endif
     uint8_t *c=NCanvas(variant);if(!c)return 0;void *screen=*(void **)(c+0xb8);
     void *clazz=*(void **)(NBase()+AGNotesMaps[variant].room_class);return screen&&clazz&&*(void **)screen==clazz;
 }
 static void NClear(int variant){
+#ifdef AG_WHEEL_PREVIEW
+    return;
+#endif
     uint8_t *c=NCanvas(variant);if(!c)return;
     for(int off=0xa0;off<=0xa8;off+=8){uint8_t *a=*(uint8_t **)(c+off);if(a){int n=*(int *)(a+0x10);if(n>=0&&n<=64)memset(a+0x14,0,n);}}
     c[0x140]=0;c[0x141]=0;
@@ -334,3 +340,28 @@ static void NUpdateUI(void){
     if(variant>=0&&variant<6){if(NController.variant!=variant){NController.variant=variant;NController.inboxSerial=UINT64_MAX;NController.captcha.imageSerial=UINT64_MAX;}NController.reply.enabled=YES;NController.close.enabled=YES;[NController render];[NController.view setNeedsLayout];}
     if(NActiveAlert&&!NController.presentedViewController){UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Thông báo" message:NActiveAlert preferredStyle:UIAlertControllerStyleAlert];[a addAction:[UIAlertAction actionWithTitle:@"Đã hiểu" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){NActiveAlert=NQueuedAlert;NQueuedAlert=nil;dispatch_async(dispatch_get_main_queue(),^{NUpdateUI();});}]];[NController presentViewController:a animated:YES completion:nil];}
 }
+
+#ifdef AG_WHEEL_PREVIEW
+__attribute__((visibility("default"))) void AGNotesPreviewCheck(void){
+    NInit();NSData *data=[NSData dataWithContentsOfFile:[NSBundle.mainBundle pathForResource:@"captcha-preview-fixtures" ofType:@"json"]];
+    NSDictionary *fixtures=[NSJSONSerialization JSONObjectWithData:data options:0 error:nil];NSCAssert(fixtures.count==6,@"Six server captcha fixtures");
+    NSMutableArray *results=[NSMutableArray new];NSString *dir=NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject;
+    for(NSString *name in fixtures){
+        NSData *wire=[[NSData alloc]initWithBase64EncodedString:fixtures[name] options:0];AGCaptchaPacket packet;
+        NSCAssert(AGNotesParse(wire.bytes,wire.length,-123,&packet),@"Server captcha packet parses");packet.expires=(uint64_t)(NSDate.date.timeIntervalSince1970*1000)+180000;
+        pthread_mutex_lock(&NMutex);AGCaptchaInit(&NModels[0].cap);AGCaptchaContext(&NModels[0].cap,1,1);AGCaptchaReceive(&NModels[0].cap,&packet,NNow());atomic_store(&NCurrent,0);pthread_mutex_unlock(&NMutex);
+        NUpdateUI();[NController.view setNeedsLayout];[NController.view layoutIfNeeded];
+        NSCAssert(NController.mode==1&&NController.close.hidden,@"No extra back/reset overlay");
+        NSCAssert(CGRectGetMaxY(NController.status.frame)<=NWindow.gameBottom,@"Countdown above game keys");
+        NSCAssert(CGRectGetMaxY(NController.captcha.frame)<NWindow.gameBottom,@"Captcha fits game region");
+        NSCAssert([NWindow hitTest:CGPointMake(100,NWindow.gameBottom+10) withEvent:nil]==nil,@"Captcha passes keypad touches");
+        NSCAssert(AGNotesInput(0,0,-4,0)&&AGNotesInput(0,1,-4,0),@"Existing native keypad drives captcha");
+        UIGraphicsBeginImageContextWithOptions(NController.view.bounds.size,NO,2);[NController.view.layer renderInContext:UIGraphicsGetCurrentContext()];UIImage *image=UIGraphicsGetImageFromCurrentImageContext();UIGraphicsEndImageContext();
+        [UIImagePNGRepresentation(image)writeToFile:[dir stringByAppendingPathComponent:[NSString stringWithFormat:@"captcha-%@.png",name]] atomically:YES];
+        [results addObject:@{@"mode":name,@"passes_keys":@YES,@"extra_button_hidden":@YES}];
+    }
+    NSData *report=[NSJSONSerialization dataWithJSONObject:@{@"passed":@YES,@"modes":results,@"live_requests":@0} options:NSJSONWritingPrettyPrinted error:nil];
+    [report writeToFile:[dir stringByAppendingPathComponent:@"captcha-ui-check.json"] atomically:YES];
+    pthread_mutex_lock(&NMutex);AGCaptchaClose(&NModels[0].cap);pthread_mutex_unlock(&NMutex);NUpdateUI();
+}
+#endif
