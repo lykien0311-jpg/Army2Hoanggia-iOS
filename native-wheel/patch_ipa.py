@@ -62,7 +62,7 @@ def build_native(old,original,maps):
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
     symbols={};strcursor=0x7000
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values()):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
     for title in REFERENCE_TITLES.values():
@@ -536,6 +536,32 @@ def build_native(old,original,maps):
         ''')
         patch(inbox_site,asm(f'bl {inbox_addr}',inbox_site),f'V{i+1} retain full inbox text and original dialog actions')
         hooks.append(dict(notes77=n,config_hooks=config_hooks,input_hooks=input_hooks,inbox_hook=inbox_addr,variant=i,open_hook=open_addr,receive_hook=receive_addr,tick_hook=tick_addr,room_build_hook=build_addr,home_append_hook=append_addr,home_select_hook=select_addr,width_hooks=width_hooks,v9_hook=v9_addr,clock_hook=clock_addr,move_hook=move_addr,callback_slot=callback_slot,**m))
+    # Notes78: only the third UTF in login changes. Registration, credentials,
+    # platform tail and every other service packet retain their native path.
+    release=json.loads((ROOT/'login-map.json').read_text())
+    marker=symbols['2.4.1-HG78-IPA'];cache=rwvm+248
+    login_hook,_=emit(f'''
+        stp x29, x30, [sp, #-32]!
+        mov x29, sp
+        stp x0, x1, [sp, #16]
+        adrp x1, {cache&-4096}
+        add x1, x1, #{cache&4095}
+        adrp x2, {marker&-4096}
+        add x2, x2, #{marker&4095}
+        mov w3, #{len('2.4.1-HG78-IPA')}
+        bl {0x12e8038}
+        mov x2, x0
+        ldp x0, x1, [sp, #16]
+        ldp x29, x30, [sp], #32
+        b {release['write_utf']}
+    ''')
+    for i,v in enumerate(release['variants']):
+        at=v['utf_calls'][2]
+        assert old[at:at+4]==asm(f"bl {release['write_utf']}",at)
+        patch(at,asm(f'bl {login_hook}',at),f'V{i+1} Notes78 login build marker')
+    at=release['version_offset']
+    assert old[at:at+6]==b'2.4.0\0'
+    patch(at,b'2.4.1','Native version label 2.4.1')
     b[rxoff:rxoff+PAGE]=rx
     # Relocate only link-edit FILE offsets; no original text/data VM address
     # changes. Existing rebases/bindings target segment 1/2, never LINKEDIT.
@@ -562,7 +588,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES)
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()
