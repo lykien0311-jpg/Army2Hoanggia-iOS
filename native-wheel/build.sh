@@ -29,7 +29,9 @@ p=pathlib.Path('build/AGWheel.dylib');exports=pathlib.Path('build/exports.txt').
 for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox'):
     assert '_'+name in exports,name
 assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
+assert '_AGReleaseIdentity' in exports and b'2.4.1-HG78-IPA\0' in p.read_bytes()
 info={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+      'release_version':'2.4.1','login_marker':'2.4.1-HG78-IPA',
       'xcode':subprocess.check_output(['xcodebuild','-version'],text=True).strip(),
       'compiler':subprocess.check_output(['xcrun','--sdk','iphoneos','clang','--version'],text=True).splitlines()[0],
       'sdk':subprocess.check_output(['xcrun','--sdk','iphoneos','--show-sdk-version'],text=True).strip(),
