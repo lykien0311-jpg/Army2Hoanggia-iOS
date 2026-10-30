@@ -2,6 +2,7 @@
 extern void AGWheelPreview(void);
 extern void AGWheelPreviewShowInput(void);
 extern void AGWheelPreviewCheckInterface(void);
+extern void AGNotesPreviewCheck(void);
 @interface PreviewApp : UIResponder<UIApplicationDelegate>
 @property(strong,nonatomic) UIWindow *window;
 @end
@@ -9,7 +10,7 @@ extern void AGWheelPreviewCheckInterface(void);
 - (BOOL)application:(UIApplication *)app didFinishLaunchingWithOptions:(NSDictionary *)options {
     self.window=[[UIWindow alloc]initWithFrame:UIScreen.mainScreen.bounds];self.window.rootViewController=[UIViewController new];self.window.rootViewController.view.backgroundColor=UIColor.blackColor;[self.window makeKeyAndVisible];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,NSEC_PER_SEC),dispatch_get_main_queue(),^{AGWheelPreview();});
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,2*NSEC_PER_SEC),dispatch_get_main_queue(),^{AGWheelPreviewCheckInterface();});
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,2*NSEC_PER_SEC),dispatch_get_main_queue(),^{AGWheelPreviewCheckInterface();AGNotesPreviewCheck();});
     if([NSProcessInfo.processInfo.arguments containsObject:@"--show-input"])
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW,3*NSEC_PER_SEC),dispatch_get_main_queue(),^{AGWheelPreviewShowInput();});
     return YES;
