@@ -11,6 +11,9 @@
 #include "NativeMap.h"
 #include "Notes77.h"
 
+// Exported release identity binds the Apple artifact to the native login patch.
+__attribute__((visibility("default"))) const char *AGReleaseIdentity(void) { return "2.4.1-HG78-IPA"; }
+
 // UI work stays on UIKit's main thread. Java calls stay on the original game
 // thread with its Env, protected by RoboVM's catch-all exception context.
 static pthread_mutex_t AGMutex=PTHREAD_MUTEX_INITIALIZER;
