@@ -10,6 +10,7 @@
 #include "WheelProtocol.h"
 #include "NativeMap.h"
 #include "Notes77.h"
+#import "GameViewport.h"
 
 // Exported release identity binds the Apple artifact to the native login patch.
 __attribute__((visibility("default"))) const char *AGReleaseIdentity(void) { return "2.4.1-HG78-IPA"; }
@@ -72,6 +73,7 @@ __attribute__((noinline,optnone)) static int AGSendNative(void *env, void *conte
 }
 
 __attribute__((visibility("default"))) void AGWheelTick(void *env, int variant) {
+    if(env)AGViewportCapture(variant);
     AGNotesTick(env,variant);
     if(!env || variant<0 || variant>=6 || !atomic_load(&AGInterested) || !atomic_load(&AGForeground))return;
     double now=AGNow();AGSendJob job={0};uint64_t generation;int isBet=0;
@@ -145,12 +147,41 @@ __attribute__((visibility("default"))) void AGWheelReceive(void *env, void *mess
 @property(nonatomic,strong) AGAmountPanel *amountPanel;
 @property(nonatomic,strong) UITextField *amountField;
 @property(nonatomic,strong) NSTimer *timer;
+@property(nonatomic,strong) UIView *backdrop;
 @property(nonatomic) BOOL editingAmount;
 @property(nonatomic) CGFloat keyboardInset;
+- (void)primary;
+- (void)secondary;
+- (void)close;
+- (void)endAmountEntry;
 @end
-static UIWindow *AGWindow;
+static AGGameWindow *AGWindow;
 static __weak UIWindow *AGPreviousWindow;
 static AGWheelController *AGController;
+// Capture presses and their releases; only forward to the active wheel UI.
+int AGWheelInput(int variant,int kind,int code,int y){
+    if(variant<0||variant>=6)return 0;
+    static unsigned char held[6][256],pointer[6];
+    int index=code+128,consumed;uint64_t generation;
+    pthread_mutex_lock(&AGMutex);
+    consumed=AGState.visible&&AGState.variant==variant;generation=AGState.generation;
+    if(kind==1&&index>=0&&index<256&&held[variant][index]){held[variant][index]=0;consumed=1;}
+    if(kind==4&&pointer[variant]){pointer[variant]=0;consumed=1;}
+    if(consumed&&kind==0&&index>=0&&index<256)held[variant][index]=1;
+    if(consumed&&kind==2)pointer[variant]=1;
+    pthread_mutex_unlock(&AGMutex);
+    if(consumed&&kind==0)dispatch_async(dispatch_get_main_queue(),^{
+        AGModel m=AGCopy();AGWheelController *c=AGController;
+        if(!m.visible||m.variant!=variant||m.generation!=generation||!c||c.presentedViewController)return;
+        if(code==-6)[c primary];
+        else if(code==-7||code==27){if(c.editingAmount)[c endAmountEntry];else [c close];}
+        else if(code==-5||code==10||code==13)[c secondary];
+        else if(c.editingAmount&&code>=48&&code<=57)c.amountField.text=[(c.amountField.text?:@"") stringByAppendingFormat:@"%c",code];
+        else if(c.editingAmount&&(code==8||code==127))[c.amountField deleteBackward];
+        else if(code==-1||code==-2){CGFloat limit=MAX(0,c.panelScroll.contentSize.height-c.panelScroll.bounds.size.height);CGPoint p=c.panelScroll.contentOffset;p.y=MAX(0,MIN(limit,p.y+(code==-1?-44:44)));[c.panelScroll setContentOffset:p animated:NO];}
+    });
+    return consumed;
+}
 @implementation AGWheelController
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations{return UIInterfaceOrientationMaskAllButUpsideDown;}
 - (BOOL)prefersStatusBarHidden{return YES;}
@@ -159,7 +190,8 @@ static AGWheelController *AGController;
     [b addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];return b;
 }
 - (void)viewDidLoad{
-    [super viewDidLoad];self.view.backgroundColor=[UIColor colorWithRed:87/255.0 green:201/255.0 blue:239/255.0 alpha:1];
+    [super viewDidLoad];self.view.backgroundColor=UIColor.clearColor;
+    self.backdrop=[UIView new];self.backdrop.backgroundColor=[UIColor colorWithRed:87/255.0 green:201/255.0 blue:239/255.0 alpha:1];[self.view addSubview:self.backdrop];
     self.panel=[AGClassicPanel new];self.panel.opaque=NO;self.panel.isAccessibilityElement=YES;
     self.betButton=[self button:@"Tham gia" action:@selector(primary)];self.betButton.tag=1;
     self.middleButton=[self button:@"Cập nhật" action:@selector(secondary)];
@@ -181,12 +213,16 @@ static AGWheelController *AGController;
 }
 - (void)viewDidLayoutSubviews{
     [super viewDidLayoutSubviews];UIEdgeInsets safe=self.view.safeAreaInsets;
-    CGFloat width=self.view.bounds.size.width-safe.left-safe.right,height=self.view.bounds.size.height-safe.top-safe.bottom;
+    CGRect game=AGGameRect(self.view);
+    CGFloat bottom=self.keyboardInset>0?self.view.bounds.size.height-safe.bottom-self.keyboardInset:CGRectGetMaxY(game);
+    CGFloat width=game.size.width,height=MAX(1,bottom-safe.top);
+    self.backdrop.frame=CGRectMake(0,0,self.view.bounds.size.width,bottom);
+    AGWindow.gameBottom=bottom;AGWindow.passesGameKeys=self.keyboardInset<=0;
     CGFloat bar=MAX(44,MIN(64,width/7)),panelHeight=MAX(1,height-bar-8),panelWidth=MAX(1,width-8),s=AGPanelScale(panelWidth,panelHeight);
     self.panelScroll.frame=CGRectMake(safe.left+4,safe.top+4,panelWidth,panelHeight);
     CGFloat contentHeight=MAX(panelHeight,450*s);
     self.panel.frame=CGRectMake(0,0,panelWidth,contentHeight);self.panelScroll.contentSize=CGSizeMake(panelWidth,contentHeight);
-    CGFloat controlsY=safe.top+MAX(0,height-bar-self.keyboardInset);
+    CGFloat controlsY=safe.top+MAX(0,height-bar);
     self.controls.frame=CGRectMake(safe.left,controlsY,width,bar);
     CGFloat inputHeight=MIN(MAX(80,75*s),MAX(0,controlsY-safe.top-4));
     CGFloat inputScale=MIN(s,inputHeight/75),fieldY=inputHeight<66?4:36*inputScale;
@@ -234,7 +270,7 @@ static AGWheelController *AGController;
 }
 - (void)bet {
     AGModel m=AGCopy();if(!m.loaded||m.waiting||AGNow()-m.receivedAt>=6)return;
-    self.editingAmount=YES;self.amountPanel.hidden=NO;self.amountField.text=@"1000000";
+    self.editingAmount=YES;self.amountPanel.hidden=NO;self.amountField.text=@"";
     [self render];[self.view setNeedsLayout];[self.view layoutIfNeeded];[self.amountField becomeFirstResponder];
 }
 - (void)submitAmount {
@@ -267,7 +303,7 @@ static AGWheelController *AGController;
 @end
 
 __attribute__((visibility("default"))) void AGWheelOpen(void *env, int variant) {
-    (void)env;if(variant<0||variant>=6)return;
+    if(variant<0||variant>=6)return;if(env)AGViewportCapture(variant);
     pthread_mutex_lock(&AGMutex);
     if(AGState.variant!=variant){uint64_t generation=AGState.generation+1;memset(&AGState,0,sizeof AGState);AGState.generation=generation;AGState.variant=variant;}
     AGState.visible=1;AGState.loaded=0;AGState.openedAt=AGNow();AGState.lastPoll=0;atomic_store(&AGInterested,1);
@@ -283,8 +319,9 @@ __attribute__((visibility("default"))) void AGWheelOpen(void *env, int variant) 
         UIWindow *previous=UIApplication.sharedApplication.keyWindow;
         if(!previous){for(UIWindow *w in UIApplication.sharedApplication.windows)if(!w.hidden){previous=w;break;}}
         AGPreviousWindow=previous;
-        if(@available(iOS 13.0,*)){if(previous.windowScene)AGWindow=[[UIWindow alloc]initWithWindowScene:previous.windowScene];}
-        if(!AGWindow)AGWindow=[[UIWindow alloc]initWithFrame:UIScreen.mainScreen.bounds];
+        if(@available(iOS 13.0,*)){if(previous.windowScene)AGWindow=[[AGGameWindow alloc]initWithWindowScene:previous.windowScene];}
+        if(!AGWindow)AGWindow=[[AGGameWindow alloc]initWithFrame:UIScreen.mainScreen.bounds];
+        AGWindow.opaque=NO;AGWindow.backgroundColor=UIColor.clearColor;
         AGWindow.frame=previous?previous.frame:UIScreen.mainScreen.bounds;AGWindow.windowLevel=UIWindowLevelAlert+2;
         AGController=[AGWheelController new];AGWindow.rootViewController=AGController;[AGWindow makeKeyAndVisible];
     });
@@ -329,6 +366,8 @@ __attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
     for(NSValue *value in sizes){
         CGSize size=value.CGSizeValue;view.frame=CGRectMake(0,0,size.width,size.height);[view setNeedsLayout];[view layoutIfNeeded];
         CGFloat width=size.width-view.safeAreaInsets.left-view.safeAreaInsets.right;
+        NSCAssert(fabs(CGRectGetMaxY(AGController.controls.frame)-CGRectGetMaxY(AGGameRect(view)))<.01,@"Footer above native keypad");
+        NSCAssert([AGWindow hitTest:CGPointMake(size.width/2,AGWindow.gameBottom+10) withEvent:nil]==nil,@"Keypad receives touches");
         CGFloat s=AGPanelScale(AGController.panel.bounds.size.width,AGController.panel.bounds.size.height);
         NSCAssert(fabs(AGController.panelScroll.bounds.size.width-(width-8))<.01,@"Full width panel");
         NSCAssert(AGController.panel.bounds.size.height>=450*s-.01,@"Large text must scroll, never clip");
@@ -348,6 +387,7 @@ __attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
     }
     view.frame=original;[view setNeedsLayout];[view layoutIfNeeded];
     [AGController bet];NSCAssert(AGController.editingAmount&&!AGController.amountPanel.hidden,@"Amount panel opens");
+    NSCAssert(AGController.amountField.text.length==0,@"New entry must be empty");
     NSCAssert([AGController.middleButton.accessibilityLabel isEqualToString:@"OK"],@"Amount confirm control");
     NSCAssert(CGRectGetMaxY(AGController.amountField.frame)<=AGController.amountPanel.bounds.size.height,@"Amount text fits");
     [AGController primary];NSCAssert(!AGController.editingAmount&&AGController.amountPanel.hidden,@"Cancel restores wheel");
