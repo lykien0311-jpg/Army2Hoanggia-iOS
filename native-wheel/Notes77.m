@@ -11,6 +11,8 @@
 #include "NotesMap.h"
 #include "NativeMap.h"
 #include "NotesProtocol.h"
+#import "GameViewport.h"
+extern int AGWheelInput(int,int,int,int);
 extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
 static pthread_mutex_t NMutex=PTHREAD_MUTEX_INITIALIZER;
 static atomic_int NInitialized=0,NCurrent=-1;
@@ -124,7 +126,8 @@ __attribute__((visibility("default"))) int AGNotesReceive(void *env,void *messag
 }
 // Native input guards close the short interval before UIKit presents its modal.
 __attribute__((visibility("default"))) int AGNotesInput(int variant,int kind,int a,int b){
-    if(variant<0||variant>=6||!atomic_load(&NInitialized))return 0;
+    if(variant<0||variant>=6)return 0;
+    if(!atomic_load(&NInitialized)){int wheel=AGWheelInput(variant,kind,a,b);if(wheel)NClear(variant);return wheel;}
     int room=NRoom(variant),consumed=0,inbox=0;pthread_mutex_lock(&NMutex);NModel *m=&NModels[variant];
     AGCaptchaContext(&m->cap,m->cap.boss,room);
     if(m->cap.active){consumed=1;if(kind<2)AGCaptchaKey(&m->cap,a,kind==1,NNow());}
@@ -133,6 +136,7 @@ __attribute__((visibility("default"))) int AGNotesInput(int variant,int kind,int
     if(kind==4&&m->heldPointer){m->heldPointer=0;consumed=1;}
     if(consumed&&kind==0){m->heldCode=a;m->heldKey=1;}
     if(consumed&&kind==2)m->heldPointer=1;
+    if(!consumed)consumed=AGWheelInput(variant,kind,a,b);
     if(consumed)NClear(variant);else atomic_store(&NCurrent,variant);
     pthread_mutex_unlock(&NMutex);if(inbox&&kind==0)dispatch_async(dispatch_get_main_queue(),^{NInboxKey(a);});return consumed;
 }
@@ -265,7 +269,7 @@ __attribute__((visibility("default"))) void AGNotesInbox(void *env,void *dialog,
 @property(nonatomic,strong) NSTimer *timer;
 - (void)render;
 @end
-static UIWindow *NWindow;
+static AGGameWindow *NWindow;
 static __weak UIWindow *NPrevious;
 static AGNotesController *NController;
 static NSString *NActiveAlert,*NQueuedAlert;
@@ -288,15 +292,16 @@ static NSString *NActiveAlert,*NQueuedAlert;
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];UIEdgeInsets s=self.view.safeAreaInsets;CGFloat w=self.view.bounds.size.width-s.left-s.right,h=self.view.bounds.size.height-s.top-s.bottom,x=s.left,y=s.top;
     self.captcha.frame=CGRectMake(x+4,y+4,w-8,MAX(30,h-108));self.status.frame=CGRectMake(x+8,y+h-100,w-16,44);self.close.frame=CGRectMake(x+w/2+4,y+h-50,w/2-12,44);self.reply.frame=CGRectMake(x+8,y+h-50,w/2-12,44);
-    if(self.mode==1){self.close.frame=CGRectMake(x+MAX(8,(w-220)/2),y+h-50,MIN(220,w-16),44);}
+    if(self.mode==1){CGRect game=AGGameRect(self.view);CGFloat bottom=CGRectGetMaxY(game);self.captcha.frame=CGRectMake(x+4,y+4,w-8,MAX(30,bottom-y-42));self.status.frame=CGRectMake(x+8,bottom-36,w-16,32);NWindow.gameBottom=bottom;}
+    NWindow.passesGameKeys=self.mode==1;
     self.titleLabel.frame=CGRectMake(x+8,y+6,w-16,40);self.body.frame=CGRectMake(x+8,y+50,w-16,MAX(20,h-110));
 }
 - (void)render {
     if(self.variant<0||self.variant>=6)return;pthread_mutex_lock(&NMutex);NModel *m=&NModels[self.variant];int mode=m->cap.active?1:m->inboxVisible?2:0;uint64_t serial=m->inboxSerial;NSString *text=NInboxBodies[self.variant];NSString *notice=NText(m->cap.notice);uint64_t expires=m->cap.packet.expires;pthread_mutex_unlock(&NMutex);
     if(self.mode!=mode){self.mode=mode;[self.view setNeedsLayout];}
     self.view.backgroundColor=mode==2?[UIColor colorWithRed:.07 green:.22 blue:.39 alpha:1]:UIColor.clearColor;
-    self.captcha.hidden=mode!=1;self.status.hidden=mode!=1;self.titleLabel.hidden=mode!=2;self.body.hidden=mode!=2;self.reply.hidden=mode!=2;self.close.hidden=mode==0;
-    if(mode==1){self.captcha.variant=self.variant;[self.captcha setNeedsDisplay];long long seconds=expires>(uint64_t)(NSDate.date.timeIntervalSince1970*1000)?(long long)((expires-(uint64_t)(NSDate.date.timeIntervalSince1970*1000)+999)/1000):0;self.status.text=[NSString stringWithFormat:@"%@ · %lld giây",notice,seconds];[self.close setTitle:@"Trở ra / Đặt lại" forState:UIControlStateNormal];}
+    self.captcha.hidden=mode!=1;self.status.hidden=mode!=1;self.titleLabel.hidden=mode!=2;self.body.hidden=mode!=2;self.reply.hidden=mode!=2;self.close.hidden=mode!=2;
+    if(mode==1){self.captcha.variant=self.variant;[self.captcha setNeedsDisplay];long long seconds=expires>(uint64_t)(NSDate.date.timeIntervalSince1970*1000)?(long long)((expires-(uint64_t)(NSDate.date.timeIntervalSince1970*1000)+999)/1000):0;self.status.text=[NSString stringWithFormat:@"%@ · %lld giây",notice,seconds];}
     else if(mode==2){if(self.inboxSerial!=serial){self.inboxSerial=serial;self.body.text=text?:@"";self.body.contentOffset=CGPointZero;}[self.close setTitle:@"Đóng" forState:UIControlStateNormal];}
     if(!mode&&!NActiveAlert)NUpdateUI();
 }
@@ -325,7 +330,7 @@ static void NUpdateUI(void){
     if(!mode&&!NActiveAlert){if(NWindow){[NController.timer invalidate];NController.timer=nil;NWindow.hidden=YES;NWindow.rootViewController=nil;NWindow=nil;NController=nil;UIWindow *previous=NPrevious;if(previous&&!previous.hidden)[previous makeKeyWindow];else for(UIWindow *w in UIApplication.sharedApplication.windows)if(!w.hidden){[w makeKeyWindow];break;}}return;}
     if(UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
     if(!NWindow){UIWindow *previous=UIApplication.sharedApplication.keyWindow;if(!previous)for(UIWindow *w in UIApplication.sharedApplication.windows)if(!w.hidden){previous=w;break;}NPrevious=previous;
-        if([previous respondsToSelector:@selector(windowScene)]&&previous.windowScene)NWindow=[[UIWindow alloc]initWithWindowScene:previous.windowScene];if(!NWindow)NWindow=[[UIWindow alloc]initWithFrame:UIScreen.mainScreen.bounds];NWindow.frame=previous?previous.frame:UIScreen.mainScreen.bounds;NWindow.windowLevel=UIWindowLevelAlert+4;NWindow.backgroundColor=UIColor.clearColor;NWindow.opaque=NO;NController=[AGNotesController new];NWindow.rootViewController=NController;[NWindow makeKeyAndVisible];}
+        if([previous respondsToSelector:@selector(windowScene)]&&previous.windowScene)NWindow=[[AGGameWindow alloc]initWithWindowScene:previous.windowScene];if(!NWindow)NWindow=[[AGGameWindow alloc]initWithFrame:UIScreen.mainScreen.bounds];NWindow.frame=previous?previous.frame:UIScreen.mainScreen.bounds;NWindow.windowLevel=UIWindowLevelAlert+4;NWindow.backgroundColor=UIColor.clearColor;NWindow.opaque=NO;NController=[AGNotesController new];NWindow.rootViewController=NController;[NWindow makeKeyAndVisible];}
     if(variant>=0&&variant<6){if(NController.variant!=variant){NController.variant=variant;NController.inboxSerial=UINT64_MAX;NController.captcha.imageSerial=UINT64_MAX;}NController.reply.enabled=YES;NController.close.enabled=YES;[NController render];[NController.view setNeedsLayout];}
     if(NActiveAlert&&!NController.presentedViewController){UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Thông báo" message:NActiveAlert preferredStyle:UIAlertControllerStyleAlert];[a addAction:[UIAlertAction actionWithTitle:@"Đã hiểu" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){NActiveAlert=NQueuedAlert;NQueuedAlert=nil;dispatch_async(dispatch_get_main_queue(),^{NUpdateUI();});}]];[NController presentViewController:a animated:YES completion:nil];}
 }
