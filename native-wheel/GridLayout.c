@@ -16,8 +16,10 @@ static void layout(uintptr_t base,int v,int kind,uint8_t *screen,Grid g,int widt
     if(!screen)return;
     *(int *)(screen+0x50)=(width-g.w)/2+7;*(int *)(screen+0x54)=8;
     *(int *)(screen+0x58)=g.w;*(int *)(screen+0x5c)=g.h;*(int *)(screen+0x60)=g.decor;
+    int resized=0;
     for(int i=1;i<=2;i++){
         uint8_t *c=*(uint8_t **)(base+gridClasses[v][i]);if(!c)continue;
+        if(i==kind)resized=*(int *)(c+0xb0)!=g.columns||*(int *)(c+0xb8)!=g.cell;
         *(int *)(c+0xb0)=g.columns;*(int *)(c+0xb8)=g.cell;
         *(int *)(c+0xbc)=g.cell/2-10;*(int *)(c+0xc0)=g.cell/2-14;
     }
@@ -25,6 +27,19 @@ static void layout(uintptr_t base,int v,int kind,uint8_t *screen,Grid g,int widt
         *(int *)(screen+0xc0)=g.columns;*(int *)(screen+0xb8)=g.cell;
         uint8_t *vec=*(uint8_t **)(screen+0x70);int count=vec?*(int *)(vec+0x24):0;
         if(count>=0&&count<100000)*(int *)(screen+0xcc)=(count+g.columns-1)/g.columns;
+    }else{
+        uint8_t *c=*(uint8_t **)(base+gridClasses[v][kind]);
+        uint8_t *vec=*(uint8_t **)(screen+(kind==1?0x70:0x78));
+        int count=vec?*(int *)(vec+0x24):0;
+        if(c&&count>=0&&count<100000){
+            int rows=(count+g.columns-1)/g.columns,limit=larger(0,rows*g.cell-(g.h-110));
+            *(int *)(c+0xb4)=rows;*(int *)(c+0xd4)=limit;
+            for(int off=0xc4;off<=0xc8;off+=4)*(int *)(c+off)=smaller(limit,larger(0,*(int *)(c+off)));
+            if(resized){int selected=*(int *)(screen+(kind==1?0xa8:0xb0));
+                if(selected>=0&&selected<count){int bottom=(selected/g.columns+1)*g.cell;
+                    if(bottom>*(int *)(c+0xc4)+g.h-110)*(int *)(c+0xc4)=smaller(limit,larger(0,bottom-(g.h-110)));
+                }}
+        }
     }
 }
 void AGInventoryTick(int v){
@@ -63,3 +78,4 @@ __attribute__((visibility("default"))) void AGGridAdjust(uint64_t *r,uintptr_t p
     else if((word&0x7f000000)==0x51000000)value=(uint32_t)r[rn]-value;
     r[rd]=value;
 }
+

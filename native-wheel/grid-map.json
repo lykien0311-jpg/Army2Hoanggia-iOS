@@ -50,6 +50,20 @@
       "kind": 2
     },
     {
+      "site": 5724256,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5724268,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 0,
+      "kind": 2
+    },
+    {
       "site": 5724396,
       "word": 1384122889,
       "metric": "SHOP_CLIP",
@@ -463,6 +477,20 @@
       "kind": 1
     },
     {
+      "site": 5888140,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5888148,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 0,
+      "kind": 1
+    },
+    {
       "site": 5888276,
       "word": 1384125443,
       "metric": "HIT_W",
@@ -683,6 +711,20 @@
       "site": 6679876,
       "word": 1384120969,
       "metric": "CELL",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6683220,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6683232,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
       "variant": 1,
       "kind": 2
     },
@@ -1100,6 +1142,20 @@
       "kind": 1
     },
     {
+      "site": 6841816,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6841824,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 1,
+      "kind": 1
+    },
+    {
       "site": 6841952,
       "word": 1384125443,
       "metric": "HIT_W",
@@ -1320,6 +1376,20 @@
       "site": 7617032,
       "word": 1384120969,
       "metric": "CELL",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7620376,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7620388,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
       "variant": 2,
       "kind": 2
     },
@@ -1737,6 +1807,20 @@
       "kind": 1
     },
     {
+      "site": 7778972,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7778980,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 2,
+      "kind": 1
+    },
+    {
       "site": 7779108,
       "word": 1384125443,
       "metric": "HIT_W",
@@ -1957,6 +2041,20 @@
       "site": 8554188,
       "word": 1384120969,
       "metric": "CELL",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8557532,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8557544,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
       "variant": 3,
       "kind": 2
     },
@@ -2374,6 +2472,20 @@
       "kind": 1
     },
     {
+      "site": 8716128,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8716136,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 3,
+      "kind": 1
+    },
+    {
       "site": 8716264,
       "word": 1384125443,
       "metric": "HIT_W",
@@ -2594,6 +2706,20 @@
       "site": 9491344,
       "word": 1384120969,
       "metric": "CELL",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9494688,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9494700,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
       "variant": 4,
       "kind": 2
     },
@@ -3011,6 +3137,20 @@
       "kind": 1
     },
     {
+      "site": 9653284,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9653292,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 4,
+      "kind": 1
+    },
+    {
       "site": 9653420,
       "word": 1384125443,
       "metric": "HIT_W",
@@ -3231,6 +3371,20 @@
       "site": 10428500,
       "word": 1384120969,
       "metric": "CELL",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10431844,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10431856,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
       "variant": 5,
       "kind": 2
     },
@@ -3644,6 +3798,20 @@
       "site": 10588192,
       "word": 1384120969,
       "metric": "CELL",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10590440,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10590448,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
       "variant": 5,
       "kind": 1
     },
