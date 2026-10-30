@@ -26,7 +26,7 @@ shasum -a 256 build/AGWheel.dylib > build/SHA256.txt
 python3 - <<'PY'
 import hashlib,json,pathlib,subprocess
 p=pathlib.Path('build/AGWheel.dylib');exports=pathlib.Path('build/exports.txt').read_text()
-for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox'):
+for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust'):
     assert '_'+name in exports,name
 assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
 assert '_AGReleaseIdentity' in exports and b'2.4.1-HG78-IPA\0' in p.read_bytes()
@@ -46,6 +46,7 @@ PY
 sim_sdk="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 sim_arch="$(uname -m)"
 mkdir -p build/WheelPreview.app/Frameworks
+cp captcha-preview-fixtures.json build/WheelPreview.app/
 xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -mios-simulator-version-min=16.0 -DAG_WHEEL_PREVIEW=1 -dynamiclib \
   -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wno-deprecated-declarations \
@@ -78,11 +79,14 @@ subprocess.run(['xcrun','simctl','launch',device,'vn.army2hoanggia.wheelpreview'
 PY
 preview_data="$(xcrun simctl get_app_container "$(cat build/simulator-id)" vn.army2hoanggia.wheelpreview data)"
 for attempt in {1..30}; do
-  if [ -s "$preview_data/Documents/ui-check.json" ]; then break; fi
+  if [ -s "$preview_data/Documents/captcha-ui-check.json" ]; then break; fi
   sleep 1
 done
 cp "$preview_data/Documents/ui-check.json" build/ui-check.json
 cp "$preview_data"/Documents/wheel-layout-*.png build/
+cp "$preview_data"/Documents/captcha-*.png build/
+cp "$preview_data"/Documents/captcha-ui-check.json build/
+python3 -c 'import json; assert json.load(open("build/captcha-ui-check.json"))["passed"]'
 python3 -c 'import json; assert json.load(open("build/ui-check.json"))["passed"]'
 xcrun simctl io "$(cat build/simulator-id)" screenshot build/wheel-preview.png
 for mode in input waiting single; do
