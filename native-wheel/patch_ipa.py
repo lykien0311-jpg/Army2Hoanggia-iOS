@@ -93,6 +93,11 @@ def build_native(old,original,maps):
         assert old[at:at+len(raw)]==original[at:at+len(raw)],(hex(at),label)
         records.append(dict(offset=at,label=label,before=b[at:at+len(raw)].hex(),after=raw.hex()))
         b[at:at+len(raw)]=raw
+    # Clan member packet 118 sends the absolute member rank as a short.
+    # Reading one byte desynchronizes cup, equipment and contribution strings.
+    for at in [5426252, 6399636, 7336792, 8273948, 9211104, 10148260]:
+        assert original[at:at+4]==asm('bl 0xa64274',at)
+        patch(at,asm('bl 0xa64208',at),'Clan members: read full 16-bit rank in packet 118')
     grid_map=json.loads((ROOT/'grid-map.json').read_text())
     save=['sub sp, sp, #800']
     for r in range(0,30,2):save.append(f'stp x{r}, x{r+1}, [sp, #{r*8}]')
