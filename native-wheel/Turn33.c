@@ -132,7 +132,10 @@ void AGTurnTick(void *env,int v){
     if(!c.globals||!c.playerGlobals||!c.players){AGTurnStatusUpdate(v,9);return;}
     if(AGNotesBlocksAuto(v)||*(void **)(c.canvas+0x108)){AGTurnStatusUpdate(v,7);return;}
     if(c.globals[0x266]!=copy.owner||c.local!=copy.owner){AGTurnStatusUpdate(v,6);return;}
-    if(c.playerGlobals[0x1a7]||c.playerGlobals[0x1a8]||(c.projectiles&&c.projectiles[0x118])||c.canvas[0x13c]){AGTurnStatusUpdate(v,4);return;}
+    // JAR Turn33 checks the busy flag cleared by native n() after 200 ms.
+    // 1a8 is a separate deferred-shot notification consumed by V.s(); it
+    // survives owner changes and must not veto the next ticketed auto shot.
+    if(c.playerGlobals[0x1a7]||(c.projectiles&&c.projectiles[0x118])||c.canvas[0x13c]){AGTurnStatusUpdate(v,4);return;}
     int count=*(int *)(c.players+0x10);if(count<1||count>64||copy.owner<0||copy.owner>=8||copy.owner>=count)return;
     // Confirmed against d0_.l(Z): native walking and terrain settling write
     // full int32 values at 114/118. C0/D0 at 80/84 are unrelated fields.

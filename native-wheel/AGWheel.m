@@ -40,48 +40,10 @@ __attribute__((visibility("default"))) int AGWheelSuppressFooter(int variant) {
     pthread_mutex_unlock(&AGMutex);return hide;
 }
 static double AGNow(void) { struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return t.tv_sec+t.tv_nsec/1e9; }
-// A device report must distinguish missing turn data from animation guards.
-// Only atomics are touched on Java threads; UIKit polls on the main thread.
-static atomic_int AGTurnReason=0, AGTurnDiagnosticVariant=-1;
-static _Atomic(double) AGTurnUpdated=0;
-static void AGInstallTurnStatus(void);
-__attribute__((visibility("default"))) void AGTurnStatusUpdate(int variant,int reason) {
-    atomic_store(&AGTurnDiagnosticVariant,variant);
-    atomic_store(&AGTurnReason,reason);atomic_store(&AGTurnUpdated,AGNow());
-    if(reason){static dispatch_once_t once;dispatch_once(&once,^{dispatch_async(dispatch_get_main_queue(),^{AGInstallTurnStatus();});});}
-}
+// Retained ABI for the bridge; no diagnostic window, label or timer.
+__attribute__((visibility("default"))) void AGTurnStatusUpdate(int variant,int reason) {(void)variant;(void)reason;}
 __attribute__((visibility("default"))) void AGTurnPulse(void *env,int variant) {
     if(atomic_load(&AGForeground))AGTurnTick(env,variant);
-}
-@interface AGTurnStatusWindow : UIWindow
-@end
-@implementation AGTurnStatusWindow
-- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event{return nil;}
-@end
-static void AGInstallTurnStatus(void) {
-    static AGTurnStatusWindow *window;static UILabel *label;static NSTimer *timer;
-    timer=[NSTimer scheduledTimerWithTimeInterval:.25 repeats:YES block:^(NSTimer *t){
-        int reason=atomic_load(&AGTurnReason);
-        BOOL visible=reason>0&&reason<12&&AGNow()-atomic_load(&AGTurnUpdated)<2&&UIApplication.sharedApplication.applicationState==UIApplicationStateActive;
-        if(!visible){window.hidden=YES;return;}
-        UIWindow *game=nil;for(UIWindow *w in UIApplication.sharedApplication.windows)if(!w.hidden&&w.windowLevel==UIWindowLevelNormal){game=w;break;}
-        if(!game)return;
-        if(!window){
-            if(@available(iOS 13.0,*)){if(game.windowScene)window=[[AGTurnStatusWindow alloc]initWithWindowScene:game.windowScene];}
-            if(!window)window=[[AGTurnStatusWindow alloc]initWithFrame:game.frame];
-            window.backgroundColor=UIColor.clearColor;window.opaque=NO;window.windowLevel=UIWindowLevelStatusBar+1;
-            window.rootViewController=[UIViewController new];window.rootViewController.view.backgroundColor=UIColor.clearColor;
-            label=[UILabel new];label.textColor=UIColor.whiteColor;label.backgroundColor=[UIColor colorWithWhite:0 alpha:.55];
-            label.textAlignment=NSTextAlignmentCenter;label.font=[UIFont systemFontOfSize:11 weight:UIFontWeightMedium];label.adjustsFontSizeToFitWidth=YES;
-            label.layer.cornerRadius=4;label.clipsToBounds=YES;label.isAccessibilityElement=YES;
-            [window.rootViewController.view addSubview:label];
-        }
-        NSArray *reasons=@[@"",@"Chờ dữ liệu lượt",@"Chờ dữ liệu bắn",@"Chờ nhân vật sẵn sàng",@"Chờ kết thúc hiệu ứng",@"Chờ đúng vị trí",@"Chờ lượt của bạn",@"Đang mở hộp thoại",@"Đã gọi bắn",@"Dữ liệu trận đã đổi",@"Chưa bật auto",@"Chưa gọi được hàm bắn"];
-        window.frame=game.frame;UIEdgeInsets safe=game.safeAreaInsets;
-        label.frame=CGRectMake(safe.left+8,safe.top+2,MAX(1,game.bounds.size.width-safe.left-safe.right-16),19);
-        label.text=[@"Auto UFO: " stringByAppendingString:reasons[reason]];window.hidden=NO;
-    }];
-    [[NSRunLoop mainRunLoop]addTimer:timer forMode:NSRunLoopCommonModes];
 }
 static NSString *AGString(const char *s) {return [NSString stringWithUTF8String:s]?:@"";}
 static NSString *AGMoney(int64_t value) {
@@ -126,7 +88,7 @@ __attribute__((noinline,optnone)) static int AGSendNative(void *env, void *conte
 }
 
 __attribute__((visibility("default"))) void AGWheelTick(void *env, int variant) {
-    if(env){AGViewportCapture(variant);AGInventoryTick(variant);}
+    if(env){AGViewportCapture(env,variant);AGInventoryTick(variant);}
     AGNotesTick(env,variant);
     if(atomic_load(&AGForeground))AGTurnTick(env,variant);
     if(!env || variant<0 || variant>=6 || !atomic_load(&AGInterested) || !atomic_load(&AGForeground))return;
@@ -202,6 +164,7 @@ __attribute__((visibility("default"))) void AGWheelReceive(void *env, void *mess
 @property(nonatomic,strong) UITextField *amountField;
 @property(nonatomic,strong) NSTimer *timer;
 @property(nonatomic,strong) UIView *backdrop;
+@property(nonatomic,strong) UIView *footerFill;
 @property(nonatomic) BOOL editingAmount;
 @property(nonatomic) CGFloat keyboardInset;
 - (void)primary;
@@ -253,6 +216,7 @@ int AGWheelInput(int variant,int kind,int code,int y){
     self.controls=[[UIStackView alloc]initWithArrangedSubviews:@[self.betButton,self.middleButton,self.exitButton]];
     self.controls.axis=UILayoutConstraintAxisHorizontal;self.controls.distribution=UIStackViewDistributionFillEqually;self.controls.spacing=0;
     self.panelScroll=[UIScrollView new];self.panelScroll.alwaysBounceVertical=NO;
+    self.footerFill=[UIView new];self.footerFill.backgroundColor=AGPaper();[self.view addSubview:self.footerFill];
     self.controls.backgroundColor=AGPaper();[self.panelScroll addSubview:self.panel];[self.view addSubview:self.panelScroll];[self.view addSubview:self.controls];
     self.amountPanel=[AGAmountPanel new];self.amountPanel.opaque=NO;self.amountPanel.hidden=YES;
     self.amountField=[UITextField new];self.amountField.keyboardType=UIKeyboardTypeNumberPad;
@@ -278,6 +242,9 @@ int AGWheelInput(int variant,int kind,int code,int y){
     self.panel.frame=CGRectMake(0,0,panelWidth,contentHeight);self.panelScroll.contentSize=CGSizeMake(panelWidth,contentHeight);
     CGFloat controlsY=safe.top+MAX(0,height-bar);
     self.controls.frame=CGRectMake(safe.left,controlsY,width,bar);
+    CGFloat fillY=CGRectGetMaxY(self.panelScroll.frame);
+    self.footerFill.frame=CGRectMake(0,fillY,self.view.bounds.size.width,MAX(0,bottom-fillY));
+    [self.view bringSubviewToFront:self.controls];
     CGFloat inputHeight=MIN(MAX(80,75*s),MAX(0,controlsY-safe.top-4));
     CGFloat inputScale=MIN(s,inputHeight/75),fieldY=inputHeight<66?4:36*inputScale;
     self.amountPanel.layoutScale=inputScale;
@@ -353,15 +320,17 @@ int AGWheelInput(int variant,int kind,int code,int y){
 - (void)previous {pthread_mutex_lock(&AGMutex);if(AGState.page>0)AGState.page--;AGState.lastPoll=0;pthread_mutex_unlock(&AGMutex);}
 - (void)next {pthread_mutex_lock(&AGMutex);if(((int64_t)AGState.page+1)*20<AGState.snapshot.count)AGState.page++;AGState.lastPoll=0;pthread_mutex_unlock(&AGMutex);}
 - (void)close {
+    AGViewportWheelVisible(0);
     pthread_mutex_lock(&AGMutex);AGState.visible=0;atomic_store(&AGInterested,AGState.waiting);pthread_mutex_unlock(&AGMutex);
     [self.amountField resignFirstResponder];[self.timer invalidate];self.timer=nil;AGWindow.hidden=YES;AGWindow.rootViewController=nil;[AGPreviousWindow makeKeyWindow];AGWindow=nil;AGController=nil;
 }
 @end
 
 __attribute__((visibility("default"))) void AGWheelOpen(void *env, int variant) {
-    if(variant<0||variant>=6)return;if(env){AGViewportCapture(variant);AGInventoryTick(variant);}
+    if(variant<0||variant>=6)return;if(env){AGViewportCapture(env,variant);AGInventoryTick(variant);}
     pthread_mutex_lock(&AGMutex);
     if(AGState.variant!=variant){uint64_t generation=AGState.generation+1;memset(&AGState,0,sizeof AGState);AGState.generation=generation;AGState.variant=variant;}
+    AGViewportWheelVisible(1);
     AGState.visible=1;AGState.loaded=0;AGState.openedAt=AGNow();AGState.lastPoll=0;atomic_store(&AGInterested,1);
     pthread_mutex_unlock(&AGMutex);
     dispatch_async(dispatch_get_main_queue(),^{
@@ -431,13 +400,12 @@ __attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
         NSCAssert(CGRectGetMaxY(AGController.controls.frame)<=view.bounds.size.height+.01,@"Controls fit visible screen");
         // Simulate the original keypad's combined matrix after initial layout.
         // The whole footer and its touch boundary must move on the next render.
-        uint8_t keys[48]={0},batch[144]={0},matrix[32]={0},values[84]={0};
-        *(int *)(keys+0x28)=294;batch[0x85]=1;
-        *(void **)(batch+0x20)=matrix;*(void **)(matrix+0x10)=values;*(int *)(values+0x10)=16;
-        float *projection=(float *)(values+0x14);projection[5]=.002f;projection[13]=-1;projection[15]=1;
-        AGViewportKeypad(NULL,keys,batch);[view setNeedsLayout];[view layoutIfNeeded];
+        AGViewportPreviewTop(.7055);[view setNeedsLayout];[view layoutIfNeeded];
         NSCAssert(fabs(CGRectGetMaxY(AGController.controls.frame)-size.height*.7055)<.001,@"Footer reaches projected keypad boundary");
         NSCAssert(fabs(AGWindow.gameBottom-CGRectGetMaxY(AGController.controls.frame))<.001,@"Touch boundary follows relocated controls");
+        NSCAssert(CGRectGetMinY(AGController.footerFill.frame)<=CGRectGetMaxY(AGController.panelScroll.frame),@"No sky strip below panel");
+        NSCAssert(CGRectGetMaxY(AGController.footerFill.frame)>=CGRectGetMaxY(AGController.controls.frame),@"Opaque footer covers strip down to keypad");
+        NSCAssert(CGColorGetAlpha(AGController.footerFill.backgroundColor.CGColor)==1,@"Footer background is opaque");
         UIGraphicsBeginImageContextWithOptions(view.bounds.size,YES,2);
         [view.layer renderInContext:UIGraphicsGetCurrentContext()];
         UIImage *layout=UIGraphicsGetImageFromCurrentImageContext();UIGraphicsEndImageContext();
