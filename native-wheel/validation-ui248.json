@@ -1,0 +1,57 @@
+{
+  "sizes" : [
+    {
+      "scrolls" : 1,
+      "projected_footer" : true,
+      "panel_width" : 312,
+      "width" : 320,
+      "height" : 480,
+      "content_height" : 427.5
+    },
+    {
+      "scrolls" : 1,
+      "projected_footer" : true,
+      "panel_width" : 367,
+      "width" : 375,
+      "height" : 667,
+      "content_height" : 427.5
+    },
+    {
+      "scrolls" : 0,
+      "projected_footer" : true,
+      "panel_width" : 382,
+      "width" : 390,
+      "height" : 844,
+      "content_height" : 469.72771428571434
+    },
+    {
+      "scrolls" : 0,
+      "projected_footer" : true,
+      "panel_width" : 422,
+      "width" : 430,
+      "height" : 932,
+      "content_height" : 526.09742857142862
+    },
+    {
+      "scrolls" : 0,
+      "projected_footer" : true,
+      "panel_width" : 760,
+      "width" : 768,
+      "height" : 1024,
+      "content_height" : 588.43200000000002
+    },
+    {
+      "scrolls" : 1,
+      "projected_footer" : true,
+      "panel_width" : 836,
+      "width" : 844,
+      "height" : 390,
+      "content_height" : 427.5
+    }
+  ],
+  "passed" : true,
+  "amount_open_cancel" : true,
+  "keyboard_geometry" : true,
+  "runtime" : "Apple iOS Simulator UIKit",
+  "server_requests" : 0
+}

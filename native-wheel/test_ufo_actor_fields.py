@@ -21,9 +21,13 @@ def copies(pc,n=32):
 
 ctors=copies(0x593650);bossctors=copies(0x5a2ad4)
 flightstarts=copies(0x59a2e8);itemstarts=copies(0x599aa0)
+fallupdates=copies(0x597250,64)
 constructing=False;stub_calls=set();alloc_int=0
+settling=False;settle_calls={}
 
 def hook(uc,pc,size,_):
+    if settling and pc in settle_calls:
+        t.ret(settle_calls[pc]);return
     if not constructing or pc not in stub_calls:return
     if pc==alloc_int:
         n=U.reg_read(UC_ARM64_REG_X1);a=t.alloc(0x14+4*n)
@@ -69,8 +73,17 @@ for v,m in enumerate(w.turns):
     # These values come from the original constructor, not an idle fixture.
     assert t.get(boss+0x166,'<B')==1
     assert t.get(boss+0x167,'<B')==0 and t.get(boss+0x14e,'<B')==0
-    # The local actor must have finished gravity, as in reference Turn33.
-    t.put(p+0x166,'<B',0)
+    # Execute the real local gravity update until its terrain-collision path
+    # marks it settled. Only terrain/Java helper results are controlled.
+    fall=fallupdates[v];settle_calls.clear()
+    for pc in range(fall,fall+964,4):
+        word=struct.unpack_from('<I',w.raw,pc)[0]
+        if word&0xfc000000==0x94000000:settle_calls[B+w.branch(pc)]=0
+    settle_calls.pop(B+w.branch(fall+0x248),None) # real coordinate setter
+    for offset,result in((0xb4,2000),(0x160,1),(0x194,1),(0x254,2)):
+        settle_calls[B+w.branch(fall+offset)]=result
+    settling=True;native(B+fall,t.ENV,p);settling=False
+    assert t.get(p+0x166,'<B')==0
     # Actual original item animation sets16a, separate from flight14e.
     native(B+itemstarts[v],t.ENV,p,3)
     assert t.get(p+0x16a,'<B')==1 and t.get(p+0x14e,'<B')==0
@@ -83,23 +96,25 @@ for v,m in enumerate(w.turns):
         (fire+0x80,'append'),(fire+0x90,'bullet'),(helper+0x30,'variant'),
         (service+0xf0,'writer'),(service+0x16c,'short'),(service+0x258,'secondary'),(service+0x33c,'close')]:
         w.primitives[B+w.branch(at)]=kind
-    w.receive(v,-115,struct.pack('>I',0x55464f01))
-    for num in(81,82,83):
-        U.mem_write(pg+0x1a7,bytes(2))
-        ticket=987000+num
-        w.receive(v,24,bytes([2])+struct.pack('>IiQ',1429485652,num,ticket))
-        w.receive(v,-115,struct.pack('>iBQHBBhh',num,2,ticket,173,28,0,240,350))
-        w.packets.clear();w.call('AGTurnTick',t.ENV,v)
-        expected=(22,struct.pack('>BhhhBB',0,240,350,173,28,1))
-        assert w.packets==[expected],('JAR permits native boss/item flags',v,num,w.packets)
-        w.call('AGTurnTick',t.ENV,v);assert w.packets==[expected];cases+=1
-    # Conversely, the real native flight start must defer a new shot.
-    U.mem_write(pg+0x1a7,bytes(2));native(B+flightstarts[v],t.ENV,boss,510,130)
-    assert t.get(boss+0x14e,'<B')==1
-    w.receive(v,24,bytes([2])+struct.pack('>IiQ',1429485652,84,987084))
-    w.receive(v,-115,struct.pack('>iBQHBBhh',84,2,987084,173,28,0,240,350))
-    w.packets.clear();w.call('AGTurnTick',t.ENV,v);assert not w.packets
-    # Controlled flight completion: do not zero unrelated native animations.
-    t.put(boss+0x14e,'<B',0);w.call('AGTurnTick',t.ENV,v);assert w.packets==[expected];cases+=1
+    for room_id in(8,9):
+        t.put(room+0x130,'<B',room_id)
+        w.receive(v,-115,struct.pack('>I',0x55464f01))
+        for num in(81,82,83):
+            U.mem_write(pg+0x1a7,bytes(2))
+            ticket=987000+num
+            w.receive(v,24,bytes([2])+struct.pack('>IiQ',1429485652,num,ticket))
+            w.receive(v,-115,struct.pack('>iBQHBBhh',num,2,ticket,173,28,0,240,350))
+            w.packets.clear();w.call('AGTurnTick',t.ENV,v)
+            expected=(22,struct.pack('>BhhhBB',0,240,350,173,28,1))
+            assert w.packets==[expected],('JAR permits native boss/item flags',v,room_id,num,w.packets)
+            w.call('AGTurnTick',t.ENV,v);assert w.packets==[expected];cases+=1
+        # Conversely, the real native flight start must defer a new shot.
+        U.mem_write(pg+0x1a7,bytes(2));native(B+flightstarts[v],t.ENV,boss,510,130)
+        assert t.get(boss+0x14e,'<B')==1
+        w.receive(v,24,bytes([2])+struct.pack('>IiQ',1429485652,84,987084))
+        w.receive(v,-115,struct.pack('>iBQHBBhh',84,2,987084,173,28,0,240,350))
+        w.packets.clear();w.call('AGTurnTick',t.ENV,v);assert not w.packets
+        # Controlled flight completion: do not zero unrelated native animations.
+        t.put(boss+0x14e,'<B',0);w.call('AGTurnTick',t.ENV,v);assert w.packets==[expected];cases+=1
 
 print('PASS:',cases,'native UFO/player constructor and original animation-setter -> repeated command22 cases; JAR actor predicates, exactly once, true flight deferral')
