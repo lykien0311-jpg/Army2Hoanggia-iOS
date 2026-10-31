@@ -7,7 +7,13 @@
     "room_paint_size": 22084,
     "boss_call": 5617408,
     "boss_renderer": 5845480,
-    "footer": 5954896
+    "footer": 5954896,
+    "canvas_paint": 5308140,
+    "canvas_footer_calls": [
+      5310016,
+      5310156
+    ],
+    "font_renderer": 6045284
   },
   {
     "variant": 1,
@@ -17,7 +23,13 @@
     "room_paint_size": 22084,
     "boss_call": 6579492,
     "boss_renderer": 6801236,
-    "footer": 6907332
+    "footer": 6907332,
+    "canvas_paint": 6282340,
+    "canvas_footer_calls": [
+      6284216,
+      6284356
+    ],
+    "font_renderer": 6995080
   },
   {
     "variant": 2,
@@ -27,7 +39,13 @@
     "room_paint_size": 22084,
     "boss_call": 7516648,
     "boss_renderer": 7738392,
-    "footer": 7844488
+    "footer": 7844488,
+    "canvas_paint": 7219496,
+    "canvas_footer_calls": [
+      7221372,
+      7221512
+    ],
+    "font_renderer": 7932236
   },
   {
     "variant": 3,
@@ -37,7 +55,13 @@
     "room_paint_size": 22084,
     "boss_call": 8453804,
     "boss_renderer": 8675548,
-    "footer": 8781644
+    "footer": 8781644,
+    "canvas_paint": 8156652,
+    "canvas_footer_calls": [
+      8158528,
+      8158668
+    ],
+    "font_renderer": 8869392
   },
   {
     "variant": 4,
@@ -47,7 +71,13 @@
     "room_paint_size": 22084,
     "boss_call": 9390960,
     "boss_renderer": 9612704,
-    "footer": 9718800
+    "footer": 9718800,
+    "canvas_paint": 9093808,
+    "canvas_footer_calls": [
+      9095684,
+      9095824
+    ],
+    "font_renderer": 9806548
   },
   {
     "variant": 5,
@@ -57,6 +87,12 @@
     "room_paint_size": 22084,
     "boss_call": 10328116,
     "boss_renderer": 10549860,
-    "footer": 10655956
+    "footer": 10655956,
+    "canvas_paint": 10030964,
+    "canvas_footer_calls": [
+      10032840,
+      10032980
+    ],
+    "font_renderer": 10743704
   }
 ]

@@ -92,15 +92,17 @@ for v,m in enumerate(turns):
     receive(v,-115,struct.pack('>I',0x55464f01))
     for num,(x,y) in enumerate([(240,350),(500,200)],8):
         U.mem_write(pg+0x1a7,bytes(2));U.mem_write(player+0x166,bytes(1));U.mem_write(player+0x16a,bytes(1))
-        t.put(player+0x80,'<i',x);t.put(player+0x84,'<i',y)
-        t.put(player+0x114,'<i',110);t.put(player+0x118,'<i',90);t.put(player+0xa6,'<H',0x55aa)
+        t.put(player+0x80,'<i',110);t.put(player+0x84,'<i',90)
+        t.put(player+0x114,'<i',x);t.put(player+0x118,'<i',y);t.put(player+0xa4,'<I',0x55aa0000)
         ticket=987654+num
         receive(v,24,bytes([2])+struct.pack('>IiQ',1429485652,num,ticket))
         receive(v,-115,struct.pack('>iBQHBBhh',num,2,ticket,173,28,0,x,y))
         packets.clear();call('AGTurnTick',t.ENV,v)
         expected=struct.pack('>BhhhBB',0,x,y,173,28,1)
         assert packets==[(22,expected)],(v,num,packets,expected.hex())
-        assert t.get(player+0xa6,'<H')==0x55aa
+        assert t.get(player+0xa4,'<I')==173
+        assert t.get(player+0x80,'<i')==110 and t.get(player+0x84,'<i')==90
+        assert t.get(player+0x114,'<i')==x and t.get(player+0x118,'<i')==y
         call('AGTurnTick',t.ENV,v);assert packets==[(22,expected)]
         cases+=1
 print('PASS:',cases,'Apple UFO-to-original-player-to-Service command22 wire cases; current origin after falling/movement, angle, force, exactly-once and native short-field boundaries')

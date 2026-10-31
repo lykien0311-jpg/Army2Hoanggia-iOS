@@ -201,16 +201,16 @@ def build_native(old,original,maps):
     # The old "boss_sites" were X-coordinate subtractions in player-slot
     # painting, not boss identity calculations. Leave all twelve intact.
     presentation=json.loads((ROOT/'presentation-map.json').read_text())
-    boss_hooks=[];footer_hooks=[]
+    boss_hooks=[];footer_hooks=[];canvas_footer_hooks=[];zone_patches=[]
     notes=json.loads((ROOT/'notes-map.json').read_text())
     hooks=[]
     for i,m in enumerate(maps):
         n=notes[i]
         pm=presentation[i];room=pm['room_class'];renderer=pm['boss_renderer']
         # Resolve the boss argument at the actual sprite-renderer call.
-        # R5.l0 (0x130) is the received room number; area/map choices and
-        # screen row positions are independent. Linked rooms resolve their
-        # current map/stage explicitly; Super Boss always uses Trex.
+        # R5.l0 (0x130) is the room number. R5.w0 at 132 is the area number,
+        # NOT the current map. Linked rooms retain the native stage's type.
+        # Sprite IDs 23/24 are the client's ghosts; server IDs 25/26 differ.
         boss_addr,_=emit(f'''
             stp x9, x10, [sp, #-32]!
             mrs x9, nzcv
@@ -225,27 +225,24 @@ def build_native(old,original,maps):
             adr x9, boss_table
             ldrb w10, [x9, w10, uxtw]
             cmp w10, #255
-            b.eq boss_stage
+            b.eq boss_done
             mov w2, w10
             b boss_done
-          boss_stage:
-            adrp x9, {room&-4096}
-            ldr x9, [x9, #{room&4095}]
-            ldrb w10, [x9, #0x132]
-            sub w10, w10, #30
-            cmp w10, #10
-            b.hi boss_done
-            adr x9, boss_stage_table
-            ldrb w2, [x9, w10, uxtw]
           boss_done:
+            cmp w2, #25
+            b.ne boss_second_ghost
+            mov w2, #23
+          boss_second_ghost:
+            cmp w2, #26
+            b.ne boss_return
+            mov w2, #24
+          boss_return:
             ldr x9, [sp, #16]
             msr nzcv, x9
             ldp x9, x10, [sp], #32
             b {renderer}
           boss_table:
-            .byte 12,12,13,14,15,16,16,17,22,25,26,255,255,15
-          boss_stage_table:
-            .byte 12,12,13,14,15,16,17,22,25,26,15
+            .byte 12,12,13,14,15,16,16,17,22,23,24,255,255,15
         ''')
         site=pm['boss_call'];assert original[site:site+4]==asm(f'bl {renderer}',site)
         patch(site,asm(f'bl {boss_addr}',site),f'V{i+1} choose room boss at the actual sprite draw call')
@@ -273,6 +270,35 @@ def build_native(old,original,maps):
         ''')
         patch(footer,asm(f'b {footer_addr}',footer),f'V{i+1} hide native small softkeys only while the wheel is visible')
         footer_hooks.append(dict(variant=i,site=footer,hook=footer_addr))
+        # GameCanvas independently paints the default small left/right
+        # commands after the screen's painter. Suppress these too.
+        font=pm['font_renderer']
+        glyph_addr,_=emit(f'''
+            stp x29, x30, [sp, #-80]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            stp x2, x3, [sp, #32]
+            stp x4, x5, [sp, #48]
+            stp x6, x7, [sp, #64]
+            {lookup('AGWheelSuppressFooter',35)}
+            cbz x10, glyph_original
+            mov w0, #{i}
+            blr x10
+            cbz w0, glyph_original
+            ldp x29, x30, [sp], #80
+            ret
+          glyph_original:
+            ldp x0, x1, [sp, #16]
+            ldp x2, x3, [sp, #32]
+            ldp x4, x5, [sp, #48]
+            ldp x6, x7, [sp, #64]
+            ldp x29, x30, [sp], #80
+            b {font}
+        ''')
+        for site in pm['canvas_footer_calls']:
+            assert original[site:site+4]==asm(f'bl {font}',site)
+            patch(site,asm(f'bl {glyph_addr}',site),f'V{i+1} suppress GameCanvas default small command while wheel visible')
+            canvas_footer_hooks.append(dict(variant=i,site=site,hook=glyph_addr,renderer=font))
         open_addr,raw=emit(f'''
             stp x29, x30, [sp, #-32]!
             mov x29, sp
@@ -688,6 +714,23 @@ def build_native(old,original,maps):
         at=v['utf_calls'][2]
         assert old[at:at+4]==asm(f"bl {release['write_utf']}",at)
         patch(at,asm(f'bl {login_hook}',at),f'V{i+1} Notes78 login build marker')
+    # Area IDs are an unsigned protocol byte. Keep the byte on the wire;
+    # remove sign extension only at numeric labels and area-index reads.
+    for z in json.loads((ROOT/'zone-map.json').read_text()):
+        i=z['variant'];site=z['row_id_load']
+        assert original[site:site+4]==asm('ldrsb w2, [x8, #0x1d]',site)
+        patch(site,asm('ldrb w2, [x8, #0x1d]',site),f'V{i+1} unsigned area number in list (128..255)')
+        zone_patches.append(dict(variant=i,site=site,kind='list'))
+        site=z['title_id_arg'];assert original[site:site+4]==asm('mov w2, w22',site)
+        patch(site,asm('uxtb w2, w22',site),f'V{i+1} unsigned area number in formatted title')
+        zone_patches.append(dict(variant=i,site=site,kind='title'))
+        pm=presentation[i]
+        for site in range(pm['room_paint'],pm['room_paint']+pm['room_paint_size'],4):
+            word=struct.unpack_from('<I',original,site)[0]
+            if word&0xffc00000==0x39c00000 and (word>>10)&4095==0x132:
+                raw=struct.pack('<I',word&~0x00800000)
+                patch(site,raw,f'V{i+1} unsigned waiting-room area label/index')
+                zone_patches.append(dict(variant=i,site=site,kind='waiting'))
     at=release['version_offset']
     assert old[at:at+6]==b'2.4.0\0'
     patch(at,b'2.4.1','Native version label 2.4.1')
@@ -717,7 +760,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,turn_map=turn_map,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,zone_patches=zone_patches,turn_map=turn_map,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()

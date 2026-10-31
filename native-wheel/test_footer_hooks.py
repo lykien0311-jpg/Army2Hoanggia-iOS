@@ -25,3 +25,22 @@ for h in t.R['footer_hooks']:
         for i in range(19,29):assert U.reg_read(X[i])==0xc000+i
         cases+=1
 print('PASS:',cases,'native footer cases; small commands suppressed only for visible wheel, fallback retained; GameCanvas keypad unchanged')
+
+# GameCanvas adds its own default labels after the base screen painter.
+# Execute these original call sites too, with the callback active/inactive.
+glyphs=[];font=0
+def glyph_hook(uc,pc,size,_):
+    if pc==font:
+        glyphs.append(tuple(U.reg_read(r)for r in X[:8]));t.returned()
+U.hook_add(UC_HOOK_CODE,glyph_hook)
+for h in t.R['canvas_footer_hooks']:
+    for missing,visible in [(False,0),(False,1),(True,0)]:
+        t.reset();t.missing=missing;t.continuation=B+h['site']+4;glyphs.clear()
+        font=B+h['renderer'];before=tuple(U.reg_read(r)for r in X[:8])
+        U.emu_start(B+h['site'],t.STOP+4,count=1000)
+        assert bool(glyphs)==(not visible or missing)
+        if glyphs:assert glyphs==[before]
+        assert U.reg_read(UC_ARM64_REG_SP)==t.SP
+        for i in range(19,29):assert U.reg_read(X[i])==0xc000+i
+        cases+=1
+print('PASS:',cases,'screen/footer and independent GameCanvas glyph cases; both small-label sources suppressed')

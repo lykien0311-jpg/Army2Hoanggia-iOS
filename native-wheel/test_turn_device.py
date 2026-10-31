@@ -13,7 +13,7 @@ def ret(v=0):t.ret(v)
 def hook(u,pc,size,_):
  if pc in native:
   v=native[pc];p=r(1);assert r(0)==t.ENV
-  shots.append((v,p,t.get(p+0xa4,'<h'),t.get(p+0x16d,'<B'),t.get(p+0x16e,'<B'),t.get(p+0x134,'<i')));ret()
+  shots.append((v,p,t.get(p+0xa4,'<i'),t.get(p+0x16d,'<B'),t.get(p+0x16e,'<B'),t.get(p+0x134,'<i')));ret()
  elif pc==t.symbols['_AGNotesBlocksAuto']:ret(blocked)
 U.hook_add(UC_HOOK_CODE,hook)
 def call(name,*args):
@@ -37,12 +37,11 @@ for v,m in enumerate(R):
  t.put(B+m['arena_class'],'<Q',globals);t.put(B+m['player_class'],'<Q',pg);t.put(B+m['array_class'],'<Q',ag);t.put(B+notes[v]['canvas'],'<Q',canvas)
  t.put(globals+0xe8,'<Q',arena);t.put(globals+0x266,'<B',2);t.put(ag+0xa0,'<Q',array);t.put(ag+0xd0,'<B',2);t.put(canvas+0xb8,'<Q',arena)
  t.put(array+0x10,'<I',8);t.put(array+0x18+16,'<Q',p)
- # A real first turn follows spawn/falling. Keep the old spawn position
- # different from the live coordinates, instead of populating only the
- # two stale fields as the previous fixture did.
- t.put(p+0x114,'<i',110);t.put(p+0x118,'<i',90)
- t.put(p+0x80,'<i',240);t.put(p+0x84,'<i',350)
- t.put(p+0xa6,'<H',0x55aa)
+ # Native walking changes 114/118. Constructor/spawn copies at 80/84
+ # are deliberately different, as they are after movement/falling.
+ t.put(p+0x80,'<i',110);t.put(p+0x84,'<i',90)
+ t.put(p+0x114,'<i',240);t.put(p+0x118,'<i',350)
+ t.put(p+0xa4,'<I',0x55aa0000)
  t.put(t.SERVICE+0x10,'<Q',t.SESSION)
  recv(v,-115,struct.pack('>I',0x55464f01))
  for label,kw in [('normal',{}),('wrong turn',{'num':7}),('wrong owner',{'owner':1}),('wrong ticket',{'ticket':123}),('bad angle',{'angle':360}),('zero force',{'force':0}),('large force',{'force':31}),('large release',{'release':31}),('stale origin',{'x':241})]:
@@ -50,10 +49,16 @@ for v,m in enumerate(R):
   assert bool(shots)==(label=='normal'),(v,label,shots)
   if shots:
    assert shots==[(v,p,173,28,0,0)]
-   assert t.get(p+0x114,'<h')==240 and t.get(p+0x118,'<h')==350
-   assert t.get(p+0xa6,'<H')==0x55aa,'angle write corrupted the adjacent native field'
+   assert t.get(p+0x114,'<i')==240 and t.get(p+0x118,'<i')==350
+   assert t.get(p+0xa4,'<I')==173,'angle is an int32 field'
+   assert t.get(p+0x80,'<i')==110 and t.get(p+0x84,'<i')==90
    call('AGTurnTick',t.ENV,v);assert len(shots)==1
   cases+=1
+ # Real observer ordering: ticket/aim arrive before screen/owner update.
+ t.put(canvas+0xb8,'<Q',0);t.put(globals+0x266,'<B',7)
+ turn(v);shots.clear();aim(v);call('AGTurnTick',t.ENV,v);assert not shots
+ t.put(canvas+0xb8,'<Q',arena);t.put(globals+0x266,'<B',2)
+ call('AGTurnTick',t.ENV,v);assert len(shots)==1;cases+=1
  # Busy animation, captcha and dialog defer, then exactly one native fire.
  for target,off,fmt in [(pg,0x1a7,'<B'),(pg,0x1a8,'<B'),(p,0x166,'<B'),(p,0x16a,'<B'),(canvas,0x108,'<Q')]:
   turn(v);shots.clear();aim(v);t.put(target+off,fmt,1);call('AGTurnTick',t.ENV,v);assert not shots

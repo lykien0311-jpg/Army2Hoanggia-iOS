@@ -8,7 +8,7 @@ import test_hooks as t
 from unicorn import UC_HOOK_CODE
 from unicorn.arm64_const import *
 U=t.U;B=t.BASE;X=t.X
-expected={3:12,4:12,5:13,6:14,7:15,8:16,9:16,10:17,11:22,12:25,13:26,16:15}
+expected={3:12,4:12,5:13,6:14,7:15,8:16,9:16,10:17,11:22,12:23,13:24,16:15}
 map_types={30:12,31:12,32:13,33:14,34:15,35:16,36:17,37:22,38:25,39:26,40:15}
 events=[];renderer=0
 def hook(uc,pc,size,_):
@@ -27,12 +27,13 @@ for m,turn in zip(t.R['boss_hooks'],t.R['turn_map']):
             before=tuple(U.reg_read(r)for r in X[:11]);renderer=B+m['boss_renderer']
             U.emu_start(B+m['boss_call'],t.STOP+4,count=1000)
             assert len(events)==1
-            wanted=map_types.get(map_id,stage) if room in [14,15] else expected.get(room,stage)
+            wanted=expected.get(room,stage)
+            wanted={25:23,26:24}.get(wanted,wanted)
             after=events[0];assert after[2]==wanted,(m['variant'],room,map_id,after[2])
             assert after[:2]+after[3:]==before[:2]+before[3:]
             assert U.reg_read(UC_ARM64_REG_NZCV)==0xa0000000
             assert U.reg_read(UC_ARM64_REG_SP)==t.SP
             assert U.reg_read(UC_ARM64_REG_LR)==B+m['boss_call']+4
             cases+=1
-print('PASS:',cases,'real sprite-call cases across six variants; UFO 8/9=16, Super Boss 16=Trex15; linked stages and coordinates preserved')
+print('PASS:',cases,'real sprite-call cases across six variants; UFO 8/9=16, Super Boss 16=Trex15; linked native stages and coordinates preserved')
 
