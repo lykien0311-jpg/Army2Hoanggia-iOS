@@ -13,7 +13,7 @@ def main():
     p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib')
     p.add_argument('--build-info',type=Path,default=ROOT/'build/build-info.json')
     p.add_argument('--output',type=Path,required=True)
-    p.add_argument('--bundle-build',default='247')
+    p.add_argument('--bundle-build',default='248')
     args=p.parse_args()
     r=json.loads((ROOT/'baseline-recovery.json').read_text())
     with zipfile.ZipFile(args.ipa) as src:native=src.read(APP+'Army2Hoanggia')

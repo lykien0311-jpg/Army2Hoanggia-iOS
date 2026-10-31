@@ -45,7 +45,7 @@ for v,m in enumerate(w.turns):
     t.put(array+0x10,'<i',8);t.put(array+0x18+3*8,'<Q',p);U.mem_write(room+0x130,bytes([8,5]))
     t.put(t.SERVICE+0x10,'<Q',t.SESSION)
     for wait in m['waits']:
-        site=wait['site'];kind=wait['kind'];watched={0:proj+0x118,1:canvas+0x13c,2:p+0x166,3:p+0x16a}[kind]
+        site=wait['site'];kind=wait['kind'];watched={0:proj+0x118,1:canvas+0x13c,2:p+0x167,3:p+0x14e}[kind]
         new=bytes(U.mem_read(B+site,4))
         # The old IPA performs Object.wait() even after completion. Replaying
         # that instruction records the otherwise indefinite monitor wait.

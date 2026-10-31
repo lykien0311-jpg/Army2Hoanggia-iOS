@@ -40,6 +40,11 @@ static int context(void *env,void *opaque){
 }
 static int getContext(void *env,Context *c){return AGWheelGuard(env,context,c,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));}
 static int active(const Context *c){return c->arena&&c->canvas&&*(void **)(c->canvas+0xb8)==c->arena;}
+// Match the actual fields referenced by Turn33 in the working JAR. Native
+// d0_.<init> and g(II) prove these mappings; they are different animations.
+// 166 is gravity/falling, 167 is server-directed movement, 14e is flight.
+// 16a belongs to the separate item animation started by d0_.f(B).
+enum { PLAYER_FALLING=0x166, PLAYER_MOVING=0x167, PLAYER_FLIGHT=0x14e };
 // Working Turn33 uses predicate waits: an animation may finish before the
 // network thread enters its monitor, so an unconditional wait loses notify.
 // Keep the native monitor enter/exit and Java exception propagation intact.
@@ -61,7 +66,7 @@ __attribute__((visibility("default"))) void AGTurnAwait(void *env,void *lock,int
             int count=*(int *)(c.players+0x10);
             if(actor>=0&&actor<count&&count<=64){
                 uint8_t *p=*(uint8_t **)(c.players+0x18+actor*8);
-                busy=p&&((volatile uint8_t *)p)[kind==2?0x166:0x16a];
+                busy=p&&((volatile uint8_t *)p)[kind==2?PLAYER_MOVING:PLAYER_FLIGHT];
             }
         }
         if(!busy)return;
@@ -132,7 +137,7 @@ void AGTurnTick(void *env,int v){
     if(!c.globals||!c.playerGlobals||!c.players){AGTurnStatusUpdate(v,9);return;}
     if(AGNotesBlocksAuto(v)||*(void **)(c.canvas+0x108)){AGTurnStatusUpdate(v,7);return;}
     if(c.globals[0x266]!=copy.owner||c.local!=copy.owner){AGTurnStatusUpdate(v,6);return;}
-    // JAR Turn33 checks the busy flag cleared by native n() after 200 ms.
+    // JAR Turn33 checks the primary shot-busy flag reset for the new turn.
     // 1a8 is a separate deferred-shot notification consumed by V.s(); it
     // survives owner changes and must not veto the next ticketed auto shot.
     if(c.playerGlobals[0x1a7]||(c.projectiles&&c.projectiles[0x118])||c.canvas[0x13c]){AGTurnStatusUpdate(v,4);return;}
@@ -140,9 +145,9 @@ void AGTurnTick(void *env,int v){
     // Confirmed against d0_.l(Z): native walking and terrain settling write
     // full int32 values at 114/118. C0/D0 at 80/84 are unrelated fields.
     uint8_t *p=*(uint8_t **)(c.players+0x18+copy.owner*8);
-    if(!p||*(int64_t *)(p+0x68)<=0||p[0x16f]!=0||p[0x166]||p[0x16a]){AGTurnStatusUpdate(v,3);return;}
+    if(!p||*(int64_t *)(p+0x68)<=0||p[0x16f]!=0||p[PLAYER_FALLING]){AGTurnStatusUpdate(v,3);return;}
     if(*(int32_t *)(p+0x114)!=copy.x||*(int32_t *)(p+0x118)!=copy.y){AGTurnStatusUpdate(v,5);return;}
-    for(int i=0;i<count;i++){uint8_t *other=*(uint8_t **)(c.players+0x18+i*8);if(other&&*(int64_t *)(other+0x68)>0&&(other[0x166]||other[0x16a])){AGTurnStatusUpdate(v,3);return;}}
+    for(int i=0;i<count;i++){uint8_t *other=*(uint8_t **)(c.players+0x18+i*8);if(other&&*(int64_t *)(other+0x68)>0&&(other[PLAYER_MOVING]||other[PLAYER_FLIGHT])){AGTurnStatusUpdate(v,3);return;}}
     Shot shot={v,p,copy.angle,copy.force,copy.release};int ready=0;
     pthread_mutex_lock(&turnMutex);Turn *t=&turns[v];
     if(t->generation==copy.generation&&t->enabled&&t->pending&&!t->used&&t->ticket==copy.ticket){t->used=1;t->pending=0;ready=1;}
