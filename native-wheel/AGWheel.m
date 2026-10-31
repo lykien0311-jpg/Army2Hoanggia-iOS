@@ -31,6 +31,14 @@ typedef struct {
     char notice[AG_TEXT];
 } AGModel;
 static AGModel AGState={.variant=-1};
+// Called from the game's original base-screen painter. Suppress its small
+// command row while the UIKit wheel owns those commands; the native keypad
+// is painted separately by GameCanvas and remains visible and interactive.
+__attribute__((visibility("default"))) int AGWheelSuppressFooter(int variant) {
+    pthread_mutex_lock(&AGMutex);
+    int hide=AGState.visible&&AGState.variant==variant;
+    pthread_mutex_unlock(&AGMutex);return hide;
+}
 static double AGNow(void) { struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return t.tv_sec+t.tv_nsec/1e9; }
 static NSString *AGString(const char *s) {return [NSString stringWithUTF8String:s]?:@"";}
 static NSString *AGMoney(int64_t value) {
@@ -400,5 +408,6 @@ __attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
     [json writeToFile:[directory stringByAppendingPathComponent:@"ui-check.json"] atomically:YES];
 }
 #endif
+
 
 

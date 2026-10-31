@@ -87,7 +87,9 @@ void AGTurnTick(void *env,int v){
     }
     if(!c.globals||!c.playerGlobals||!c.players||AGNotesBlocksAuto(v)||*(void **)(c.canvas+0x108)||c.globals[0x266]!=copy.owner||c.local!=copy.owner||c.playerGlobals[0x1a7]||c.playerGlobals[0x1a8])return;
     int count=*(int *)(c.players+0x10);if(count<1||count>64||copy.owner<0||copy.owner>=8||copy.owner>=count)return;
-    uint8_t *p=*(uint8_t **)(c.players+0x18+copy.owner*8);if(!p||p[0x16f]!=0||p[0x166]||p[0x16a]||*(int *)(p+0x114)!=copy.x||*(int *)(p+0x118)!=copy.y)return;
+    // 0x114/0x118 retain the constructor/spawn coordinates. The native
+    // movement and falling code updates the live position at 0x80/0x84.
+    uint8_t *p=*(uint8_t **)(c.players+0x18+copy.owner*8);if(!p||p[0x16f]!=0||p[0x166]||p[0x16a]||*(int *)(p+0x80)!=copy.x||*(int *)(p+0x84)!=copy.y)return;
     for(int i=0;i<count;i++){uint8_t *other=*(uint8_t **)(c.players+0x18+i*8);if(other&&(other[0x166]||other[0x16a]))return;}
     Shot shot={v,p,copy.angle,copy.force,copy.release};int ready=0;
     pthread_mutex_lock(&turnMutex);Turn *t=&turns[v];
@@ -95,3 +97,4 @@ void AGTurnTick(void *env,int v){
     pthread_mutex_unlock(&turnMutex);
     if(ready)AGWheelGuard(env,shoot,&shot,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));
 }
+

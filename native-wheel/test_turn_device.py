@@ -36,7 +36,12 @@ for v,m in enumerate(R):
  globals=t.alloc(0x400);pg=t.alloc(0x400);ag=t.alloc(0x200);canvas=t.alloc(0x200);arena=t.alloc(0x200);array=t.alloc(0x200);p=t.alloc(0x200)
  t.put(B+m['arena_class'],'<Q',globals);t.put(B+m['player_class'],'<Q',pg);t.put(B+m['array_class'],'<Q',ag);t.put(B+notes[v]['canvas'],'<Q',canvas)
  t.put(globals+0xe8,'<Q',arena);t.put(globals+0x266,'<B',2);t.put(ag+0xa0,'<Q',array);t.put(ag+0xd0,'<B',2);t.put(canvas+0xb8,'<Q',arena)
- t.put(array+0x10,'<I',8);t.put(array+0x18+16,'<Q',p);t.put(p+0x114,'<i',240);t.put(p+0x118,'<i',350)
+ t.put(array+0x10,'<I',8);t.put(array+0x18+16,'<Q',p)
+ # A real first turn follows spawn/falling. Keep the old spawn position
+ # different from the live coordinates, instead of populating only the
+ # two stale fields as the previous fixture did.
+ t.put(p+0x114,'<i',110);t.put(p+0x118,'<i',90)
+ t.put(p+0x80,'<i',240);t.put(p+0x84,'<i',350)
  t.put(t.SERVICE+0x10,'<Q',t.SESSION)
  recv(v,-115,struct.pack('>I',0x55464f01))
  for label,kw in [('normal',{}),('wrong turn',{'num':7}),('wrong owner',{'owner':1}),('wrong ticket',{'ticket':123}),('bad angle',{'angle':360}),('zero force',{'force':0}),('large force',{'force':31}),('large release',{'release':31}),('stale origin',{'x':241})]:
@@ -64,3 +69,4 @@ for v,m in enumerate(R):
  for wire in [b'',b'\x02',bytes([2])+bytes(16),bytes([8])+struct.pack('>IiQ',1429485652,8,987654)]:
   recv(v,-115,struct.pack('>I',0x55464f01));recv(v,24,wire);shots.clear();aim(v);call('AGTurnTick',t.ENV,v);assert not shots;cases+=1
 print('PASS:',cases,'Apple ARM64 UFO turn/ticket/native fire checks across six variants; duplicate, manual, captcha, stale aim, scene and connection guards')
+

@@ -13,6 +13,7 @@ def main():
     p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib')
     p.add_argument('--build-info',type=Path,default=ROOT/'build/build-info.json')
     p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--bundle-build',default='244')
     args=p.parse_args()
     r=json.loads((ROOT/'baseline-recovery.json').read_text())
     with zipfile.ZipFile(args.ipa) as src:native=src.read(APP+'Army2Hoanggia')
@@ -54,7 +55,7 @@ def main():
     assert len(signatures)==1 and all(v>0 for v in signatures[0])
     assert signatures[0][0]+signatures[0][1]<=len(lib)
     assert b'_AGWheelPreview' not in lib
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust'):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGWheelSuppressFooter'):
         assert ('_'+name+'\0').encode() in lib,name
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(args.ipa) as src,zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as dst:
@@ -64,7 +65,7 @@ def main():
             if zi.filename==APP+'Info.plist':
                 plist=plistlib.loads(data)
                 assert plist['CFBundleShortVersionString'] in ('2.4.0','2.4.1')
-                plist['CFBundleShortVersionString']='2.4.1';plist['CFBundleVersion']='243'
+                plist['CFBundleShortVersionString']='2.4.1';plist['CFBundleVersion']=args.bundle_build
                 data=plistlib.dumps(plist,fmt=plistlib.FMT_BINARY,sort_keys=False)
             dst.writestr(zi,data)
     with zipfile.ZipFile(args.ipa) as src,zipfile.ZipFile(args.output) as dst:
@@ -79,4 +80,5 @@ def main():
     print(json.dumps(report,indent=2))
 
 if __name__=='__main__':main()
+
 

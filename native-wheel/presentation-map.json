@@ -1,0 +1,62 @@
+[
+  {
+    "variant": 0,
+    "room_class": 34106544,
+    "room_name": "game/R5",
+    "room_paint": 5605452,
+    "room_paint_size": 22084,
+    "boss_call": 5617408,
+    "boss_renderer": 5845480,
+    "footer": 5954896
+  },
+  {
+    "variant": 1,
+    "room_class": 34299648,
+    "room_name": "game0/R5",
+    "room_paint": 6567536,
+    "room_paint_size": 22084,
+    "boss_call": 6579492,
+    "boss_renderer": 6801236,
+    "footer": 6907332
+  },
+  {
+    "variant": 2,
+    "room_class": 34487280,
+    "room_name": "game1/R5",
+    "room_paint": 7504692,
+    "room_paint_size": 22084,
+    "boss_call": 7516648,
+    "boss_renderer": 7738392,
+    "footer": 7844488
+  },
+  {
+    "variant": 3,
+    "room_class": 34674912,
+    "room_name": "game2/R5",
+    "room_paint": 8441848,
+    "room_paint_size": 22084,
+    "boss_call": 8453804,
+    "boss_renderer": 8675548,
+    "footer": 8781644
+  },
+  {
+    "variant": 4,
+    "room_class": 34862544,
+    "room_name": "game3/R5",
+    "room_paint": 9379004,
+    "room_paint_size": 22084,
+    "boss_call": 9390960,
+    "boss_renderer": 9612704,
+    "footer": 9718800
+  },
+  {
+    "variant": 5,
+    "room_class": 35050176,
+    "room_name": "game4/R5",
+    "room_paint": 10316160,
+    "room_paint_size": 22084,
+    "boss_call": 10328116,
+    "boss_renderer": 10549860,
+    "footer": 10655956
+  }
+]

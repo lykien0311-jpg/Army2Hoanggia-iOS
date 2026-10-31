@@ -62,7 +62,7 @@ def build_native(old,original,maps):
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
     symbols={};strcursor=0x7000
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
     for title in REFERENCE_TITLES.values():
@@ -198,36 +198,69 @@ def build_native(old,original,maps):
         ret
     ''')
     turn_map=json.loads((ROOT/'turn-map.json').read_text())
-    # Room32.boss: map IDs are protocol values; subtraction is incorrect for
-    # duplicate maps and for the later balloon/ghost/linked boss additions.
-    boss_addr,_=emit("""
-        stp x9, x10, [sp, #-32]!
-        mrs x9, nzcv
-        str x9, [sp, #16]
-        sub w8, w8, #30
-        cmp w8, #10
-        b.hi boss_default
-        adr x9, boss_table
-        ldrb w8, [x9, w8, uxtw]
-        b boss_done
-      boss_default:
-        mov w8, #12
-      boss_done:
-        ldr x9, [sp, #16]
-        msr nzcv, x9
-        ldp x9, x10, [sp], #32
-        ret
-      boss_table:
-        .byte 12,12,13,14,15,16,17,22,23,24,15
-    """)
-    for tm in turn_map:
-        for at in tm['boss_sites']:
-            assert original[at:at+4]==asm('sub w8, w8, #18',at)
-            patch(at,asm(f'bl {boss_addr}',at),'Room32 map to boss preview identity')
+    # The old "boss_sites" were X-coordinate subtractions in player-slot
+    # painting, not boss identity calculations. Leave all twelve intact.
+    presentation=json.loads((ROOT/'presentation-map.json').read_text())
+    boss_hooks=[];footer_hooks=[]
     notes=json.loads((ROOT/'notes-map.json').read_text())
     hooks=[]
     for i,m in enumerate(maps):
         n=notes[i]
+        pm=presentation[i];room=pm['room_class'];renderer=pm['boss_renderer']
+        # Resolve the boss argument at the actual sprite-renderer call.
+        # R5.l0 (0x130) is the received room number; area/map choices and
+        # screen row positions are independent. Linked rooms retain their
+        # current stage's native icon (255); Super Boss explicitly uses Trex.
+        boss_addr,_=emit(f'''
+            stp x9, x10, [sp, #-32]!
+            mrs x9, nzcv
+            str x9, [sp, #16]
+            adrp x9, {room&-4096}
+            ldr x9, [x9, #{room&4095}]
+            cbz x9, boss_done
+            ldrb w10, [x9, #0x130]
+            sub w10, w10, #3
+            cmp w10, #13
+            b.hi boss_done
+            adr x9, boss_table
+            ldrb w10, [x9, w10, uxtw]
+            cmp w10, #255
+            b.eq boss_done
+            mov w2, w10
+          boss_done:
+            ldr x9, [sp, #16]
+            msr nzcv, x9
+            ldp x9, x10, [sp], #32
+            b {renderer}
+          boss_table:
+            .byte 12,12,13,14,15,16,16,17,22,25,26,255,255,15
+        ''')
+        site=pm['boss_call'];assert original[site:site+4]==asm(f'bl {renderer}',site)
+        patch(site,asm(f'bl {boss_addr}',site),f'V{i+1} choose room boss at the actual sprite draw call')
+        boss_hooks.append(dict(**pm,hook=boss_addr))
+        footer=pm['footer'];displaced=original[footer:footer+4]
+        assert displaced==asm('stp x22, x21, [sp, #-48]!',0)
+        footer_addr,_=emit(f'''
+            stp x29, x30, [sp, #-48]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            str x2, [sp, #32]
+            {lookup('AGWheelSuppressFooter',35)}
+            cbz x10, footer_original
+            mov w0, #{i}
+            blr x10
+            cbz w0, footer_original
+            ldp x29, x30, [sp], #48
+            ret
+          footer_original:
+            ldp x0, x1, [sp, #16]
+            ldr x2, [sp, #32]
+            ldp x29, x30, [sp], #48
+            stp x22, x21, [sp, #-48]!
+            b {footer+4}
+        ''')
+        patch(footer,asm(f'b {footer_addr}',footer),f'V{i+1} hide native small softkeys only while the wheel is visible')
+        footer_hooks.append(dict(variant=i,site=footer,hook=footer_addr))
         open_addr,raw=emit(f'''
             stp x29, x30, [sp, #-32]!
             mov x29, sp
@@ -672,7 +705,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hook=boss_addr,turn_map=turn_map,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,turn_map=turn_map,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()
@@ -697,5 +730,6 @@ def main():
         info=zipfile.ZipInfo(APP+'Frameworks/AGWheel.dylib');info.create_system=3;info.external_attr=0o100755<<16;info.compress_type=zipfile.ZIP_DEFLATED;dst.writestr(info,lib)
     print(args.output,hashlib.sha256(args.output.read_bytes()).hexdigest())
 if __name__=='__main__':main()
+
 
 
