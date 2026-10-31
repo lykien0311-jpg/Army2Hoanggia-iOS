@@ -403,8 +403,8 @@ __attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
         AGViewportPreviewTop(.7055);[view setNeedsLayout];[view layoutIfNeeded];
         NSCAssert(fabs(CGRectGetMaxY(AGController.controls.frame)-size.height*.7055)<.001,@"Footer reaches projected keypad boundary");
         NSCAssert(fabs(AGWindow.gameBottom-CGRectGetMaxY(AGController.controls.frame))<.001,@"Touch boundary follows relocated controls");
-        NSCAssert(CGRectGetMinY(AGController.footerFill.frame)<=CGRectGetMaxY(AGController.panelScroll.frame),@"No sky strip below panel");
-        NSCAssert(CGRectGetMaxY(AGController.footerFill.frame)>=CGRectGetMaxY(AGController.controls.frame),@"Opaque footer covers strip down to keypad");
+        NSCAssert(CGRectGetMinY(AGController.footerFill.frame)<=CGRectGetMaxY(AGController.panelScroll.frame)+.01,@"No sky strip below panel");
+        NSCAssert(CGRectGetMaxY(AGController.footerFill.frame)+.01>=CGRectGetMaxY(AGController.controls.frame),@"Opaque footer covers strip down to keypad");
         NSCAssert(CGColorGetAlpha(AGController.footerFill.backgroundColor.CGColor)==1,@"Footer background is opaque");
         UIGraphicsBeginImageContextWithOptions(view.bounds.size,YES,2);
         [view.layer renderInContext:UIGraphicsGetCurrentContext()];

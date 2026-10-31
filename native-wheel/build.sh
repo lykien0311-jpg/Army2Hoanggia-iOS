@@ -82,6 +82,11 @@ for attempt in {1..30}; do
   if [ -s "$preview_data/Documents/captcha-ui-check.json" ]; then break; fi
   sleep 1
 done
+python3 - "$preview_data" <<'PY_UI'
+import json,pathlib,sys
+error=pathlib.Path(sys.argv[1])/'Documents/ui-error.json'
+if error.exists():raise SystemExit(error.read_text())
+PY_UI
 cp "$preview_data/Documents/ui-check.json" build/ui-check.json
 cp "$preview_data"/Documents/wheel-layout-*.png build/
 cp "$preview_data"/Documents/captcha-*.png build/

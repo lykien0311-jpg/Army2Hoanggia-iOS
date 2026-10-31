@@ -5,6 +5,7 @@ mocked. The actual player firing body and Service packet construction execute.
 The resulting command 22 bytes must match the server's shootMessage reader.
 """
 import json,struct
+import os
 import lief
 import test_device_bridge as t
 from unicorn import UC_HOOK_CODE
@@ -91,10 +92,22 @@ for v,m in enumerate(turns):
     room=t.alloc(0x200);t.put(B+notes[v]['room_class'],'<Q',room);U.mem_write(room+0x130,bytes([8,5]));t.put(player+0x68,'<q',1000)
     t.put(t.SERVICE+0x10,'<Q',t.SESSION)
     receive(v,-115,struct.pack('>I',0x55464f01))
+    stale_notice=bool(os.environ.get('AG_TEST_STALE_SHOT_NOTICE'))
     for num,(x,y) in enumerate([(240,350),(500,200)],8):
         U.mem_write(pg+0x1a7,bytes(2));U.mem_write(player+0x166,bytes(1));U.mem_write(player+0x16a,bytes(1))
         t.put(player+0x80,'<i',110);t.put(player+0x84,'<i',90)
         t.put(player+0x114,'<i',x);t.put(player+0x118,'<i',y);t.put(player+0xa4,'<I',0x55aa0000)
+        if stale_notice:
+            # The original native receive path resets 1a7 through this setter,
+            # while the notification at 1a8 survives until V.s() consumes it.
+            native_maps=json.loads((ROOT/'native-map.json').read_text())
+            clear=branch(native_maps[v]['controller']+0x51f988-0x51820c)
+            t.put(pg+0x1a7,'<B',1);t.put(pg+0x1a8,'<B',1)
+            t.put(B+m['player_class']+9,'<B',2)
+            U.reg_write(UC_ARM64_REG_SP,t.STACK+0x30000);U.reg_write(UC_ARM64_REG_LR,t.STOP)
+            U.reg_write(UC_ARM64_REG_X0,t.ENV);U.reg_write(UC_ARM64_REG_X1,0)
+            U.emu_start(B+clear,t.STOP+4,count=1000)
+            assert t.get(pg+0x1a7,'<B')==0 and t.get(pg+0x1a8,'<B')==1
         ticket=987654+num
         receive(v,24,bytes([2])+struct.pack('>IiQ',1429485652,num,ticket))
         receive(v,-115,struct.pack('>iBQHBBhh',num,2,ticket,173,28,0,x,y))

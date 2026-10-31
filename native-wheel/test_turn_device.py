@@ -68,7 +68,7 @@ for v,m in enumerate(R):
  t.put(canvas+0xb8,'<Q',arena);t.put(globals+0x266,'<B',2)
  call('AGTurnTick',t.ENV,v);assert len(shots)==1;cases+=1
  # Busy animation, captcha and dialog defer, then exactly one native fire.
- for target,off,fmt in [(pg,0x1a7,'<B'),(pg,0x1a8,'<B'),(p,0x166,'<B'),(p,0x16a,'<B'),(canvas,0x108,'<Q')]:
+ for target,off,fmt in [(pg,0x1a7,'<B'),(p,0x166,'<B'),(p,0x16a,'<B'),(canvas,0x108,'<Q')]:
   turn(v);shots.clear();aim(v);t.put(target+off,fmt,1);call('AGTurnTick',t.ENV,v);assert not shots
   t.put(target+off,fmt,0);call('AGTurnTick',t.ENV,v);assert len(shots)==1;cases+=1
  turn(v);shots.clear();aim(v);blocked=1;call('AGTurnTick',t.ENV,v);assert not shots;blocked=0;call('AGTurnTick',t.ENV,v);assert len(shots)==1;cases+=1
