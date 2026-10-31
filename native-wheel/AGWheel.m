@@ -429,6 +429,15 @@ __attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
         NSCAssert(AGController.panel.bounds.size.height>=450*s-.01,@"Large text must scroll, never clip");
         NSCAssert(AGController.controls.bounds.size.height>=44,@"Readable controls");
         NSCAssert(CGRectGetMaxY(AGController.controls.frame)<=view.bounds.size.height+.01,@"Controls fit visible screen");
+        // Simulate the original keypad's combined matrix after initial layout.
+        // The whole footer and its touch boundary must move on the next render.
+        uint8_t keys[48]={0},batch[144]={0},matrix[32]={0},values[84]={0};
+        *(int *)(keys+0x28)=294;batch[0x85]=1;
+        *(void **)(batch+0x20)=matrix;*(void **)(matrix+0x10)=values;*(int *)(values+0x10)=16;
+        float *projection=(float *)(values+0x14);projection[5]=.002f;projection[13]=-1;projection[15]=1;
+        AGViewportKeypad(NULL,keys,batch);[view setNeedsLayout];[view layoutIfNeeded];
+        NSCAssert(fabs(CGRectGetMaxY(AGController.controls.frame)-size.height*.7055)<.001,@"Footer reaches projected keypad boundary");
+        NSCAssert(fabs(AGWindow.gameBottom-CGRectGetMaxY(AGController.controls.frame))<.001,@"Touch boundary follows relocated controls");
         UIGraphicsBeginImageContextWithOptions(view.bounds.size,YES,2);
         [view.layer renderInContext:UIGraphicsGetCurrentContext()];
         UIImage *layout=UIGraphicsGetImageFromCurrentImageContext();UIGraphicsEndImageContext();
@@ -439,7 +448,8 @@ __attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
         NSCAssert(CGRectGetMinY(AGController.amountPanel.frame)>=view.safeAreaInsets.top-.01,@"Input stays below safe top");
         NSCAssert(CGRectGetMaxY(AGController.amountField.frame)<=AGController.amountPanel.bounds.size.height+.01,@"Input field remains visible with keyboard");
         AGController.keyboardInset=0;[view setNeedsLayout];[view layoutIfNeeded];
-        [checked addObject:@{@"width":@(size.width),@"height":@(size.height),@"panel_width":@(AGController.panel.bounds.size.width),@"content_height":@(AGController.panel.bounds.size.height),@"scrolls":@(AGController.panel.bounds.size.height>AGController.panelScroll.bounds.size.height+.01)}];
+        [checked addObject:@{@"width":@(size.width),@"height":@(size.height),@"panel_width":@(AGController.panel.bounds.size.width),@"content_height":@(AGController.panel.bounds.size.height),@"scrolls":@(AGController.panel.bounds.size.height>AGController.panelScroll.bounds.size.height+.01),@"projected_footer":@YES}];
+        AGViewportPreview(.30);
     }
     view.frame=original;[view setNeedsLayout];[view layoutIfNeeded];
     [AGController bet];NSCAssert(AGController.editingAmount&&!AGController.amountPanel.hidden,@"Amount panel opens");

@@ -8,7 +8,7 @@ static double keyboardPerWidth;
 static double keypadTopFraction=-1;
 #ifdef AG_WHEEL_PREVIEW
 static double previewFraction=.30;
-void AGViewportPreview(CGFloat fraction){previewFraction=fraction;}
+void AGViewportPreview(CGFloat fraction){previewFraction=fraction;keypadTopFraction=-1;}
 #endif
 // Capture the native N/d keypad's height on the original game thread.
 void AGViewportCapture(int variant){
@@ -59,7 +59,6 @@ CGRect AGGameRect(UIView *view){
     CGFloat reserved=bounds.size.width*ratio;
 #ifdef AG_WHEEL_PREVIEW
     reserved=bounds.size.height*previewFraction;
-    top=-1;
 #endif
     CGFloat bottom=reserved>0?bounds.size.height-reserved:bounds.size.height-safe.bottom;
     if(top>0){

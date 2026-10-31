@@ -25,6 +25,8 @@ static void invalidate(Turn *t){t->valid=t->pending=t->used=0;t->arena=t->ticket
 typedef struct {int v;uintptr_t connection;uint8_t *arena,*canvas,*globals,*players,*playerGlobals,*projectiles;int local,ufo;} Context;
 static int context(void *env,void *opaque){
     Context *c=opaque;uintptr_t base=(uintptr_t)_dyld_get_image_header(0);
+    uint8_t *room=*(uint8_t **)(base+AGNotesMaps[c->v].room_class);
+    c->ufo=room&&room[0x131]==5&&(room[0x130]==8||room[0x130]==9);
     void *(*get)(void *)=(void *)(base+AGMaps[c->v].service);uint8_t *volatile service=get(env);
     if(!service)return 0;c->connection=*(uintptr_t *)(service+0x10);if(!c->connection)return 0;
     c->globals=*(uint8_t **)(base+AGTurnMaps[c->v].arena_class);
@@ -34,8 +36,6 @@ static int context(void *env,void *opaque){
     uint8_t *g=*(uint8_t **)(base+AGTurnMaps[c->v].array_class);
     c->players=g?*(uint8_t **)(g+0xa0):NULL;c->local=g?(int8_t)g[0xd0]:-1;
     c->arena=c->globals?*(uint8_t **)(c->globals+0xe8):NULL;
-    uint8_t *room=*(uint8_t **)(base+AGNotesMaps[c->v].room_class);
-    c->ufo=room&&room[0x131]==5&&(room[0x130]==8||room[0x130]==9);
     return 1;
 }
 static int getContext(void *env,Context *c){return AGWheelGuard(env,context,c,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));}
@@ -48,9 +48,10 @@ __attribute__((visibility("default"))) void AGTurnAwait(void *env,void *lock,int
     if(!env||!lock||v<0||v>=6)return;
     uintptr_t base=(uintptr_t)_dyld_get_image_header(0);
     Context c={.v=v};int ok=getContext(env,&c);
-    if(ok<=0||!active(&c)||!c.ufo){
+    if(!c.ufo){
         void (*wait)(void *,void *)=(void *)(base+0xaaa6e8);wait(env,lock);return;
     }
+    if(ok<=0||!active(&c))return;
     uint8_t *volatile arena=c.arena;
     for(;;){
         int busy=0;
