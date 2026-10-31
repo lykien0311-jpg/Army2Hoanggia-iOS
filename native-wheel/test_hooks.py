@@ -30,7 +30,7 @@ assert [(s.name,s.virtual_address,s.offset)for s in M.sections if s.segment_name
 for a,b in zip(list(M.segments)[1:],list(M.segments)[2:]):assert a.virtual_address+a.virtual_size<=b.virtual_address and a.file_offset+a.file_size<=b.file_offset
 assert all(not(s.init_protection&2 and s.init_protection&4)for s in M.segments)
 
-CALLBACKS={'AGWheelOpen':0x300000000,'AGWheelTick':0x300001000,'AGWheelReceive':0x300002000,'AGRoomReceive':0x300006000,'AGRoomRebuild':0x300007000,'AGTurnReceive':0x300009000,'AGTurnManual':0x30000a000,'AGTurnPulse':0x30000b000,'AGViewportKeypad':0x30000c000}
+CALLBACKS={'AGWheelOpen':0x300000000,'AGWheelTick':0x300001000,'AGWheelReceive':0x300002000,'AGRoomReceive':0x300006000,'AGRoomRebuild':0x300007000,'AGTurnReceive':0x300009000,'AGTurnManual':0x30000a000,'AGTurnPulse':0x300010000,'AGViewportKeypad':0x300011000}
 STACK=0x700000000;SP=STACK+0x18000;ENV=0x600000000;MSG=ENV+0x1000;OBJECT=ENV+0x2000;STOP=0x300003000;GUARD=0x300004000;BODY=0x300005000
 X=[getattr(__import__('unicorn.arm64_const',fromlist=['']),f'UC_ARM64_REG_X{i}')for i in range(31)]
 U=Uc(UC_ARCH_ARM64,UC_MODE_ARM)
@@ -38,7 +38,7 @@ for s in M.segments:
     if s.name=='__PAGEZERO':continue
     U.mem_map(s.virtual_address,(s.virtual_size+4095)&-4096)
     U.mem_write(s.virtual_address,B[s.file_offset:s.file_offset+s.file_size])
-U.mem_map(STACK,0x20000);U.mem_map(ENV,0x10000);U.mem_map(0x300000000,0x10000)
+U.mem_map(STACK,0x20000);U.mem_map(ENV,0x10000);U.mem_map(0x300000000,0x20000)
 def readq(a):return struct.unpack('<Q',U.mem_read(a,8))[0]
 def writeq(a,v):U.mem_write(a,struct.pack('<Q',v))
 def string(a):return bytes(U.mem_read(a,100)).split(b'\0')[0].decode()

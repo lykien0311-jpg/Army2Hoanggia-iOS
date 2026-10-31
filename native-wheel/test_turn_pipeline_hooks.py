@@ -3,7 +3,7 @@ import test_hooks as t
 import struct
 
 U=t.U;X=t.X;B=t.BASE;R=t.R
-t.CALLBACKS['AGTurnAwait']=0x30000d000
+t.CALLBACKS['AGTurnAwait']=0x300012000
 body=0;body_done=False;old_waits=0
 def hook(uc,pc,size,data):
     global body_done,old_waits

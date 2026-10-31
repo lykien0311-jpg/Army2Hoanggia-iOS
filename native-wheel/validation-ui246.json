@@ -1,0 +1,112 @@
+{
+  "build": "246",
+  "native_sha256": "3fda3b084de5b4119c5ea60ec1a6998b4fb7af46ea0de73a4bcc7e0546abd08b",
+  "ipa_sha256": "b98328de1a9a09bde0369bbdd4625a17fac0f033bc62a8a839946a0436b0e97c",
+  "dylib_sha256": "1cd5d7496f05a282390bc6b69dd0f85e77c0656620ee60cbf172a61ffc5c2e5f",
+  "bytes": 16563458,
+  "apple_run_id": 41192348295,
+  "apple_artifact_id": 13039725977,
+  "apple_artifact_sha256": "8cddad2c8f894012ff136e365d4d81da7c41161529c9ae229b6b7d3cb5564fab",
+  "apple_source_branch_commit": "19d6611d94243f3bbd0838f42156621164dc5a8c",
+  "apple_tested_merge_commit": "b6a83a99e3f0f75fc471a7ede1c1f4e49595a796",
+  "apple_signature_and_resign_checks": true,
+  "checks": {
+    "test_boss_preview.py": {
+      "exit_code": 0,
+      "seconds": 4.087
+    },
+    "test_boss_render.py": {
+      "exit_code": 0,
+      "seconds": 3.99
+    },
+    "test_footer_hooks.py": {
+      "exit_code": 0,
+      "seconds": 4.109
+    },
+    "test_grid_device.py": {
+      "exit_code": 0,
+      "seconds": 1.846
+    },
+    "test_keypad_projection.py": {
+      "exit_code": 0,
+      "seconds": 0.602
+    },
+    "test_login78.py": {
+      "exit_code": 0,
+      "seconds": 3.731
+    },
+    "test_notes_device.py": {
+      "exit_code": 0,
+      "seconds": 0.632
+    },
+    "test_notes_hooks.py": {
+      "exit_code": 0,
+      "seconds": 4.006
+    },
+    "test_settings_exit.py": {
+      "exit_code": 0,
+      "seconds": 4.17
+    },
+    "test_turn_device.py": {
+      "exit_code": 0,
+      "seconds": 1.098
+    },
+    "test_turn_pipeline_hooks.py": {
+      "exit_code": 0,
+      "seconds": 3.893
+    },
+    "test_turn_update_wire.py": {
+      "exit_code": 0,
+      "seconds": 2.05
+    },
+    "test_turn_wait_device.py": {
+      "exit_code": 0,
+      "seconds": 2.034
+    },
+    "test_ufo_native_movement.py": {
+      "exit_code": 0,
+      "seconds": 1.592
+    },
+    "test_zone_labels.py": {
+      "exit_code": 0,
+      "seconds": 3.643
+    }
+  },
+  "counts": {
+    "native_preservation_and_static_hooks": 134,
+    "new_update_wait_keypad_hooks": 86,
+    "compiled_turn_guards": 174,
+    "native_wait_predicates": 150,
+    "post_update_to_original_shot_wire": 36,
+    "original_walking_then_repeated_shot": 18,
+    "original_shot_wire": 12,
+    "native_key_geometry_to_projection": 8,
+    "boss_sprite_arguments": 480,
+    "original_boss_image_selection": 96,
+    "hidden_small_footer_labels": 54,
+    "unsigned_area_labels": 348,
+    "compiled_grid": 624,
+    "compiled_notes": 444,
+    "notes_hooks": 120,
+    "settings_exit_screens": 12,
+    "login_version": 25,
+    "uikit_projected_footer_sizes": 6
+  },
+  "unchanged_archive_entries": 522,
+  "physical_device_tested": false,
+  "live_vps_tested": false,
+  "requires_user_certificate_resigning": true,
+  "mocked_boundaries": [
+    "original arena update body in post-update wire test",
+    "Java/OS/graphics primitives",
+    "final network transport"
+  ],
+  "device_evidence": {
+    "video": "32843.mp4",
+    "build245_auto_ufo": "still starts without shooting",
+    "build245_waiting_room_preview": "UFO now correct",
+    "image": "32842.jpg",
+    "request": "move the full wheel command row down to cover the gap above the native keypad"
+  },
+  "byte_identical_repack": true
+}
