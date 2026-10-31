@@ -88,6 +88,7 @@ for v,m in enumerate(turns):
     for address,value in [(m['arena_class'],g),(m['player_class'],pg),(m['array_class'],ag),(notes[v]['canvas'],canvas)]:t.put(B+address,'<Q',value)
     t.put(g+0xe8,'<Q',arena);t.put(g+0x266,'<B',2);t.put(ag+0xa0,'<Q',array);t.put(ag+0xd0,'<B',2)
     t.put(canvas+0xb8,'<Q',arena);t.put(array+0x10,'<I',8);t.put(array+0x28,'<Q',player)
+    room=t.alloc(0x200);t.put(B+notes[v]['room_class'],'<Q',room);U.mem_write(room+0x130,bytes([8,5]));t.put(player+0x68,'<q',1000)
     t.put(t.SERVICE+0x10,'<Q',t.SESSION)
     receive(v,-115,struct.pack('>I',0x55464f01))
     for num,(x,y) in enumerate([(240,350),(500,200)],8):

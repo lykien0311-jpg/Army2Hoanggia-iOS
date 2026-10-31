@@ -30,7 +30,7 @@ assert [(s.name,s.virtual_address,s.offset)for s in M.sections if s.segment_name
 for a,b in zip(list(M.segments)[1:],list(M.segments)[2:]):assert a.virtual_address+a.virtual_size<=b.virtual_address and a.file_offset+a.file_size<=b.file_offset
 assert all(not(s.init_protection&2 and s.init_protection&4)for s in M.segments)
 
-CALLBACKS={'AGWheelOpen':0x300000000,'AGWheelTick':0x300001000,'AGWheelReceive':0x300002000,'AGRoomReceive':0x300006000,'AGRoomRebuild':0x300007000,'AGTurnReceive':0x300009000,'AGTurnManual':0x30000a000}
+CALLBACKS={'AGWheelOpen':0x300000000,'AGWheelTick':0x300001000,'AGWheelReceive':0x300002000,'AGRoomReceive':0x300006000,'AGRoomRebuild':0x300007000,'AGTurnReceive':0x300009000,'AGTurnManual':0x30000a000,'AGTurnPulse':0x30000b000,'AGViewportKeypad':0x30000c000}
 STACK=0x700000000;SP=STACK+0x18000;ENV=0x600000000;MSG=ENV+0x1000;OBJECT=ENV+0x2000;STOP=0x300003000;GUARD=0x300004000;BODY=0x300005000
 X=[getattr(__import__('unicorn.arm64_const',fromlist=['']),f'UC_ARM64_REG_X{i}')for i in range(31)]
 U=Uc(UC_ARCH_ARM64,UC_MODE_ARM)
@@ -104,12 +104,12 @@ for h in R['hooks']:
         cb=[c for c in calls if c[0]=='AGRoomRebuild'];assert bool(cb)==(not missing)
         if cb:assert cb[0][1]==(ENV,OBJECT,v)
         cases+=1
-        for command,roomHandled in ((-101,1),(-19,1),(-19,0),(-100,1),(0,1),(116,1),(None,1)):
+        for command,roomHandled in ((-115,1),(-101,1),(-19,1),(-19,0),(-100,1),(0,1),(116,1),(None,1)):
             reset();continuation=BASE+h['controller']+4
             if command is None:U.reg_write(X[2],0)
             else:U.mem_write(MSG+0x30,bytes([command&255]))
             U.emu_start(BASE+h['controller'],STOP+4,count=1000)
-            intercept=(command==-101 or (command==-19 and roomHandled)) and not missing
+            intercept=(command in (-115,-101) or (command==-19 and roomHandled)) and not missing
             assert stopKind==(STOP if intercept else continuation)
             preserved(not intercept)
             cb=[c for c in calls if c[0] in ('AGWheelReceive','AGRoomReceive')];assert bool(cb)==(command in (-101,-19) and not missing)
@@ -130,5 +130,6 @@ for bodyRaises in (False,True):
 assert B[0x5bd128:0x5bd150]==ORIG[0x5bd128:0x5bd150], 'Xem giờ label must be restored'
 for h in R['hooks']:assert B[h['clock']+4:h['clock']+0x22c]==ORIG[h['clock']+4:h['clock']+0x22c], 'Original clock body must remain intact after dispatch'
 print(f'PASS: {cases} ARM64 hook/exception cases; all 6 variants; clock restored; exact prior-patch preservation; unchanged symbols/function starts, {len(bindings(M))} bindings, {len(rebases(M))} rebases; ordered W^X segments; LINKEDIT last')
+
 
 

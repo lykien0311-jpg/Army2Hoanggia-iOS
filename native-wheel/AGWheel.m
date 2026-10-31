@@ -40,6 +40,49 @@ __attribute__((visibility("default"))) int AGWheelSuppressFooter(int variant) {
     pthread_mutex_unlock(&AGMutex);return hide;
 }
 static double AGNow(void) { struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return t.tv_sec+t.tv_nsec/1e9; }
+// A device report must distinguish missing turn data from animation guards.
+// Only atomics are touched on Java threads; UIKit polls on the main thread.
+static atomic_int AGTurnReason=0, AGTurnDiagnosticVariant=-1;
+static _Atomic(double) AGTurnUpdated=0;
+static void AGInstallTurnStatus(void);
+__attribute__((visibility("default"))) void AGTurnStatusUpdate(int variant,int reason) {
+    atomic_store(&AGTurnDiagnosticVariant,variant);
+    atomic_store(&AGTurnReason,reason);atomic_store(&AGTurnUpdated,AGNow());
+    if(reason){static dispatch_once_t once;dispatch_once(&once,^{dispatch_async(dispatch_get_main_queue(),^{AGInstallTurnStatus();});});}
+}
+__attribute__((visibility("default"))) void AGTurnPulse(void *env,int variant) {
+    if(atomic_load(&AGForeground))AGTurnTick(env,variant);
+}
+@interface AGTurnStatusWindow : UIWindow
+@end
+@implementation AGTurnStatusWindow
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event{return nil;}
+@end
+static void AGInstallTurnStatus(void) {
+    static AGTurnStatusWindow *window;static UILabel *label;static NSTimer *timer;
+    timer=[NSTimer scheduledTimerWithTimeInterval:.25 repeats:YES block:^(NSTimer *t){
+        int reason=atomic_load(&AGTurnReason);
+        BOOL visible=reason>0&&reason<12&&AGNow()-atomic_load(&AGTurnUpdated)<2&&UIApplication.sharedApplication.applicationState==UIApplicationStateActive;
+        if(!visible){window.hidden=YES;return;}
+        UIWindow *game=nil;for(UIWindow *w in UIApplication.sharedApplication.windows)if(!w.hidden&&w.windowLevel==UIWindowLevelNormal){game=w;break;}
+        if(!game)return;
+        if(!window){
+            if(@available(iOS 13.0,*)){if(game.windowScene)window=[[AGTurnStatusWindow alloc]initWithWindowScene:game.windowScene];}
+            if(!window)window=[[AGTurnStatusWindow alloc]initWithFrame:game.frame];
+            window.backgroundColor=UIColor.clearColor;window.opaque=NO;window.windowLevel=UIWindowLevelStatusBar+1;
+            window.rootViewController=[UIViewController new];window.rootViewController.view.backgroundColor=UIColor.clearColor;
+            label=[UILabel new];label.textColor=UIColor.whiteColor;label.backgroundColor=[UIColor colorWithWhite:0 alpha:.55];
+            label.textAlignment=NSTextAlignmentCenter;label.font=[UIFont systemFontOfSize:11 weight:UIFontWeightMedium];label.adjustsFontSizeToFitWidth=YES;
+            label.layer.cornerRadius=4;label.clipsToBounds=YES;label.isAccessibilityElement=YES;
+            [window.rootViewController.view addSubview:label];
+        }
+        NSArray *reasons=@[@"",@"Chờ dữ liệu lượt",@"Chờ dữ liệu bắn",@"Chờ nhân vật sẵn sàng",@"Chờ kết thúc hiệu ứng",@"Chờ đúng vị trí",@"Chờ lượt của bạn",@"Đang mở hộp thoại",@"Đã gọi bắn",@"Dữ liệu trận đã đổi",@"Chưa bật auto",@"Chưa gọi được hàm bắn"];
+        window.frame=game.frame;UIEdgeInsets safe=game.safeAreaInsets;
+        label.frame=CGRectMake(safe.left+8,safe.top+2,MAX(1,game.bounds.size.width-safe.left-safe.right-16),19);
+        label.text=[@"Auto UFO: " stringByAppendingString:reasons[reason]];window.hidden=NO;
+    }];
+    [[NSRunLoop mainRunLoop]addTimer:timer forMode:NSRunLoopCommonModes];
+}
 static NSString *AGString(const char *s) {return [NSString stringWithUTF8String:s]?:@"";}
 static NSString *AGMoney(int64_t value) {
     static NSNumberFormatter *f; static dispatch_once_t once;
@@ -259,6 +302,8 @@ int AGWheelInput(int variant,int kind,int code,int y){
     [self.amountField resignFirstResponder];[self.view setNeedsLayout];[self render];
 }
 - (void)render{
+    // Keypad projection can become available after the first wheel layout.
+    [self.view setNeedsLayout];
     AGModel m=AGCopy();AGSnapshot s=m.snapshot;BOOL fresh=m.loaded&&AGNow()-m.receivedAt<6;
     int64_t now=AGServerNow(m),remain=s.ends>now?(s.ends-now+999)/1000:0;
     BOOL locked=s.ends>0&&now>=s.ends-10000;

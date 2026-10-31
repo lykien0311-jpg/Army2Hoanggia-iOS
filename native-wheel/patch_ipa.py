@@ -62,7 +62,7 @@ def build_native(old,original,maps):
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
     symbols={};strcursor=0x7000
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnAwait','AGViewportKeypad','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
     for title in REFERENCE_TITLES.values():
@@ -93,6 +93,26 @@ def build_native(old,original,maps):
         assert old[at:at+len(raw)]==original[at:at+len(raw)],(hex(at),label)
         records.append(dict(offset=at,label=label,before=b[at:at+len(raw)].hex(),after=raw.hex()))
         b[at:at+len(raw)]=raw
+    keypad_paint=0x1fcbc4
+    assert original[keypad_paint:keypad_paint+4]==asm('stp x22, x21, [sp, #-48]!',0)
+    keypad_hook,_=emit(f'''
+        stp x29, x30, [sp, #-48]!
+        mov x29, sp
+        stp x0, x1, [sp, #16]
+        str x2, [sp, #32]
+        {lookup('AGViewportKeypad',37)}
+        cbz x10, keypad_original
+        ldp x0, x1, [sp, #16]
+        ldr x2, [sp, #32]
+        blr x10
+      keypad_original:
+        ldp x0, x1, [sp, #16]
+        ldr x2, [sp, #32]
+        ldp x29, x30, [sp], #48
+        stp x22, x21, [sp, #-48]!
+        b {keypad_paint+4}
+    ''')
+    patch(keypad_paint,asm(f'b {keypad_hook}',keypad_paint),'Capture actual native keypad projection for the wheel footer')
     # Clan member packet 118 sends the absolute member rank as a short.
     # Reading one byte desynchronizes cup, equipment and contribution strings.
     for at in [5426252, 6399636, 7336792, 8273948, 9211104, 10148260]:
@@ -201,7 +221,7 @@ def build_native(old,original,maps):
     # The old "boss_sites" were X-coordinate subtractions in player-slot
     # painting, not boss identity calculations. Leave all twelve intact.
     presentation=json.loads((ROOT/'presentation-map.json').read_text())
-    boss_hooks=[];footer_hooks=[];canvas_footer_hooks=[];zone_patches=[]
+    boss_hooks=[];footer_hooks=[];canvas_footer_hooks=[];zone_patches=[];arena_update_hooks=[];turn_wait_hooks=[]
     notes=json.loads((ROOT/'notes-map.json').read_text())
     hooks=[]
     for i,m in enumerate(maps):
@@ -473,6 +493,13 @@ def build_native(old,original,maps):
             ldr x1, [sp, #32]
             mov w2, #{i}
             blr x10
+            ldr x9, [sp, #32]
+            cbz x9, turn_observed
+            ldrsb w9, [x9, #48]
+            cmn w9, #115
+            b.ne turn_observed
+            ldp x29, x30, [sp], #48
+            ret
           turn_observed:
             ldp x0, x1, [sp, #16]
             ldr x2, [sp, #32]
@@ -553,6 +580,60 @@ def build_native(old,original,maps):
             b {fire_trampoline}
         ''')
         patch(fire_site,asm(f'b {fire_hook}',fire_site),f'V{i+1} cancel queued UFO aim on native manual fire')
+        for wait in turn_map[i]['waits']:
+            site=wait['site'];kind=wait['kind'];actor=wait['actor_offset']
+            load_actor=f"{'ldur' if actor<0 else 'ldr'} w9, [{wait['actor_register']}, #{actor}]" if kind in (2,3) else 'mov w9, #-1'
+            wait_hook,_=emit(f'''
+                {load_actor}
+                stp x29, x30, [sp, #-48]!
+                mov x29, sp
+                stp x0, x1, [sp, #16]
+                str w9, [sp, #32]
+                {lookup('AGTurnAwait',38)}
+                cbz x10, old_wait
+                ldp x0, x1, [sp, #16]
+                mov w2, #{i}
+                mov w3, #{kind}
+                ldr w4, [sp, #32]
+                blr x10
+                b wait_done
+              old_wait:
+                ldp x0, x1, [sp, #16]
+                bl {0xaaa6e8}
+              wait_done:
+                ldp x29, x30, [sp], #48
+                ret
+            ''')
+            assert original[site:site+4]==asm(f'bl {0xaaa6e8}',site)
+            patch(site,asm(f'bl {wait_hook}',site),f'V{i+1} UFO predicate wait kind {kind}; preserve native monitor')
+            turn_wait_hooks.append(dict(variant=i,hook=wait_hook,**wait))
+        # Turn33.pulse is called after the arena update in the working JAR.
+        # Hook both native update entries, preserving the original method,
+        # Env, this and callee-saved registers. The ticket makes two callbacks
+        # idempotent when one update calls the other.
+        for update in presentation[i]['arena_updates']:
+            site=update['entry'];first=original[site:site+4]
+            assert struct.unpack('<I',first)[0]&0xffc003e0==0xa98003e0,(hex(site),first.hex())
+            trampoline,_=emit(f'nop; b {site+4}')
+            rx[trampoline-rxvm:trampoline-rxvm+4]=first
+            update_hook,_=emit(f'''
+                stp x29, x30, [sp, #-48]!
+                mov x29, sp
+                stp x0, x1, [sp, #16]
+                bl {trampoline}
+                str x0, [sp, #32]
+                {lookup('AGTurnPulse',36)}
+                cbz x10, arena_done
+                ldr x0, [sp, #16]
+                mov w1, #{i}
+                blr x10
+              arena_done:
+                ldr x0, [sp, #32]
+                ldp x29, x30, [sp], #48
+                ret
+            ''')
+            patch(site,asm(f'b {update_hook}',site),f'V{i+1} process UFO aim after native arena {update["method"]} update')
+            arena_update_hooks.append(dict(variant=i,site=site,hook=update_hook,trampoline=trampoline,first=first.hex(),method=update['method']))
         build_addr,raw=emit(f'''
             stp x29, x30, [sp, #-48]!
             mov x29, sp
@@ -752,7 +833,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,zone_patches=zone_patches,turn_map=turn_map,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()

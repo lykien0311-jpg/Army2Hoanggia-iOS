@@ -30,6 +30,7 @@ for v,(m,map)in enumerate(zip(w.turns,maps)):
     for address,value in [(m['arena_class'],g),(m['player_class'],pg),(m['array_class'],ag),(w.notes[v]['canvas'],canvas)]:t.put(B+address,'<Q',value)
     t.put(g+0xe8,'<Q',arena);t.put(ag+0xa0,'<Q',array);t.put(ag+0xd0,'<B',2)
     t.put(array+0x10,'<I',8);t.put(array+0x28,'<Q',p);t.put(t.SERVICE+0x10,'<Q',t.SESSION)
+    room=t.alloc(0x200);t.put(B+w.notes[v]['room_class'],'<Q',room);U.mem_write(room+0x130,bytes([8,5]));t.put(p+0x68,'<q',1000)
     t.put(p+0x80,'<i',110);t.put(p+0x84,'<i',90)
     t.put(p+0x114,'<i',240);t.put(p+0x118,'<i',350);t.put(p+0x173,'<B',3)
     walking=True;native_call(B+walk,t.ENV,p,1);walking=False

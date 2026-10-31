@@ -26,7 +26,7 @@ shasum -a 256 build/AGWheel.dylib > build/SHA256.txt
 python3 - <<'PY'
 import hashlib,json,pathlib,subprocess
 p=pathlib.Path('build/AGWheel.dylib');exports=pathlib.Path('build/exports.txt').read_text()
-for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGWheelSuppressFooter','AGTurnReceive','AGTurnManual'):
+for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGWheelSuppressFooter','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnAwait','AGTurnStatusUpdate','AGViewportKeypad'):
     assert '_'+name in exports,name
 assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
 assert '_AGReleaseIdentity' in exports and b'2.4.1-HG78-IPA\0' in p.read_bytes()

@@ -13,7 +13,19 @@
       5310016,
       5310156
     ],
-    "font_renderer": 6045284
+    "font_renderer": 6045284,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 5516152,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 5531168,
+        "size": 5820
+      }
+    ]
   },
   {
     "variant": 1,
@@ -29,7 +41,19 @@
       6284216,
       6284356
     ],
-    "font_renderer": 6995080
+    "font_renderer": 6995080,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 6481968,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 6496904,
+        "size": 5820
+      }
+    ]
   },
   {
     "variant": 2,
@@ -45,7 +69,19 @@
       7221372,
       7221512
     ],
-    "font_renderer": 7932236
+    "font_renderer": 7932236,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 7419124,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 7434060,
+        "size": 5820
+      }
+    ]
   },
   {
     "variant": 3,
@@ -61,7 +97,19 @@
       8158528,
       8158668
     ],
-    "font_renderer": 8869392
+    "font_renderer": 8869392,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 8356280,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 8371216,
+        "size": 5820
+      }
+    ]
   },
   {
     "variant": 4,
@@ -77,7 +125,19 @@
       9095684,
       9095824
     ],
-    "font_renderer": 9806548
+    "font_renderer": 9806548,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 9293436,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 9308372,
+        "size": 5820
+      }
+    ]
   },
   {
     "variant": 5,
@@ -93,6 +153,18 @@
       10032840,
       10032980
     ],
-    "font_renderer": 10743704
+    "font_renderer": 10743704,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 10230592,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 10245528,
+        "size": 5820
+      }
+    ]
   }
 ]

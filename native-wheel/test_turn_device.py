@@ -36,6 +36,7 @@ for v,m in enumerate(R):
  globals=t.alloc(0x400);pg=t.alloc(0x400);ag=t.alloc(0x200);canvas=t.alloc(0x200);arena=t.alloc(0x200);array=t.alloc(0x200);p=t.alloc(0x200)
  t.put(B+m['arena_class'],'<Q',globals);t.put(B+m['player_class'],'<Q',pg);t.put(B+m['array_class'],'<Q',ag);t.put(B+notes[v]['canvas'],'<Q',canvas)
  t.put(globals+0xe8,'<Q',arena);t.put(globals+0x266,'<B',2);t.put(ag+0xa0,'<Q',array);t.put(ag+0xd0,'<B',2);t.put(canvas+0xb8,'<Q',arena)
+ room=t.alloc(0x200);t.put(B+notes[v]["room_class"],"<Q",room);U.mem_write(room+0x130,bytes([8,5]));t.put(p+0x68,"<q",1000)
  t.put(array+0x10,'<I',8);t.put(array+0x18+16,'<Q',p)
  # Native walking changes 114/118. Constructor/spawn copies at 80/84
  # are deliberately different, as they are after movement/falling.
@@ -54,6 +55,13 @@ for v,m in enumerate(R):
    assert t.get(p+0x80,'<i')==110 and t.get(p+0x84,'<i')==90
    call('AGTurnTick',t.ENV,v);assert len(shots)==1
   cases+=1
+ # Dead actors can retain animation flags; the reference pulse ignores them.
+ other=t.alloc(0x200);t.put(array+0x18+3*8,'<Q',other)
+ t.put(other+0x166,'<B',1);t.put(other+0x16a,'<B',1)
+ turn(v);shots.clear();aim(v);call('AGTurnTick',t.ENV,v);assert len(shots)==1;cases+=1
+ t.put(other+0x68,'<q',1000)
+ turn(v);shots.clear();aim(v);call('AGTurnTick',t.ENV,v);assert not shots
+ t.put(other+0x68,'<q',0);call('AGTurnTick',t.ENV,v);assert len(shots)==1;cases+=1
  # Real observer ordering: ticket/aim arrive before screen/owner update.
  t.put(canvas+0xb8,'<Q',0);t.put(globals+0x266,'<B',7)
  turn(v);shots.clear();aim(v);call('AGTurnTick',t.ENV,v);assert not shots

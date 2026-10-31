@@ -9,6 +9,7 @@
 #include "NativeMap.h"
 #include "NotesMap.h"
 extern int AGNotesBlocksAuto(int);
+extern void AGTurnStatusUpdate(int,int);
 extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
 typedef struct {
     uintptr_t connection,arena;
@@ -21,7 +22,7 @@ static uint32_t be32(const uint8_t *b){return (uint32_t)b[0]<<24|(uint32_t)b[1]<
 static uint64_t be64(const uint8_t *b){return (uint64_t)be32(b)<<32|be32(b+4);}
 static int short16(const uint8_t *b){return (int16_t)((b[0]<<8)|b[1]);}
 static void invalidate(Turn *t){t->valid=t->pending=t->used=0;t->arena=t->ticket=0;t->owner=-1;t->generation++;}
-typedef struct {int v;uintptr_t connection;uint8_t *arena,*canvas,*globals,*players,*playerGlobals;int local;} Context;
+typedef struct {int v;uintptr_t connection;uint8_t *arena,*canvas,*globals,*players,*playerGlobals,*projectiles;int local,ufo;} Context;
 static int context(void *env,void *opaque){
     Context *c=opaque;uintptr_t base=(uintptr_t)_dyld_get_image_header(0);
     void *(*get)(void *)=(void *)(base+AGMaps[c->v].service);uint8_t *volatile service=get(env);
@@ -29,13 +30,46 @@ static int context(void *env,void *opaque){
     c->globals=*(uint8_t **)(base+AGTurnMaps[c->v].arena_class);
     c->canvas=*(uint8_t **)(base+AGNotesMaps[c->v].canvas);
     c->playerGlobals=*(uint8_t **)(base+AGTurnMaps[c->v].player_class);
+    c->projectiles=*(uint8_t **)(base+AGTurnMaps[c->v].projectile_class);
     uint8_t *g=*(uint8_t **)(base+AGTurnMaps[c->v].array_class);
     c->players=g?*(uint8_t **)(g+0xa0):NULL;c->local=g?(int8_t)g[0xd0]:-1;
     c->arena=c->globals?*(uint8_t **)(c->globals+0xe8):NULL;
+    uint8_t *room=*(uint8_t **)(base+AGNotesMaps[c->v].room_class);
+    c->ufo=room&&room[0x131]==5&&(room[0x130]==8||room[0x130]==9);
     return 1;
 }
 static int getContext(void *env,Context *c){return AGWheelGuard(env,context,c,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));}
 static int active(const Context *c){return c->arena&&c->canvas&&*(void **)(c->canvas+0xb8)==c->arena;}
+// Working Turn33 uses predicate waits: an animation may finish before the
+// network thread enters its monitor, so an unconditional wait loses notify.
+// Keep the native monitor enter/exit and Java exception propagation intact.
+// kind: 0 projectile, 1 flash, 2 walk, 3 flight.
+__attribute__((visibility("default"))) void AGTurnAwait(void *env,void *lock,int v,int kind,int actor){
+    if(!env||!lock||v<0||v>=6)return;
+    uintptr_t base=(uintptr_t)_dyld_get_image_header(0);
+    Context c={.v=v};int ok=getContext(env,&c);
+    if(ok<=0||!active(&c)||!c.ufo){
+        void (*wait)(void *,void *)=(void *)(base+0xaaa6e8);wait(env,lock);return;
+    }
+    uint8_t *volatile arena=c.arena;
+    for(;;){
+        int busy=0;
+        if(kind==0)busy=c.projectiles&&((volatile uint8_t *)c.projectiles)[0x118];
+        else if(kind==1)busy=((volatile uint8_t *)c.canvas)[0x13c];
+        else if((kind==2||kind==3)&&c.players){
+            int count=*(int *)(c.players+0x10);
+            if(actor>=0&&actor<count&&count<=64){
+                uint8_t *p=*(uint8_t **)(c.players+0x18+actor*8);
+                busy=p&&((volatile uint8_t *)p)[kind==2?0x166:0x16a];
+            }
+        }
+        if(!busy)return;
+        void (*wait)(void *,void *,int64_t)=(void *)(base+0xaaa730);
+        wait(env,lock,16);
+        c=(Context){.v=v};
+        if(getContext(env,&c)<=0||!active(&c)||c.arena!=arena||!c.ufo)return;
+    }
+}
 __attribute__((visibility("default"))) void AGTurnReceive(void *env,void *message,int v){
     if(!env||!message||v<0||v>=6)return;
     int cmd=*(int8_t *)((uint8_t *)message+0x30);
@@ -58,7 +92,7 @@ __attribute__((visibility("default"))) void AGTurnReceive(void *env,void *messag
         // can arrive while that dispatcher is still activating the arena.
         // Cache the ticket now; screen/owner checks belong to the game tick.
         if(n==17&&be32(b+1)==1429485652U&&b[0]<8){
-            t->valid=1;t->owner=b[0];t->turn=(int32_t)be32(b+5);t->ticket=be64(b+9);t->arena=(uintptr_t)c.arena;
+            t->valid=1;t->owner=b[0];t->turn=(int32_t)be32(b+5);t->ticket=be64(b+9);t->arena=active(&c)?(uintptr_t)c.arena:0;
         }
     }else if(n==4){
         uint32_t mode=be32(b);if((mode&~1U)==0x55464f00U){t->enabled=mode&1U;if(!t->enabled)t->pending=0;}
@@ -85,21 +119,30 @@ static int shoot(void *env,void *opaque){
 void AGTurnTick(void *env,int v){
     if(!env||v<0||v>=6)return;
     pthread_mutex_lock(&turnMutex);Turn copy=turns[v];pthread_mutex_unlock(&turnMutex);
-    if(!copy.enabled||!copy.pending||!copy.valid||copy.used)return;
     Context c={.v=v};int ok=getContext(env,&c);
+    if(!active(&c)||!c.ufo){AGTurnStatusUpdate(v,0);return;}
+    if(!copy.enabled){AGTurnStatusUpdate(v,10);return;}
+    if(!copy.valid){AGTurnStatusUpdate(v,1);return;}
+    if(copy.used){AGTurnStatusUpdate(v,8);return;}
+    if(!copy.pending){AGTurnStatusUpdate(v,2);return;}
     if(ok<=0||c.connection!=copy.connection||(copy.arena&&c.arena&&(uintptr_t)c.arena!=copy.arena)){
-        pthread_mutex_lock(&turnMutex);if(turns[v].generation==copy.generation){invalidate(&turns[v]);if(c.connection!=copy.connection)turns[v].enabled=0;}pthread_mutex_unlock(&turnMutex);return;
+        pthread_mutex_lock(&turnMutex);if(turns[v].generation==copy.generation){invalidate(&turns[v]);if(c.connection!=copy.connection)turns[v].enabled=0;}pthread_mutex_unlock(&turnMutex);AGTurnStatusUpdate(v,9);return;
     }
-    if(!active(&c)||!c.globals||!c.playerGlobals||!c.players||AGNotesBlocksAuto(v)||*(void **)(c.canvas+0x108)||c.globals[0x266]!=copy.owner||c.local!=copy.owner||c.playerGlobals[0x1a7]||c.playerGlobals[0x1a8])return;
+    if(!c.globals||!c.playerGlobals||!c.players){AGTurnStatusUpdate(v,9);return;}
+    if(AGNotesBlocksAuto(v)||*(void **)(c.canvas+0x108)){AGTurnStatusUpdate(v,7);return;}
+    if(c.globals[0x266]!=copy.owner||c.local!=copy.owner){AGTurnStatusUpdate(v,6);return;}
+    if(c.playerGlobals[0x1a7]||c.playerGlobals[0x1a8]||(c.projectiles&&c.projectiles[0x118])||c.canvas[0x13c]){AGTurnStatusUpdate(v,4);return;}
     int count=*(int *)(c.players+0x10);if(count<1||count>64||copy.owner<0||copy.owner>=8||copy.owner>=count)return;
     // Confirmed against d0_.l(Z): native walking and terrain settling write
     // full int32 values at 114/118. C0/D0 at 80/84 are unrelated fields.
-    uint8_t *p=*(uint8_t **)(c.players+0x18+copy.owner*8);if(!p||p[0x16f]!=0||p[0x166]||p[0x16a]||*(int32_t *)(p+0x114)!=copy.x||*(int32_t *)(p+0x118)!=copy.y)return;
-    for(int i=0;i<count;i++){uint8_t *other=*(uint8_t **)(c.players+0x18+i*8);if(other&&(other[0x166]||other[0x16a]))return;}
+    uint8_t *p=*(uint8_t **)(c.players+0x18+copy.owner*8);
+    if(!p||*(int64_t *)(p+0x68)<=0||p[0x16f]!=0||p[0x166]||p[0x16a]){AGTurnStatusUpdate(v,3);return;}
+    if(*(int32_t *)(p+0x114)!=copy.x||*(int32_t *)(p+0x118)!=copy.y){AGTurnStatusUpdate(v,5);return;}
+    for(int i=0;i<count;i++){uint8_t *other=*(uint8_t **)(c.players+0x18+i*8);if(other&&*(int64_t *)(other+0x68)>0&&(other[0x166]||other[0x16a])){AGTurnStatusUpdate(v,3);return;}}
     Shot shot={v,p,copy.angle,copy.force,copy.release};int ready=0;
     pthread_mutex_lock(&turnMutex);Turn *t=&turns[v];
     if(t->generation==copy.generation&&t->enabled&&t->pending&&!t->used&&t->ticket==copy.ticket){t->used=1;t->pending=0;ready=1;}
     pthread_mutex_unlock(&turnMutex);
-    if(ready)AGWheelGuard(env,shoot,&shot,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));
+    if(ready){int sent=AGWheelGuard(env,shoot,&shot,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));AGTurnStatusUpdate(v,sent>0?8:11);}
 }
 
