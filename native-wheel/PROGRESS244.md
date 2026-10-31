@@ -1,3 +1,5 @@
+> Superseded by build 245. The owner reported all three repairs still failed on their device. In particular, the build-244 live-coordinate and int16-angle assumptions below were wrong; see PROGRESS245.md and the native-walking regression test.
+
 # iOS 2.4.1 build 244
 
 Three requested repairs are included:

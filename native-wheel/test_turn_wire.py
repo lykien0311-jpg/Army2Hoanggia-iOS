@@ -105,4 +105,4 @@ for v,m in enumerate(turns):
         assert t.get(player+0x114,'<i')==x and t.get(player+0x118,'<i')==y
         call('AGTurnTick',t.ENV,v);assert packets==[(22,expected)]
         cases+=1
-print('PASS:',cases,'Apple UFO-to-original-player-to-Service command22 wire cases; current origin after falling/movement, angle, force, exactly-once and native short-field boundaries')
+print('PASS:',cases,'Apple UFO-to-original-player-to-Service command22 wire cases; current origin after falling/movement, angle, force, exactly-once and native int32 position/angle fields')

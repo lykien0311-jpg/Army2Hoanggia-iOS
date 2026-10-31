@@ -210,7 +210,7 @@ def build_native(old,original,maps):
         # Resolve the boss argument at the actual sprite-renderer call.
         # R5.l0 (0x130) is the room number. R5.w0 at 132 is the area number,
         # NOT the current map. Linked rooms retain the native stage's type.
-        # Sprite IDs 23/24 are the client's ghosts; server IDs 25/26 differ.
+        # The original renderer has explicit ghost branches at IDs 25/26.
         boss_addr,_=emit(f'''
             stp x9, x10, [sp, #-32]!
             mrs x9, nzcv
@@ -229,20 +229,12 @@ def build_native(old,original,maps):
             mov w2, w10
             b boss_done
           boss_done:
-            cmp w2, #25
-            b.ne boss_second_ghost
-            mov w2, #23
-          boss_second_ghost:
-            cmp w2, #26
-            b.ne boss_return
-            mov w2, #24
-          boss_return:
             ldr x9, [sp, #16]
             msr nzcv, x9
             ldp x9, x10, [sp], #32
             b {renderer}
           boss_table:
-            .byte 12,12,13,14,15,16,16,17,22,23,24,255,255,15
+            .byte 12,12,13,14,15,16,16,17,22,25,26,255,255,15
         ''')
         site=pm['boss_call'];assert original[site:site+4]==asm(f'bl {renderer}',site)
         patch(site,asm(f'bl {boss_addr}',site),f'V{i+1} choose room boss at the actual sprite draw call')
