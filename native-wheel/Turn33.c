@@ -70,10 +70,13 @@ __attribute__((visibility("default"))) void AGTurnReceive(void *env,void *messag
 __attribute__((visibility("default"))) void AGTurnManual(int v){
     if(v<0||v>=6)return;pthread_mutex_lock(&turnMutex);turns[v].used=1;turns[v].pending=0;pthread_mutex_unlock(&turnMutex);
 }
-typedef struct {int v;uint8_t *player;int angle,force,release;} Shot;
+typedef struct {int v;uint8_t *player;int angle,force,release,x,y;} Shot;
 static int shoot(void *env,void *opaque){
     Shot *s=opaque;uint8_t *volatile p=s->player;
-    *(int *)(p+0xa4)=s->angle;p[0x16d]=(uint8_t)s->force;p[0x16e]=(uint8_t)s->release;*(int *)(p+0x134)=0;
+    // The manual input path snapshots the live position before invoking p().
+    // Its native packet writer reads these separate short origin fields.
+    *(int16_t *)(p+0x114)=(int16_t)s->x;*(int16_t *)(p+0x118)=(int16_t)s->y;
+    *(int16_t *)(p+0xa4)=(int16_t)s->angle;p[0x16d]=(uint8_t)s->force;p[0x16e]=(uint8_t)s->release;*(int *)(p+0x134)=0;
     void (*fire)(void *,void *)=(void *)((uintptr_t)_dyld_get_image_header(0)+AGTurnMaps[s->v].fire);
     fire(env,p);return 1;
 }
@@ -91,7 +94,7 @@ void AGTurnTick(void *env,int v){
     // movement and falling code updates the live position at 0x80/0x84.
     uint8_t *p=*(uint8_t **)(c.players+0x18+copy.owner*8);if(!p||p[0x16f]!=0||p[0x166]||p[0x16a]||*(int *)(p+0x80)!=copy.x||*(int *)(p+0x84)!=copy.y)return;
     for(int i=0;i<count;i++){uint8_t *other=*(uint8_t **)(c.players+0x18+i*8);if(other&&(other[0x166]||other[0x16a]))return;}
-    Shot shot={v,p,copy.angle,copy.force,copy.release};int ready=0;
+    Shot shot={v,p,copy.angle,copy.force,copy.release,copy.x,copy.y};int ready=0;
     pthread_mutex_lock(&turnMutex);Turn *t=&turns[v];
     if(t->generation==copy.generation&&t->enabled&&t->pending&&!t->used&&t->ticket==copy.ticket){t->used=1;t->pending=0;ready=1;}
     pthread_mutex_unlock(&turnMutex);

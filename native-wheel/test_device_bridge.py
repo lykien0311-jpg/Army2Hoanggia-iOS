@@ -86,7 +86,7 @@ def hook(uc,pc,size,_):
         s=alloc(0x40);titles[s]=bytes(u.mem_read(reg(1),reg(2)*2)).decode('utf-16-le','surrogatepass');made.append(s);ret(s)
     elif pc==DELETES:assert reg(0)==ENV;released.append(reg(1));ret()
     elif pc==CLEAR:put(ENV+0x10,'<Q',0);ret()
-u.hook_add(UC_HOOK_CODE,hook)
+BASE_HOOK=u.hook_add(UC_HOOK_CODE,hook)
 def call(name,*args):
     u.reg_write(UC_ARM64_REG_SP,STACK+0x30000);u.reg_write(UC_ARM64_REG_LR,STOP)
     for i,arg in enumerate(args):u.reg_write(UC_ARM64_REG_X0+i,arg)
@@ -161,4 +161,5 @@ if '_AGMoveAllow' in symbols:
         now=105.;assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==1
         assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==0
     print('PASS: compiled device movement pacing, 36 monotonic-clock checks across six variants')
+
 

@@ -13,7 +13,7 @@ def ret(v=0):t.ret(v)
 def hook(u,pc,size,_):
  if pc in native:
   v=native[pc];p=r(1);assert r(0)==t.ENV
-  shots.append((v,p,t.get(p+0xa4,'<i'),t.get(p+0x16d,'<B'),t.get(p+0x16e,'<B'),t.get(p+0x134,'<i')));ret()
+  shots.append((v,p,t.get(p+0xa4,'<h'),t.get(p+0x16d,'<B'),t.get(p+0x16e,'<B'),t.get(p+0x134,'<i')));ret()
  elif pc==t.symbols['_AGNotesBlocksAuto']:ret(blocked)
 U.hook_add(UC_HOOK_CODE,hook)
 def call(name,*args):
@@ -42,12 +42,17 @@ for v,m in enumerate(R):
  # two stale fields as the previous fixture did.
  t.put(p+0x114,'<i',110);t.put(p+0x118,'<i',90)
  t.put(p+0x80,'<i',240);t.put(p+0x84,'<i',350)
+ t.put(p+0xa6,'<H',0x55aa)
  t.put(t.SERVICE+0x10,'<Q',t.SESSION)
  recv(v,-115,struct.pack('>I',0x55464f01))
  for label,kw in [('normal',{}),('wrong turn',{'num':7}),('wrong owner',{'owner':1}),('wrong ticket',{'ticket':123}),('bad angle',{'angle':360}),('zero force',{'force':0}),('large force',{'force':31}),('large release',{'release':31}),('stale origin',{'x':241})]:
   turn(v);shots.clear();aim(v,**kw);call('AGTurnTick',t.ENV,v)
   assert bool(shots)==(label=='normal'),(v,label,shots)
-  if shots:assert shots==[(v,p,173,28,0,0)];call('AGTurnTick',t.ENV,v);assert len(shots)==1
+  if shots:
+   assert shots==[(v,p,173,28,0,0)]
+   assert t.get(p+0x114,'<h')==240 and t.get(p+0x118,'<h')==350
+   assert t.get(p+0xa6,'<H')==0x55aa,'angle write corrupted the adjacent native field'
+   call('AGTurnTick',t.ENV,v);assert len(shots)==1
   cases+=1
  # Busy animation, captcha and dialog defer, then exactly one native fire.
  for target,off,fmt in [(pg,0x1a7,'<B'),(pg,0x1a8,'<B'),(p,0x166,'<B'),(p,0x16a,'<B'),(canvas,0x108,'<Q')]:

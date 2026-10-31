@@ -4,7 +4,7 @@ import struct,json
 from unicorn import UC_HOOK_CODE
 from unicorn.arm64_const import *
 U,B,R,X=t.U,t.BASE,t.R,t.X
-for j,n in enumerate(['AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox']):t.CALLBACKS[n]=0x300009000+j*0x1000
+for j,n in enumerate(['AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox']):t.CALLBACKS[n]=0x30000b000+j*0x1000
 originals={};events=[]
 def r(i):return U.reg_read(X[i])
 def ret(value=0):
@@ -55,3 +55,4 @@ for h in R['hooks']:
  assert notes_calls('AGNotesInbox')[0][1][:4]==(t.ENV,t.OBJECT,t.MSG,v);checks+=1
 report={'passed':True,'assertions':checks,'variants':6,'entry_hooks':60,'fallbacks':True,'relocated_pointer_ADRP':True,'live_requests':0}
 (t.ROOT/'build/notes-hooks-check.json').write_text(json.dumps(report,indent=2)+'\n');print('PASS',report)
+
