@@ -209,8 +209,8 @@ def build_native(old,original,maps):
         pm=presentation[i];room=pm['room_class'];renderer=pm['boss_renderer']
         # Resolve the boss argument at the actual sprite-renderer call.
         # R5.l0 (0x130) is the received room number; area/map choices and
-        # screen row positions are independent. Linked rooms retain their
-        # current stage's native icon (255); Super Boss explicitly uses Trex.
+        # screen row positions are independent. Linked rooms resolve their
+        # current map/stage explicitly; Super Boss always uses Trex.
         boss_addr,_=emit(f'''
             stp x9, x10, [sp, #-32]!
             mrs x9, nzcv
@@ -225,8 +225,18 @@ def build_native(old,original,maps):
             adr x9, boss_table
             ldrb w10, [x9, w10, uxtw]
             cmp w10, #255
-            b.eq boss_done
+            b.eq boss_stage
             mov w2, w10
+            b boss_done
+          boss_stage:
+            adrp x9, {room&-4096}
+            ldr x9, [x9, #{room&4095}]
+            ldrb w10, [x9, #0x132]
+            sub w10, w10, #30
+            cmp w10, #10
+            b.hi boss_done
+            adr x9, boss_stage_table
+            ldrb w2, [x9, w10, uxtw]
           boss_done:
             ldr x9, [sp, #16]
             msr nzcv, x9
@@ -234,6 +244,8 @@ def build_native(old,original,maps):
             b {renderer}
           boss_table:
             .byte 12,12,13,14,15,16,16,17,22,25,26,255,255,15
+          boss_stage_table:
+            .byte 12,12,13,14,15,16,17,22,25,26,15
         ''')
         site=pm['boss_call'];assert original[site:site+4]==asm(f'bl {renderer}',site)
         patch(site,asm(f'bl {boss_addr}',site),f'V{i+1} choose room boss at the actual sprite draw call')

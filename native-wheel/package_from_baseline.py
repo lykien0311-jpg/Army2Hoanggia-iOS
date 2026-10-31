@@ -18,9 +18,10 @@ def main():
     r=json.loads((ROOT/'baseline-recovery.json').read_text())
     with zipfile.ZipFile(args.ipa) as src:native=src.read(APP+'Army2Hoanggia')
     identity=sha(native)
-    assert identity in (r['main_sha256'],r['updated_main_sha256']),'Use an untouched supported IPA, before re-signing'
+    extra=r.get('additional_natives',{}).get(identity)
+    assert identity in (r['main_sha256'],r['updated_main_sha256']) or extra,'Use an untouched supported IPA, before re-signing'
     if identity==r['main_sha256']:assert sha(args.ipa.read_bytes())==r['ipa_sha256'],'Original baseline archive differs'
-    recovery=r if identity==r['main_sha256'] else r['updated_hooks']
+    recovery=json.loads(zlib.decompress(base64.b64decode(extra['hooks_zlib_base64']))) if extra else r if identity==r['main_sha256'] else r['updated_hooks']
     old=bytearray(native)
     for c in recovery['patches']:
         a=c['offset'];after=bytes.fromhex(c['after']);assert old[a:a+len(after)]==after
