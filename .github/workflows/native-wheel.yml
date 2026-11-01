@@ -35,6 +35,8 @@ jobs:
             native-wheel/build/captcha-ui-check.json
             native-wheel/build/ui-check.json
             native-wheel/build/wheel-single-preview.png
+            native-wheel/build/ufo-diagnostics.png
+            native-wheel/build/ufo-diagnostics-check.json
           if-no-files-found: error
           retention-days: 14
 

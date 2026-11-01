@@ -9,6 +9,7 @@
 #include "NativeMap.h"
 #include "NotesMap.h"
 #include "UfoAuto.h"
+#include "UfoDiagnostics.h"
 extern int AGNotesBlocksAuto(int);
 extern int AGWheelSuppressFooter(int);
 extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
@@ -19,8 +20,21 @@ typedef struct {
     int owner,pending,applying;
 } NativeTurn;
 static NativeTurn nativeTurns[6];
+static AGUfoDiagnostic diagnostics[6];
 static pthread_mutex_t autoMutex=PTHREAD_MUTEX_INITIALIZER;
 static double now(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return t.tv_sec+t.tv_nsec/1e9;}
+__attribute__((visibility("default"))) int AGUfoDiagnosticsGet(int v,AGUfoDiagnostic *out){
+    if(v<0||v>=6||!out)return 0;
+    pthread_mutex_lock(&autoMutex);*out=diagnostics[v];
+    const AGUfoAuto *a=&autos[v];const NativeTurn *n=&nativeTurns[v];
+    out->variant=v;out->enabled=a->enabled;out->valid=a->valid;out->hasPlan=a->hasPlan;
+    out->early=a->hasEarlyPlan;out->sent=a->sent;out->claimed=a->claimed;out->stable=a->stable;
+    out->turn=a->turn;out->serverOwner=a->owner;out->ticket=a->ticket;
+    out->planX=a->plan.x;out->planY=a->plan.y;out->angle=a->plan.angle;
+    out->nativePending=n->pending;out->nativeApplying=n->applying;out->nativeOwner=n->owner;
+    out->sequence=n->sequence;out->applied=n->applied;
+    pthread_mutex_unlock(&autoMutex);return out->ticks||out->receives;
+}
 static uint32_t be32(const uint8_t *p){return (uint32_t)p[0]<<24|(uint32_t)p[1]<<16|(uint32_t)p[2]<<8|p[3];}
 static uint64_t be64(const uint8_t *p){return (uint64_t)be32(p)<<32|be32(p+4);}
 static int short16(const uint8_t *p){return (int16_t)((p[0]<<8)|p[1]);}
@@ -52,13 +66,14 @@ static int context(void *env,void *opaque){
 static int getContext(void *env,Context *c){return AGWheelGuard(env,context,c,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));}
 static int active(const Context *c){return c->arena&&c->canvas&&*(void **)(c->canvas+0xb8)==c->arena;}
 static int effectsBusy(const Context *c){
-    if((c->projectiles&&c->projectiles[0x118])||(c->canvas&&c->canvas[0x13c]))return 1;
+    if(c->projectiles&&c->projectiles[0x118])return 1;
+    if(c->canvas&&c->canvas[0x13c])return 2;
     int count=c->players?*(int *)(c->players+0x10):0;
-    if(count<1||count>64)return 1;
+    if(count<1||count>64)return 0x10000;
     for(int i=0;i<count;i++){
         uint8_t *p=*(uint8_t **)(c->players+0x18+i*8);
         /* UFO gravity166 and item16a are not movement/flight predicates. */
-        if(p&&*(int64_t *)(p+0x68)>0&&(p[0x167]||p[0x14e]))return 1;
+        if(p&&*(int64_t *)(p+0x68)>0){if(p[0x167])return 4;if(p[0x14e])return 8;}
     }
     return 0;
 }
@@ -126,11 +141,21 @@ __attribute__((visibility("default"))) int AGTurnChange(void *env,int owner,int 
 __attribute__((visibility("default"))) void AGTurnReceive(void *env,void *message,int v){
     if(!env||!message||v<0||v>=6)return;
     int cmd=*(int8_t *)((uint8_t *)message+0x30);if(cmd!=-115&&cmd!=24&&cmd!=20)return;
+    pthread_mutex_lock(&autoMutex);AGUfoDiagnostic *dg=&diagnostics[v];
+    dg->receives++;dg->receiveTime=now();dg->lastCommand=cmd;dg->lastLength=-1;
+    if(cmd==20)dg->starts++;if(cmd==24)dg->turns++;
+    pthread_mutex_unlock(&autoMutex);
     uint8_t *input=*(uint8_t **)((uint8_t *)message+0x20);if(!input)return;
     uint8_t *array=*(uint8_t **)(input+0x10);if(!array)return;
     int capacity=*(int *)(array+0x10),length=*(int *)(input+0x18),pos=*(int *)(input+0x20);
     if(capacity<0||length<0||length>capacity||pos<0||pos>length)return;
     const uint8_t *b=array+0x14+pos;size_t n=(size_t)(length-pos);
+    pthread_mutex_lock(&autoMutex);dg->lastLength=(int)n;
+    if(cmd==24)dg->last24Length=(int)n;
+    if(cmd==-115){dg->last115Length=(int)n;dg->lastMagic=n>=4?be32(b):0;
+        if(n==4)dg->modes++;
+        if(n==21){dg->aims++;dg->lastAimTurn=(int32_t)be32(b);dg->lastAimOwner=b[4];}}
+    pthread_mutex_unlock(&autoMutex);
     Context c={.v=v};if(getContext(env,&c)<=0)return;
     pthread_mutex_lock(&autoMutex);AGUfoAuto *a=&autos[v];
     if(a->connection!=c.connection){AGUfoReset(a,c.connection);nativeTurns[v]=(NativeTurn){0};}
@@ -143,12 +168,12 @@ __attribute__((visibility("default"))) void AGTurnReceive(void *env,void *messag
     else if(n==21){
         AGUfoPlan p={.turn=(int32_t)be32(b),.owner=b[4],.ticket=be64(b+5),.angle=(b[13]<<8)|b[14],
             .force=b[15],.release=b[16],.x=short16(b+17),.y=short16(b+19)};
-        if(p.owner==c.local)AGUfoAim(a,&p);
+        if(p.owner==c.local&&AGUfoAim(a,&p))dg->accepted++;
     }
     pthread_mutex_unlock(&autoMutex);
 }
 __attribute__((visibility("default"))) void AGTurnManual(int v){
-    if(v<0||v>=6)return;pthread_mutex_lock(&autoMutex);AGUfoManual(&autos[v]);pthread_mutex_unlock(&autoMutex);
+    if(v<0||v>=6)return;pthread_mutex_lock(&autoMutex);diagnostics[v].manuals++;AGUfoManual(&autos[v]);pthread_mutex_unlock(&autoMutex);
 }
 /* Same native mapper called by d0_.fire. Apa/Chicky keep the second force byte. */
 static const uintptr_t bulletMap[6]={0x576cf8,0x660eec,0x745bb0,0x82a874,0x90f538,0x9f41fc};
@@ -201,17 +226,26 @@ static int dispatch(void *env,void *opaque){
     if(c->playerGlobals){c->playerGlobals[0x1a7]=1;c->playerGlobals[0x1a8]=1;}return 1;
 }
 void AGTurnTick(void *env,int v){
-    if(!env||v<0||v>=6)return;applyNativeTurn(env,v);
-    Context c={.v=v};if(getContext(env,&c)<=0)return;
+    if(!env||v<0||v>=6)return;
+    pthread_mutex_lock(&autoMutex);AGUfoDiagnostic *dg=&diagnostics[v];dg->ticks++;dg->tickTime=now();pthread_mutex_unlock(&autoMutex);
+    applyNativeTurn(env,v);
+    Context c={.v=v};int contextOK=getContext(env,&c);
+    pthread_mutex_lock(&autoMutex);dg->contextOK=contextOK;pthread_mutex_unlock(&autoMutex);
+    if(contextOK<=0)return;
     AGUfoFrame f={.connection=c.connection,.arena=(uintptr_t)c.arena,.active=active(&c),.ufo=c.ufo,
         .local=c.local,.owner=c.owner,.now=now()};
-    int count=c.players?*(int *)(c.players+0x10):0;if(count<1||count>64||c.local<0||c.local>=8||c.local>=count)return;
+    int count=c.players?*(int *)(c.players+0x10):0;
+    pthread_mutex_lock(&autoMutex);dg->active=f.active;dg->ufo=f.ufo;dg->local=c.local;dg->owner=c.owner;dg->count=count;pthread_mutex_unlock(&autoMutex);
+    if(count<1||count>64||c.local<0||c.local>=8||c.local>=count)return;
     uint8_t *p=*(uint8_t **)(c.players+0x18+c.local*8);if(!p)return;
     f.alive=*(int64_t *)(p+0x68)>0;f.state=p[0x16f];f.x=*(int *)(p+0x114);f.y=*(int *)(p+0x118);
-    f.blocked=f.active&&(effectsBusy(&c)||p[0x166]||AGNotesBlocksAuto(v)||
-        AGWheelSuppressFooter(v)||*(void **)(c.canvas+0x108));
+    int effects=effectsBusy(&c),blockers=effects;
+    if(p[0x166])blockers|=16;if(AGNotesBlocksAuto(v))blockers|=32;
+    if(AGWheelSuppressFooter(v))blockers|=64;if(c.canvas&&*(void **)(c.canvas+0x108))blockers|=128;
+    f.blocked=f.active&&blockers;
     Dispatch d={.context=c};uint64_t revision;
     pthread_mutex_lock(&autoMutex);AGUfoAuto *a=&autos[v];
+    dg->alive=f.alive;dg->state=f.state;dg->x=f.x;dg->y=f.y;dg->effects=effects;dg->blocked=blockers;
     /* Only UFO map35 gets Auto31's trailer. It is also valid while the
      * native room screen is reconstructed, before its room fields settle. */
     f.ufo=f.ufo||(a->valid&&a->enabled);
@@ -221,6 +255,7 @@ void AGTurnTick(void *env,int v){
     pthread_mutex_unlock(&autoMutex);if(!ready)return;
     int result=AGWheelGuard(env,dispatch,&d,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));
     pthread_mutex_lock(&autoMutex);if(a->revision==revision)a->powerSent=d.powerSent;
+    if(result>0)dg->shots++;else dg->failures++;
     AGUfoComplete(a,revision,result,f.now);pthread_mutex_unlock(&autoMutex);
 }
 /* Match the reference JAR: an actual animation completion releases the
@@ -231,14 +266,17 @@ __attribute__((visibility("default"))) void AGTurnAwait(void *env,void *lock,int
     pthread_mutex_lock(&autoMutex);int ufo=c.ufo||(autos[v].enabled&&autos[v].valid);pthread_mutex_unlock(&autoMutex);
     if(!ufo){void (*wait)(void *,void *)=(void *)(base+0xaaa6e8);wait(env,lock);return;}
     if(ok<=0||!active(&c))return;uint8_t *arena=c.arena;
+    pthread_mutex_lock(&autoMutex);AGUfoDiagnostic *dg=&diagnostics[v];dg->waits++;dg->waitActive=1;
+    dg->waitKind=kind;dg->waitActor=actor;dg->waitSince=now();pthread_mutex_unlock(&autoMutex);
     for(;;){
         int busy=0;
         if(kind==0)busy=c.projectiles&&((volatile uint8_t *)c.projectiles)[0x118];
         else if(kind==1)busy=((volatile uint8_t *)c.canvas)[0x13c];
         else if((kind==2||kind==3)&&c.players){int count=*(int *)(c.players+0x10);
             if(actor>=0&&actor<count&&count<=64){uint8_t *p=*(uint8_t **)(c.players+0x18+actor*8);busy=p&&((volatile uint8_t *)p)[kind==2?0x167:0x14e];}}
-        if(!busy)return;
+        if(!busy)break;
         void (*wait)(void *,void *,int64_t)=(void *)(base+0xaaa730);wait(env,lock,16);
-        c=(Context){.v=v};if(getContext(env,&c)<=0||!active(&c)||c.arena!=arena)return;
+        c=(Context){.v=v};if(getContext(env,&c)<=0||!active(&c)||c.arena!=arena)break;
     }
+    pthread_mutex_lock(&autoMutex);dg->waitActive=0;pthread_mutex_unlock(&autoMutex);
 }
