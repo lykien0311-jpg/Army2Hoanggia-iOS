@@ -94,7 +94,7 @@ __attribute__((visibility("default"))) void AGUfoDiagnosticsPreviewCheck(void){
         NSCAssert([w hitTest:CGPointMake(20,70) withEvent:nil]==nil,@"Diagnostic window passes all touches");
     }
     l.frame=CGRectMake(6,60,378,64);
-    UIGraphicsBeginImageContextWithOptions(w.bounds,YES,2);[w.rootViewController.view.layer renderInContext:UIGraphicsGetCurrentContext()];
+    UIGraphicsBeginImageContextWithOptions(w.bounds.size,YES,2);[w.rootViewController.view.layer renderInContext:UIGraphicsGetCurrentContext()];
     UIImage *im=UIGraphicsGetImageFromCurrentImageContext();UIGraphicsEndImageContext();
     NSString *dir=NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject;
     [UIImagePNGRepresentation(im)writeToFile:[dir stringByAppendingPathComponent:@"ufo-diagnostics.png"] atomically:YES];
