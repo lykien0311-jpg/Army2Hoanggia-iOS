@@ -10,6 +10,7 @@
 #include "Notes77.h"
 #include "NotesMap.h"
 #include "NativeMap.h"
+#include "Blind.h"
 #include "NotesProtocol.h"
 #import "GameViewport.h"
 extern int AGWheelInput(int,int,int,int);
@@ -112,7 +113,9 @@ void AGNotesTick(void *env,int variant){
     if(changed)NRefresh();
 }
 __attribute__((visibility("default"))) int AGNotesReceive(void *env,void *message,int variant){
-    if(!env||!message||variant<0||variant>=6)return 0;int command=*(int8_t *)((uint8_t *)message+0x30);if(command!=-122&&command!=-123)return 0;NInit();
+    if(!env||!message||variant<0||variant>=6)return 0;int command=*(int8_t *)((uint8_t *)message+0x30);
+    if(command==106||command==20){AGBlindReceive(env,message,variant);return 0;}
+    if(command!=-122&&command!=-123)return 0;NInit();
     uint8_t *in=*(uint8_t **)((uint8_t *)message+0x20);if(!in)return 1;uint8_t *a=*(uint8_t **)(in+0x10);if(!a)return 1;
     int length=*(int32_t *)(a+0x10),count=*(int32_t *)(in+0x18),pos=*(int32_t *)(in+0x20);
     if(length<0||count<0||count>length||pos<0||pos>count||count-pos>65535)return 1;
@@ -368,3 +371,4 @@ __attribute__((visibility("default"))) void AGNotesPreviewCheck(void){
 
 
 int AGNotesBlocksAuto(int v){if(v<0||v>=6)return 1;pthread_mutex_lock(&NMutex);int blocked=NModels[v].cap.active||NModels[v].inboxVisible;pthread_mutex_unlock(&NMutex);return blocked;}
+

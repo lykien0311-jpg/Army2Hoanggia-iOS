@@ -64,9 +64,12 @@ def build_native(old,original,maps):
     symbols={};strcursor=0x7000
     camera_maps=json.loads((ROOT/'camera-map.json').read_text())
     camera_hooks=[]
+    blind_maps=json.loads((ROOT/'blind-map.json').read_text());blind_hooks=[]
     for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnAwait','AGTurnChange','AGViewportKeypad','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     raw=b'AGCameraAllow\0';symbols['AGCameraAllow']=rxvm+strcursor
+    rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
+    raw=b'AGBlindPaint\0';symbols['AGBlindPaint']=rxvm+strcursor
     rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
     for title in REFERENCE_TITLES.values():
@@ -232,6 +235,37 @@ def build_native(old,original,maps):
     for i,m in enumerate(maps):
         n=notes[i]
         pm=presentation[i];room=pm['room_class'];renderer=pm['boss_renderer']
+        bm=blind_maps[i];arena_class=turn_map[i]['arena_class'];site=bm['site']
+        blind_addr,_=emit(f'''
+            stp x29, x30, [sp, #-32]!
+            str x2, [sp, #16]
+            {lookup('AGBlindPaint',41)}
+            cbz x10, blind_original
+            mov x0, x19
+            ldr x1, [sp, #16]
+            mov w2, #{i}
+            blr x10
+            cbz w0, blind_original
+            ldp x29, x30, [sp], #32
+            adrp x22, {arena_class&-4096}
+            add x22, x22, #{arena_class&4095}
+            mov w8, #2
+            stur w8, [x29, #-0x6c]
+            mov w8, #5
+            stur w8, [x29, #-0x8c]
+            mov w8, #10
+            stur w8, [x29, #-0x90]
+            b {bm['hud']}
+          blind_original:
+            ldr x2, [sp, #16]
+            ldp x29, x30, [sp], #32
+            mov x0, x19
+            mov x1, x2
+            b {site+4}
+        ''')
+        assert original[site:site+4]==asm('mov x1,x2',site)
+        patch(site,asm(f'b {blind_addr}',site),f'V{i+1} white blind-bomb world layer, then original HUD/menu/keypad')
+        blind_hooks.append(dict(**bm,hook=blind_addr))
         # Resolve the boss argument at the actual sprite-renderer call.
         # R5.l0 (0x130) is the room number. R5.w0 at 132 is the area number,
         # NOT the current map. Linked rooms retain the native stage's type.
@@ -550,6 +584,10 @@ def build_native(old,original,maps):
             ldp x29, x30, [sp], #48
             cbz x2, original
             ldrsb w9, [x2, #48]
+            cmp w9, #106
+            b.eq notes77
+            cmp w9, #20
+            b.eq notes77
             cmn w9, #101
             b.eq wheel
             cmn w9, #122
@@ -582,6 +620,12 @@ def build_native(old,original,maps):
             ldr x1, [sp, #32]
             mov w2, #{i}
             blr x10
+            ldr x9, [sp, #32]
+            ldrsb w9, [x9, #48]
+            cmp w9, #106
+            b.eq fallback
+            cmp w9, #20
+            b.eq fallback
             ldp x29, x30, [sp], #48
             ret
           wheel:
@@ -918,7 +962,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,camera_hooks=camera_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,camera_hooks=camera_hooks,blind_hooks=blind_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()

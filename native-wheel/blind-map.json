@@ -1,0 +1,44 @@
+[
+  {
+    "variant": 0,
+    "paint": 5521916,
+    "site": 5521968,
+    "hud": 5524820,
+    "hud_first_widget": 5525152
+  },
+  {
+    "variant": 1,
+    "paint": 6487692,
+    "site": 6487744,
+    "hud": 6490596,
+    "hud_first_widget": 6490928
+  },
+  {
+    "variant": 2,
+    "paint": 7424848,
+    "site": 7424900,
+    "hud": 7427752,
+    "hud_first_widget": 7428084
+  },
+  {
+    "variant": 3,
+    "paint": 8362004,
+    "site": 8362056,
+    "hud": 8364908,
+    "hud_first_widget": 8365240
+  },
+  {
+    "variant": 4,
+    "paint": 9299160,
+    "site": 9299212,
+    "hud": 9302064,
+    "hud_first_widget": 9302396
+  },
+  {
+    "variant": 5,
+    "paint": 10236316,
+    "site": 10236368,
+    "hud": 10239220,
+    "hud_first_widget": 10239552
+  }
+]

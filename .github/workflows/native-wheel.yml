@@ -35,6 +35,7 @@ jobs:
             native-wheel/build/captcha-ui-check.json
             native-wheel/build/ui-check.json
             native-wheel/build/camera-pacing-check.json
+            native-wheel/build/blind-state-check.json
             native-wheel/build/wheel-single-preview.png
             native-wheel/build/ufo-diagnostics.png
             native-wheel/build/ufo-diagnostics-check.json
