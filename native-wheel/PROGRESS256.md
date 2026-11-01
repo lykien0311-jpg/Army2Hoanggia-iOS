@@ -16,7 +16,7 @@ There is no client timer or frame-count expiry.
 
 At the native arena painter's guarded world boundary, a blinded player gets
 an opaque RGBffffff rectangle over the logical game viewport. Continue at
-the original HUD boundary, with the native tail's three shared constants
+the original HUD boundary, with all seven native tail stack constants
 initialized. GameCanvas subsequently paints menus and the keypad normally.
 Normal players follow the original world painter. Native Graphics color,
 clip and translation layout is verified against the exact executable, and

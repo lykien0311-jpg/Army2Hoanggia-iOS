@@ -26,8 +26,9 @@ for h in t.R['blind_hooks']:
         assert U.reg_read(UC_ARM64_REG_PC)==stop
         fp=U.reg_read(X[29]);assert t.readq(fp-0x60)==t.OBJECT and t.readq(fp-0x68)==t.MSG
         if active:
-            for off,value in ((0x6c,2),(0x8c,5),(0x90,10)):
+            for off,value in ((0x6c,2),(0x8c,5),(0x90,10),(0x94,10),(0x80,60),(0x88,30)):
                 assert int.from_bytes(U.mem_read(fp-off,4),'little')==value
+            assert int.from_bytes(U.mem_read(U.reg_read(UC_ARM64_REG_SP)+0x6c,4),'little')==1
             assert U.reg_read(X[22])==B+t.R['turn_map'][h['variant']]['arena_class']
         else:assert tuple(U.reg_read(r) for r in X[:3])==(t.ENV,t.MSG,t.MSG)
         assert bool(seen)==(mode!='missing')

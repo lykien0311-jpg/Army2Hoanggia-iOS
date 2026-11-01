@@ -18,6 +18,12 @@ for v,p in enumerate(painters):
     for off,word in [(0x50,'stur w9,[x29,#-0x6c]'),(0x38c,'stur w8,[x29,#-0x8c]'),(0x3a0,'stur w8,[x29,#-0x90]')]:
         assert b[p+off:p+off+4]==asm(word),(v,hex(p+off))
     maps.append(dict(variant=v,paint=p,site=p+0x34,hud=hud,hud_first_widget=p+0xca4))
+    for off,text in [(0x3d8,'mov w9,#10; orr w10,wzr,#1'),
+                     (0x3e4,'stp w10,w9,[x29,#-0x98]'),
+                     (0x52c,'orr w9,wzr,#60'),
+                     (0x534,'stp w9,w9,[x29,#-0x84]; orr w8,wzr,#30; stp w8,w8,[sp,#0x7c]'),
+                     (0x77c,'ldur w9,[x29,#-0x98]; stur w8,[x29,#-0x88]; str w9,[sp,#0x6c]')]:
+        raw=asm(text);assert b[p+off:p+off+len(raw)]==raw,(v,hex(p+off))
 for a,word in [(0xc46648,'stp s0,s2,[x1,#0x28]'),(0xc465e4,'str w2,[x8,#0x38]'),(0xc466b8,'stp w8,w9,[x1,#0x48]')]:
     assert b[a:a+4]==asm(word),hex(a)
 (R/'blind-map.json').write_text(json.dumps(maps,indent=2)+'\n')

@@ -1,0 +1,221 @@
+{
+  "passed": true,
+  "input_sha256": "7656086be4a97e7ae11bf64e67a75076340057852767e67aaccfe516454bcbb2",
+  "output": "Army2Hoanggia-2.4.1-Build256-BomMu.ipa",
+  "sha256": "47c44e46beefb1437e8eb32c3faa4617be2f2892ea543ab209c8014907ac1c3a",
+  "bytes": 16567929,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Army2Hoanggia",
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 522,
+  "github_build": {
+    "source_commit": "f95c822fa6696f2f719a3a16ac7c7db11e3902ab",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "9eabf0559f76846394231f75dd6b0f9cf307d454d003ca07adc1aaf227071bd9",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "main_sha256": "8e3ac613bd815ed8bb38dd0afe5675db97c388cc583bb449ac5bb0b656b37bc9",
+  "apple_library_source_head": "5cfc2bf97dac9ea75251c4e6fbbaebbdc55b726e",
+  "native_hook_source_sha256": "f6ddee50f20208052eee68ac1990c4ae711605024d6a23ce00b6c95ce43acb53",
+  "workflow_run": 41304458498,
+  "workflow_conclusion": "success",
+  "artifact_id": 13082766907,
+  "artifact_zip_sha256": "58eb3afb0234302156f1e8b142d9a6f6c60aa77b4a0d9940e9bc5033086b4f58",
+  "reference_videos": {
+    "IPA": "35401.mp4",
+    "APK": "35400.mp4"
+  },
+  "confirmed_defect": "Native IPA lacks the reference Client46 command106 white-world paint branch.",
+  "packet": {
+    "command": 106,
+    "wire": [
+      "state",
+      "target"
+    ],
+    "apply_state": 0,
+    "clear_state": 1,
+    "local_target_only": true,
+    "native_reader_changed": false
+  },
+  "rendering": {
+    "color": "ffffff",
+    "opaque": true,
+    "logical_viewport_only": true,
+    "original_HUD_menu_keypad": true,
+    "gameplay_updates_unchanged": true
+  },
+  "checks": {
+    "blind-state": {
+      "passed": true,
+      "state_cases": 272,
+      "local_slots": 8,
+      "server_state0_applies": true,
+      "server_state1_clears": true,
+      "other_players_do_not_change_local_blindness": true,
+      "expiry_independent_of_speed_and_frame_count": true,
+      "arena_change_and_exit_reset": true
+    },
+    "blind-hook": {
+      "passed": true,
+      "native_branch_cases": 42,
+      "variants": 6,
+      "white_branch_skips_world_and_reaches_original_HUD": true,
+      "original_controller_still_consumes_blind_and_start_packets": true,
+      "no_extra_native_stack_frame": true,
+      "optional_symbol_fallback": true
+    },
+    "blind-device": {
+      "passed": true,
+      "apple_native_cases": 96,
+      "variants": 6,
+      "local_slots": [
+        0,
+        7
+      ],
+      "protocol": 106,
+      "wire_order": [
+        "state",
+        "target"
+      ],
+      "original_reader_unchanged": true,
+      "white_rectangle": [
+        0,
+        0,
+        320,
+        480
+      ],
+      "opaque_white": true,
+      "actual_native_graphics_state_methods": true,
+      "original_HUD_entry_executed": true,
+      "graphics_restored_on_Java_exception": true,
+      "new_match_exit_and_server_clear_reset": true,
+      "live_requests": 0
+    },
+    "blind-hud-liveness": {
+      "passed": true,
+      "variants": 6,
+      "reachable_native_HUD_instructions": 9360,
+      "undefined_stack_reads": 0,
+      "undefined_incoming_callee_saved_registers": 0,
+      "all_conditional_HUD_branches_checked": true
+    },
+    "camera-device": {
+      "passed": true,
+      "apple_arm64_timing_cases": 48,
+      "variants": 6,
+      "manual_camera_and_walk_steps_per_second": 20,
+      "independent_axes": true,
+      "frame_rates": [
+        20,
+        60,
+        120,
+        1000
+      ],
+      "live_game_requests": 0
+    },
+    "speed-maximum": {
+      "passed": true,
+      "native_level_cases": 120,
+      "variants": 6,
+      "levels_1_to_9_unchanged": true,
+      "level_10_skips_scheduler_sleep": true,
+      "extra_game_ticks": 0,
+      "packet_duplication": false,
+      "physical_device_performance_measured": false
+    },
+    "wheel-home-return": {
+      "passed": true,
+      "original_native_home_transitions": 12,
+      "build254_empty_home_reproduced": true,
+      "build255_menu_paint_restored": true,
+      "original_layout_and_cleanup_executed": true,
+      "server_ack_required": false,
+      "cases": [
+        {
+          "build": 254,
+          "variant": 0,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 1,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 2,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 3,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 4,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 5,
+          "menu_visible": false
+        },
+        {
+          "build": 255,
+          "variant": 0,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 1,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 2,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 3,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 4,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 5,
+          "menu_visible": true
+        }
+      ]
+    }
+  },
+  "accepted_auto_sources": {
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f"
+  },
+  "retained_auto_verification": {
+    "native_full_encounters": 60,
+    "completion_and_other_room_waits": 12,
+    "wheel_room_bridge": 84,
+    "compiled_movement_clock": 36,
+    "normal_shots_and_eligible_POW_only": true,
+    "inventory_items": false
+  }
+}

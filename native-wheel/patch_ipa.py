@@ -13,6 +13,7 @@ APP='Payload/Army2Hoanggia.app/'
 EXPECTED_IPA='8c4779afad7981f4bf8cf5e756bdf03450437cc4e56cf949c805e2d2affc636d'
 EXPECTED_ORIGINAL='34778a89dac9103a1fd62a6e712dce1bedd012da3bbb47c7ce908724b1d4c7d6'
 PAGE=0x8000
+CODE_LIMIT=0x7200
 KS=Ks(KS_ARCH_ARM64,KS_MODE_LITTLE_ENDIAN)
 # Exact text read from the user's seven-second reference video (video 2).
 # IDs are the protocol IDs stored in each room, never their display row.
@@ -61,7 +62,7 @@ def build_native(old,original,maps):
     assert link[3]+link[4]==len(old)
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
-    symbols={};strcursor=0x7000
+    symbols={};strcursor=CODE_LIMIT
     camera_maps=json.loads((ROOT/'camera-map.json').read_text())
     camera_hooks=[]
     blind_maps=json.loads((ROOT/'blind-map.json').read_text());blind_hooks=[]
@@ -94,7 +95,7 @@ def build_native(old,original,maps):
         '''
     def emit(code):
         nonlocal cursor
-        addr=rxvm+cursor;raw=asm(code,addr);assert cursor+len(raw)<=0x7000
+        addr=rxvm+cursor;raw=asm(code,addr);assert cursor+len(raw)<=CODE_LIMIT
         rx[cursor:cursor+len(raw)]=raw;cursor=align(cursor+len(raw),16);return addr,raw
     def patch(at,raw,label):
         assert old[at:at+len(raw)]==original[at:at+len(raw)],(hex(at),label)
@@ -255,6 +256,13 @@ def build_native(old,original,maps):
             stur w8, [x29, #-0x8c]
             mov w8, #10
             stur w8, [x29, #-0x90]
+            stur w8, [x29, #-0x94]
+            mov w8, #1
+            str w8, [sp, #0x6c]
+            mov w8, #60
+            stur w8, [x29, #-0x80]
+            mov w8, #30
+            stur w8, [x29, #-0x88]
             b {bm['hud']}
           blind_original:
             ldr x2, [sp, #16]
@@ -944,7 +952,7 @@ def build_native(old,original,maps):
     for p,cmd,size in cmds:
         c=bytearray(old[p:p+size])
         if p==link_p:
-            load.append(segment('__AGWHEEL',rxvm,rxoff,PAGE,5,[('__text',rxvm,rxoff,0x7000,0x80000400,2),('__cstring',rxvm+0x7000,rxoff+0x7000,strcursor-0x7000,2,0)]))
+            load.append(segment('__AGWHEEL',rxvm,rxoff,PAGE,5,[('__text',rxvm,rxoff,CODE_LIMIT,0x80000400,2),('__cstring',rxvm+CODE_LIMIT,rxoff+CODE_LIMIT,strcursor-CODE_LIMIT,2,0)]))
             load.append(segment('__AGDATA',rwvm,rwoff,PAGE,3,[('__data',rwvm,rwoff,512,0,3)]))
             struct.pack_into('<Q',c,24,link[1]+delta);struct.pack_into('<Q',c,40,rxoff+delta)
         for field in file_fields.get(cmd,[]):
