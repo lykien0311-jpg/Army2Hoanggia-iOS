@@ -32,3 +32,18 @@ six variants, rage0/99/100 and no repeated skill/shot.
 Retain the passive status label for verification, identify it asB253 and
 show roster capacity and pulse count. No physical-device acceptance is
 claimed until the user has tested this exact IPA.
+
+Final Apple run41293403427 at headbed986312f6f118af554d38ff74b17dc17a2f43c
+(mergea1756514163085a95b5ddae67552f3ad9607b6ad), artifact13077854426, passed
+strict signing/re-signing, retained UIKit checks and theB253 passive label
+preview. Exact library SHA2568fd10fb0d9e300ce5346bcd14dd8f5fcfa7b7f8c9373150d5b23167c700bbd30.
+The shipped252 library reproduces both the100-slot frozen snapshot and
+the delayed initial NPC handoff with ten slots. The exact253 library passes
+60 capacity/first-NPC/high-slot-wait,60 full encounter,12 completion/wait,
+180 normal-weapon/skill and48 diagnostic snapshot cases.
+
+Final IPA Army2Hoanggia-2.4.1-Build253-AutoUFO.ipa,16,571,787 bytes,
+SHA2566741c3319411ecfbd209f1af40ec24328f4c60eb07f51c6e1e9a381abe19ccfa.
+Only the device dylib and bundle build change from252;523 other entries
+including the native main are byte-identical. Physical acceptance remains
+pending the owner's signed installation.
