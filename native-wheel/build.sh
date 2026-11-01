@@ -12,7 +12,7 @@ xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=1
   -Wno-unused-parameter -Wno-deprecated-declarations -Wno-unused-function \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
   -Wl,-headerpad,4000 -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
-  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c NativeGuard.S \
+  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c NativeGuard.S \
   -o build/AGWheel.dylib
 codesign --force --sign - --timestamp=none build/AGWheel.dylib
 codesign --verify --strict --verbose=2 build/AGWheel.dylib 2>build/code-signing.txt
@@ -32,6 +32,8 @@ for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoo
 assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
 assert '_AGReleaseIdentity' in exports and b'2.4.1-HG78-IPA\0' in p.read_bytes()
 assert '_AGUfoDiagnosticsGet' in exports
+for diagnostic_ui in (b'AGUfoDiagnosticWindow',b'AutoUFO-Build253.txt','B253 •'.encode()):
+    assert diagnostic_ui not in p.read_bytes(),'Diagnostic overlay in device dylib'
 info={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
       'release_version':'2.4.1','login_marker':'2.4.1-HG78-IPA',
       'xcode':subprocess.check_output(['xcodebuild','-version'],text=True).strip(),
