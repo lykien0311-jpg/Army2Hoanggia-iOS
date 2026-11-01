@@ -1,0 +1,56 @@
+[
+  {
+    "variant": 0,
+    "site": 5372316,
+    "original": 5318376,
+    "return_site": 5347376,
+    "controller_class": 34083152,
+    "input_reset": 5292644,
+    "case_entry": 5372196
+  },
+  {
+    "variant": 1,
+    "site": 6345700,
+    "original": 6292536,
+    "return_site": 6320760,
+    "controller_class": 34277712,
+    "input_reset": 6267644,
+    "case_entry": 6345580
+  },
+  {
+    "variant": 2,
+    "site": 7282856,
+    "original": 7229692,
+    "return_site": 7257916,
+    "controller_class": 34465344,
+    "input_reset": 7204800,
+    "case_entry": 7282736
+  },
+  {
+    "variant": 3,
+    "site": 8220012,
+    "original": 8166848,
+    "return_site": 8195072,
+    "controller_class": 34652976,
+    "input_reset": 8141956,
+    "case_entry": 8219892
+  },
+  {
+    "variant": 4,
+    "site": 9157168,
+    "original": 9104004,
+    "return_site": 9132228,
+    "controller_class": 34840608,
+    "input_reset": 9079112,
+    "case_entry": 9157048
+  },
+  {
+    "variant": 5,
+    "site": 10094324,
+    "original": 10041160,
+    "return_site": 10069384,
+    "controller_class": 35028240,
+    "input_reset": 10016268,
+    "case_entry": 10094204
+  }
+]

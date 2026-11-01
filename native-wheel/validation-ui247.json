@@ -1,0 +1,53 @@
+{
+  "build": 247,
+  "ipa_sha256": "efa2cfaf794e9456383a54e0f421fb4dc85aa6decce184c5e8717fbda581f4a9",
+  "ipa_bytes": 16562609,
+  "native_sha256": "3fda3b084de5b4119c5ea60ec1a6998b4fb7af46ea0de73a4bcc7e0546abd08b",
+  "native_identical_to_246": true,
+  "dylib_sha256": "b0ff27bc8b41973fb62df6896ca62f11f36ba80953e9c5f2b1dbc6c57d6e68f5",
+  "apple_run_id": 41195206993,
+  "apple_artifact_id": 13040885862,
+  "apple_artifact_sha256": "c045974966212755dab67768edbc683000314b1a65cc79b1249bd8333ea5943a",
+  "source_branch_commit": "06451efe91b031df319aac098bc8c88afa556853",
+  "apple_tested_merge_commit": "59412d29426ca4b5e47917f5a6416d672bb0e7db",
+  "apple_signature_and_resign_checks": true,
+  "old246_stale_notice_regression": "Native primary-busy reset leaves deferred notification set; old246 emits no command22. Same native setter + fixture emits one command22 per valid turn with247.",
+  "checks_passed": {
+    "compiled_turn_guards": 168,
+    "stale_notice_original_native_reset_and_shot_wire": 12,
+    "original_native_final_key_translation_and_projection": 32,
+    "post_update_to_original_shot_wire": 36,
+    "native_walk_then_repeated_shot": 18,
+    "native_monitor_wait_predicates": 150,
+    "native_grid_and_pointer": 624,
+    "compiled_notes": 444,
+    "uikit_footer_sizes": 6,
+    "no_diagnostic_label_or_window": true,
+    "diagnostic_function_is_single_RET": true
+  },
+  "logged_check_scripts": [
+    "test_grid_device.py",
+    "test_notes_device.py",
+    "test_turn_update_wire.py",
+    "test_turn_wait_device.py",
+    "test_ufo_native_movement.py"
+  ],
+  "changed_archive_entries": [
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "unchanged_archive_entries": 523,
+  "physical_device_tested": false,
+  "live_vps_tested": false,
+  "requires_user_certificate_resigning": true,
+  "mocked_boundaries": [
+    "Java list/iterator and JVM/OS primitives",
+    "original arena-update body in update-to-wire fixture",
+    "final network transport"
+  ],
+  "evidence": {
+    "failed_246_video": "32850.mp4",
+    "reference_behavior": "32828(1).mp4",
+    "footer_image": "32852.jpg"
+  }
+}

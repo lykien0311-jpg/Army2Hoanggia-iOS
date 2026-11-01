@@ -1,0 +1,170 @@
+[
+  {
+    "variant": 0,
+    "room_class": 34106544,
+    "room_name": "game/R5",
+    "room_paint": 5605452,
+    "room_paint_size": 22084,
+    "boss_call": 5617408,
+    "boss_renderer": 5845480,
+    "footer": 5954896,
+    "canvas_paint": 5308140,
+    "canvas_footer_calls": [
+      5310016,
+      5310156
+    ],
+    "font_renderer": 6045284,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 5516152,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 5531168,
+        "size": 5820
+      }
+    ]
+  },
+  {
+    "variant": 1,
+    "room_class": 34299648,
+    "room_name": "game0/R5",
+    "room_paint": 6567536,
+    "room_paint_size": 22084,
+    "boss_call": 6579492,
+    "boss_renderer": 6801236,
+    "footer": 6907332,
+    "canvas_paint": 6282340,
+    "canvas_footer_calls": [
+      6284216,
+      6284356
+    ],
+    "font_renderer": 6995080,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 6481968,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 6496904,
+        "size": 5820
+      }
+    ]
+  },
+  {
+    "variant": 2,
+    "room_class": 34487280,
+    "room_name": "game1/R5",
+    "room_paint": 7504692,
+    "room_paint_size": 22084,
+    "boss_call": 7516648,
+    "boss_renderer": 7738392,
+    "footer": 7844488,
+    "canvas_paint": 7219496,
+    "canvas_footer_calls": [
+      7221372,
+      7221512
+    ],
+    "font_renderer": 7932236,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 7419124,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 7434060,
+        "size": 5820
+      }
+    ]
+  },
+  {
+    "variant": 3,
+    "room_class": 34674912,
+    "room_name": "game2/R5",
+    "room_paint": 8441848,
+    "room_paint_size": 22084,
+    "boss_call": 8453804,
+    "boss_renderer": 8675548,
+    "footer": 8781644,
+    "canvas_paint": 8156652,
+    "canvas_footer_calls": [
+      8158528,
+      8158668
+    ],
+    "font_renderer": 8869392,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 8356280,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 8371216,
+        "size": 5820
+      }
+    ]
+  },
+  {
+    "variant": 4,
+    "room_class": 34862544,
+    "room_name": "game3/R5",
+    "room_paint": 9379004,
+    "room_paint_size": 22084,
+    "boss_call": 9390960,
+    "boss_renderer": 9612704,
+    "footer": 9718800,
+    "canvas_paint": 9093808,
+    "canvas_footer_calls": [
+      9095684,
+      9095824
+    ],
+    "font_renderer": 9806548,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 9293436,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 9308372,
+        "size": 5820
+      }
+    ]
+  },
+  {
+    "variant": 5,
+    "room_class": 35050176,
+    "room_name": "game4/R5",
+    "room_paint": 10316160,
+    "room_paint_size": 22084,
+    "boss_call": 10328116,
+    "boss_renderer": 10549860,
+    "footer": 10655956,
+    "canvas_paint": 10030964,
+    "canvas_footer_calls": [
+      10032840,
+      10032980
+    ],
+    "font_renderer": 10743704,
+    "arena_updates": [
+      {
+        "method": "j",
+        "entry": 10230592,
+        "size": 5724
+      },
+      {
+        "method": "n",
+        "entry": 10245528,
+        "size": 5820
+      }
+    ]
+  }
+]

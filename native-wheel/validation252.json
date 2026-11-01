@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "input_sha256": "8d571c0620c6fae2a3a56856f8532c12cd970fcbb728d13beb4624cc852a2ef6",
+  "output": "Army2Hoanggia-2.4.1-Build252-DoLoiUFO.ipa",
+  "sha256": "c670745855963e24cd29d87edbea59687f5823828ccc50c892037977030c0460",
+  "bytes": 16571719,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 523,
+  "github_build": {
+    "source_commit": "810863dfa2f849243de89682dea3b3b1b2b61eda",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "d384c222ff0e7b8d17754fda69eaea9cc93f51a00eb74added6485cf04247444",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "purpose": "Diagnostic build for unresolved real-iPhone UFO stall; not a verified gameplay fix",
+  "root_cause": "Not established from the supplied screen recording",
+  "source_head": "6e2a5dd904871cb1aa83c41a574aa8223e8fd899",
+  "workflow_run": 41282489953,
+  "workflow_conclusion": "success",
+  "artifact_id": 13074350828,
+  "artifact_zip_sha256": "a59784dee65a76559aa9d1160d15c5eabeb7da45edc61e27947240b08f8b833a",
+  "native_main_identical_to_build251": true,
+  "verification": {
+    "read_only_compiled_diagnostic_cases": 48,
+    "retained_arm64_encounter_cases": 60,
+    "retained_completion_and_other_room_wait_cases": 12,
+    "retained_wheel_room_bridge_cases": 84,
+    "retained_movement_clock_cases": 36,
+    "pure_ufo_model_cases": 125,
+    "diagnostic_ui_widths": [
+      320,
+      390,
+      844
+    ],
+    "diagnostic_ui_touch_passthrough": true
+  },
+  "next_required_observation": "Short iPhone video showing the Build252 diagnostic label after enabling auto and entering UFO; optional Documents/AutoUFO-Build252.txt"
+}

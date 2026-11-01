@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "input_sha256": "fc465ce2855da8d4430acaaf6fccdd67b9b4491058bfd196d5928c361a3492ba",
+  "output": "Army2Hoanggia-2.4.1-Build243-GitHub.ipa",
+  "sha256": "085067dcedd0c9b7eb4a4a74d746d43b948dbc77cd6c0a6a9b1e4a7255b3b133",
+  "bytes": 16558437,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Army2Hoanggia",
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 522,
+  "github_build": {
+    "source_commit": "eec95a6d32b84f153f5de1c7284323bc43c606ba",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "b3bff49771313c52b49566f97ebaa8add94111358d3e6a8cfa8dbca076c089db",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "validation": {
+    "clan_member_parser_fixtures": 36,
+    "ufo_apple_arm64_cases": 156,
+    "grid_apple_native_layout_input_drag_cases": 624,
+    "notes_apple_bridge_assertions": 444,
+    "settings_ok_native_transitions": 12,
+    "login_native_cases": 25,
+    "boss_preview_cases": 192,
+    "wheel_simulator_viewports": 6,
+    "captcha_simulator_modes": 6,
+    "uikit_and_java_primitives_mocked_in_arm64_tests": true,
+    "live_server_tested": false,
+    "physical_device_tested": false
+  },
+  "github_run": "https://github.com/lykien0311-jpg/Army2Hoanggia-iOS/actions/runs/41147494762",
+  "source_branch_commit": "0fe1c6bbf24d4d7044805fb26fe4032862443834"
+}

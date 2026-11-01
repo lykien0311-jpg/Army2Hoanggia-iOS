@@ -1,0 +1,56 @@
+{
+  "passed": true,
+  "input_sha256": "b93d85219aa402c6108bfa7ce4a24467799bf04c0e56e18088cc24071f5253fd",
+  "output": "Army2Hoanggia-2.4.1-Build251-LuotUFO.ipa",
+  "sha256": "8d571c0620c6fae2a3a56856f8532c12cd970fcbb728d13beb4624cc852a2ef6",
+  "bytes": 16565062,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Army2Hoanggia",
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 522,
+  "github_build": {
+    "source_commit": "f66dbd13cab17eef1c05bb2b679c9cd1a835bf7a",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "84591d07cfaf2e6a855d09e54470de4a4c2107d014b85bb4e30fdf2f79c36bb7",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "source_head": "55a21e5524eb68d1e03aca26ee022baaf547e353",
+  "workflow_run": 41278682586,
+  "workflow_conclusion": "success",
+  "workflow_artifact": 13072018594,
+  "artifact_zip_sha256": "4c2d0fca817b76bb5c6e21cf5b24bd8b229b95c473bec348bf1f5a0a19c2b756",
+  "native_sha256": "9c864919a373fa01dfe61513a602c4fb4bb319283a6171bb95ae481ee05181a1",
+  "verification": {
+    "rebuilt_ufo_model_scenarios": 125,
+    "compiled_arm64_encounter_sequences": 60,
+    "completion_and_other_room_wait_cases": 12,
+    "static_hooks_and_exceptions": 134,
+    "post_update_wait_keypad_ABI": 86,
+    "new_turn_handoff_ABI_and_fallback": 24,
+    "wheel_and_room_bridge": 84,
+    "movement_clock": 36,
+    "unchanged_battle_input_clock": 48,
+    "unchanged_login_marker": 25,
+    "apple_simulator_wheel_screens": 6,
+    "apple_simulator_captcha_modes": 6
+  },
+  "test_boundaries": [
+    "ARM64 Unicorn executes the compiled Apple dylib and original native turn, flight, projectile, gravity and command24 bodies",
+    "OS/JVM allocation and Java I/O, terrain/math, HUD/camera and transport endpoints are controlled",
+    "No physical iPhone or production combat acceptance run"
+  ],
+  "reference_videos": [
+    "35373.mp4",
+    "32828(1).mp4"
+  ]
+}
