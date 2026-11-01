@@ -6,6 +6,7 @@ python3 test_ufo_auto.py
 python3 test_protocol.py
 python3 test_rooms.py
 python3 test_movement.py
+python3 test_camera_pacing.py
 sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
 xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=12.0 \
   -dynamiclib -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wall -Wextra \
@@ -27,7 +28,7 @@ shasum -a 256 build/AGWheel.dylib > build/SHA256.txt
 python3 - <<'PY'
 import hashlib,json,pathlib,subprocess
 p=pathlib.Path('build/AGWheel.dylib');exports=pathlib.Path('build/exports.txt').read_text()
-for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGWheelSuppressFooter','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnChange','AGTurnAwait','AGTurnStatusUpdate','AGViewportKeypad'):
+for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGCameraAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGWheelSuppressFooter','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnChange','AGTurnAwait','AGTurnStatusUpdate','AGViewportKeypad'):
     assert '_'+name in exports,name
 assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
 assert '_AGReleaseIdentity' in exports and b'2.4.1-HG78-IPA\0' in p.read_bytes()
@@ -109,5 +110,6 @@ for mode in input waiting single; do
   sleep 5
   xcrun simctl io "$(cat build/simulator-id)" screenshot "build/wheel-$mode-preview.png"
 done
+
 
 

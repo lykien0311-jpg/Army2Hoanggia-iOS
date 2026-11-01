@@ -77,12 +77,15 @@ for h in R['hooks']:
     primitives={}
     for row in range(8):
         reset();U.reg_write(X[9],row);U.reg_write(X[19],ENV)
+        selected_home=alloc(0x200);pair=alloc(16);q(pair,selected_home)
+        U.mem_write(selected_home+0x9f,b'\1');U.reg_write(X[24],pair)
         endpoints={B+h['home_select_zero'],B+h['home_select']+4,B+h['home_after_action']}
         run(h['home_select'])
         want=h['home_after_action']if row==6 else h['home_select_zero']if row==0 else h['home_select']+4
         assert stopped==B+want
         calls=[c for c in t.calls if c[0]=='AGWheelOpen'];assert bool(calls)==(row==6)
         if calls:assert calls[0][1][:2]==(ENV,h['variant'])
+        assert bytes(U.mem_read(selected_home+0x9f,1))==(b'\0' if row==6 else b'\1')
         assert U.reg_read(UC_ARM64_REG_SP)==SP;menu_cases+=1
     # Exercise every patched width instruction; preserve live registers/flags.
     home=alloc(0x200);screen=alloc(0x200)

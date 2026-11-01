@@ -62,8 +62,12 @@ def build_native(old,original,maps):
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
     symbols={};strcursor=0x7000
+    camera_maps=json.loads((ROOT/'camera-map.json').read_text())
+    camera_hooks=[]
     for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnAwait','AGTurnChange','AGViewportKeypad','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
+    raw=b'AGCameraAllow\0';symbols['AGCameraAllow']=rxvm+strcursor
+    rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
     for title in REFERENCE_TITLES.values():
         rx[strcursor:strcursor+8]=struct.pack('<iI',symbols[title]-(rxvm+strcursor),len(title.encode('utf-16-le'))//2)
@@ -402,6 +406,43 @@ def build_native(old,original,maps):
         for site in m['walk_input_calls']:
             assert original[site:site+4]==asm(f"bl {m['walk']}",site)
             patch(site,asm(f'bl {move_addr}',site),f'V{i+1} pace local left/right input independently of speed')
+        # Only the directional delta setters are paced, and only in manual
+        # camera mode (0). Native auto-follow/update/clamping remain intact.
+        cm=camera_maps[i]
+        for axis,site in enumerate((cm['pan_x'],cm['pan_y'])):
+            clazz=cm['camera_class']
+            camera_addr,_=emit(f'''
+                stp x29, x30, [sp, #-48]!
+                stp x0, x1, [sp, #16]
+                adrp x16, {clazz&-4096}
+                add x16, x16, #{clazz&4095}
+                ldrb w15, [x16, #9]
+                tbz w15, #1, camera_original
+                ldr x15, [x16]
+                cbz x15, camera_original
+                str x15, [sp, #32]
+                ldrb w16, [x15, #0xbc]
+                cbnz w16, camera_original
+                {lookup('AGCameraAllow',40)}
+                cbz x10, camera_original
+                mov w0, #{i}
+                ldr x1, [sp, #32]
+                mov w2, #{axis}
+                ldr w3, [sp, #24]
+                blr x10
+                cbz w0, camera_done
+              camera_original:
+                ldp x0, x1, [sp, #16]
+                ldp x29, x30, [sp], #48
+                stp x20, x19, [sp, #-32]!
+                b {site+4}
+              camera_done:
+                ldp x29, x30, [sp], #48
+                ret
+            ''')
+            assert original[site:site+4]==asm('stp x20,x19,[sp,#-32]!',site)
+            patch(site,asm(f'b {camera_addr}',site),f'V{i+1} pace manual camera axis {axis} without slowing auto-follow or game')
+            camera_hooks.append(dict(variant=i,axis=axis,site=site,hook=camera_addr,**cm))
         # Home menu category 0 ends with Quay số at index 5. Extend only
         # this array and add the new action at index 6, preserving both
         # the existing lottery and V9's original Xem giờ action/label.
@@ -426,6 +467,8 @@ def build_native(old,original,maps):
         select_addr,_=emit(f'''
             sub w16, w9, #6
             cbnz w16, original
+            ldr x16, [x24]
+            strb wzr, [x16, #0x9f]
             mov x0, x19
             bl {open_addr}
             b {m['home_after_action']}
@@ -678,6 +721,17 @@ def build_native(old,original,maps):
         ''')
         assert original[m['room_build_call']:m['room_build_call']+4]==asm(f"bl {m['room_build']}",m['room_build_call'])
         patch(m['room_build_call'],asm(f'bl {build_addr}',m['room_build_call']),f'V{i+1} replay names after room list rebuild')
+        # The original level-10 calculation still calls Thread.sleep(0).
+        # At that level bypass its scheduler yield; all lower levels retain
+        # their original delay calculation, and no gameplay tick is duplicated.
+        speed_tail=m['tick']+0x64
+        word=struct.unpack_from('<I',original,speed_tail)[0]
+        assert word&0xfc000000==0x14000000
+        imm=word&0x3ffffff
+        sleep_start=speed_tail+4*(imm-(1<<26) if imm&(1<<25) else imm)
+        speed_resume=sleep_start+0x14
+        assert original[sleep_start:sleep_start+16]==asm('str x8,[sp,#0xe8]; str w23,[sp,#0x18]; ldr x1,[sp,#0xe8]; mov x0,x19',sleep_start)
+        assert original[speed_resume:speed_resume+4]==asm('str wzr,[sp,#0x18]',speed_resume)
         tick_addr,raw=emit(f'''
             stp x29, x30, [sp, #-32]!
             mov x29, sp
@@ -690,8 +744,13 @@ def build_native(old,original,maps):
           original:
             ldr x0, [sp, #16]
             bl {m['speed']}
+            cmp w0, #10
+            b.eq maximum_speed
             ldp x29, x30, [sp], #32
             ret
+          maximum_speed:
+            ldp x29, x30, [sp], #32
+            b {speed_resume}
         ''')
         assert original[m['tick']:m['tick']+4]==asm(f"bl {m['speed']}",m['tick'])
         patch(m['tick'],asm(f'bl {tick_addr}',m['tick']),f'V{i+1} poll/send on original game thread')
@@ -789,7 +848,7 @@ def build_native(old,original,maps):
             ret
         ''')
         patch(inbox_site,asm(f'bl {inbox_addr}',inbox_site),f'V{i+1} retain full inbox text and original dialog actions')
-        hooks.append(dict(notes77=n,config_hooks=config_hooks,input_hooks=input_hooks,inbox_hook=inbox_addr,variant=i,open_hook=open_addr,receive_hook=receive_addr,tick_hook=tick_addr,room_build_hook=build_addr,home_append_hook=append_addr,home_select_hook=select_addr,width_hooks=width_hooks,v9_hook=v9_addr,clock_hook=clock_addr,move_hook=move_addr,callback_slot=callback_slot,**m))
+        hooks.append(dict(notes77=n,config_hooks=config_hooks,input_hooks=input_hooks,inbox_hook=inbox_addr,speed_resume=speed_resume,variant=i,open_hook=open_addr,receive_hook=receive_addr,tick_hook=tick_addr,room_build_hook=build_addr,home_append_hook=append_addr,home_select_hook=select_addr,width_hooks=width_hooks,v9_hook=v9_addr,clock_hook=clock_addr,move_hook=move_addr,callback_slot=callback_slot,**m))
     # Notes78: only the third UTF in login changes. Registration, credentials,
     # platform tail and every other service packet retain their native path.
     release=json.loads((ROOT/'login-map.json').read_text())
@@ -859,7 +918,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,camera_hooks=camera_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()
