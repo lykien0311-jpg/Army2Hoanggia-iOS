@@ -46,3 +46,18 @@ reader, busy reset, handoff call site and tail. Only command selection (already
 known from the test packet) bypasses the unrelated switch branches. It checks
 that counter/input state stays unchanged during the UFO's active attack and
 resets only when the original native player turn is applied.
+
+Final artifact: Army2Hoanggia-2.4.1-Build251-LuotUFO.ipa, SHA256
+8d571c0620c6fae2a3a56856f8532c12cd970fcbb728d13beb4624cc852a2ef6.
+Apple workflow41278682586 at head55a21e5524eb68d1e03aca26ee022baaf547e353
+(merge f66dbd13cab17eef1c05bb2b679c9cd1a835bf7a), artifact13072018594,
+passed build, strict signing/re-signing and the retained UIKit previews.
+The exact packaged library passes60 encounter and12 completion/wait cases;
+125 pure-controller,134 static-hook,86 previous ABI and24 handoff ABI cases
+also pass. The package changes native hooks, dylib and bundle version only;
+522 other entries are byte-identical to Build250.
+
+The full command24 fixture supplies the native DataInputStream reader at
+Message28 as well as the observer's backing ByteArrayInputStream at20; Java
+readByte is a controlled boundary sharing the backing stream's position.
+The observer does not consume the original reader.

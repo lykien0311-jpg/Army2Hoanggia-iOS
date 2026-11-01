@@ -81,6 +81,10 @@ def owner(v,who,num):
     ticket=900000+num
     wire=bytes([who])+struct.pack('>IiQ',1429485652,num,ticket)
     msg=t.message(wire);t.put(msg+0x30,'<B',24)
+    # Message.reader() returns its DataInputStream at28. The observer reads
+    # the backing ByteArrayInputStream at20 without consuming it. At this
+    # controlled Java boundary both share the same byte position.
+    t.put(msg+0x28,'<Q',t.get(msg+0x20,'<Q'))
     this=t.alloc(0x20)
     # Original dispatcher frame/exception context, message reader, busy reset,
     # installed handoff hook and the actual command24 tail all execute.
