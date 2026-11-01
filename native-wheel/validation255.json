@@ -1,0 +1,169 @@
+{
+  "passed": true,
+  "input_sha256": "f1cd1291f9d3c5e0f7f05abbc19edc6a0aa3079f8d997835ad84ac45e5b81811",
+  "output": "Army2Hoanggia-2.4.1-Build255-VXMM-Camera-Speed.ipa",
+  "sha256": "7656086be4a97e7ae11bf64e67a75076340057852767e67aaccfe516454bcbb2",
+  "bytes": 16566368,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Army2Hoanggia",
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 522,
+  "github_build": {
+    "source_commit": "6bce04e4d0b1d6c685813e09d59517c098f5469c",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "21a12b092bc5216d00b0ef6d0435659741d9c574398e1c9250952f7ed3ae62cd",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "source_head": "1bf76b2d2e71de1eaa8061def94d95e56eafcbcd",
+  "main_sha256": "a5fab3a55c600c460c4d697998d0ac529246b0f25ce23ecbc943c583d93469a1",
+  "workflow_run": 41299936499,
+  "workflow_conclusion": "success",
+  "artifact_id": 13081220228,
+  "artifact_zip_sha256": "5d41c6c0cfe5576b16c957b86889d4718f1327b2ff579d5888b68ddef093c45a",
+  "reference_videos": [
+    "35396.mp4",
+    "35397.mp4"
+  ],
+  "speed_reference": "35398.jpg",
+  "checks": {
+    "wheel-home-return": {
+      "passed": true,
+      "original_native_home_transitions": 12,
+      "build254_empty_home_reproduced": true,
+      "build255_menu_paint_restored": true,
+      "original_layout_and_cleanup_executed": true,
+      "server_ack_required": false,
+      "cases": [
+        {
+          "build": 254,
+          "variant": 0,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 1,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 2,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 3,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 4,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 5,
+          "menu_visible": false
+        },
+        {
+          "build": 255,
+          "variant": 0,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 1,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 2,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 3,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 4,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 5,
+          "menu_visible": true
+        }
+      ]
+    },
+    "camera-pacing": {
+      "passed": true,
+      "frame_rate_direction_cases": 18,
+      "pan_steps_per_second": 20,
+      "independent_axes": true,
+      "walking_independent": true,
+      "no_sleep_or_queued_steps": true
+    },
+    "camera-hook": {
+      "passed": true,
+      "native_pan_cases": 120,
+      "variants": 6,
+      "axes": 2,
+      "manual_pan_steps_per_second": 20,
+      "automatic_modes_unchanged": true,
+      "separate_walk_clock": true,
+      "optional_symbol_fallback": true,
+      "native_setter_and_abi_executed": true
+    },
+    "camera-device": {
+      "passed": true,
+      "apple_arm64_timing_cases": 48,
+      "variants": 6,
+      "manual_camera_and_walk_steps_per_second": 20,
+      "independent_axes": true,
+      "frame_rates": [
+        20,
+        60,
+        120,
+        1000
+      ],
+      "live_game_requests": 0
+    },
+    "speed-maximum": {
+      "passed": true,
+      "native_level_cases": 120,
+      "variants": 6,
+      "levels_1_to_9_unchanged": true,
+      "level_10_skips_scheduler_sleep": true,
+      "extra_game_ticks": 0,
+      "packet_duplication": false,
+      "physical_device_performance_measured": false
+    }
+  },
+  "retained_auto_verification": {
+    "native_full_encounters": 60,
+    "completion_and_other_room_waits": 12,
+    "wheel_and_room_bridge": 84,
+    "compiled_movement_clock": 36,
+    "normal_shots_and_eligible_POW_only": true,
+    "inventory_items": false
+  },
+  "accepted_auto_sources": {
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f"
+  },
+  "speed_scope": "Only game level10 bypasses Thread.sleep(0); original native updates execute once, no duplicate gameplay or network packets; hardware/rendering determine throughput.",
+  "camera_scope": "Manual pan mode0 setters only, 20 steps/s per independent axis; automatic following unchanged."
+}
