@@ -3,4 +3,5 @@
 void AGTurnTick(void *env,int variant);
 void AGTurnReceive(void *env,void *message,int variant);
 void AGTurnManual(int variant);
+void AGTurnChange(void *env,int owner,int variant);
 #endif

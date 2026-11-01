@@ -62,7 +62,7 @@ def build_native(old,original,maps):
     assert not any(c in (0x1d,0x80000034,0x80000033)for p,c,s in cmds), 'Unexpected signature/chained fixups/export trie'
     dlsym=find_dlsym(old);b=bytearray(old[:rxoff]+bytes(delta)+old[rxoff:]);rx=bytearray(PAGE);records=[];cursor=0
     symbols={};strcursor=0x7000
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnAwait','AGViewportKeypad','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnAwait','AGTurnChange','AGViewportKeypad','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
     for title in REFERENCE_TITLES.values():
@@ -218,10 +218,11 @@ def build_native(old,original,maps):
         ret
     ''')
     turn_map=json.loads((ROOT/'turn-map.json').read_text())
+    turn_sequence=json.loads((ROOT/'turn-sequence-map.json').read_text())
     # The old "boss_sites" were X-coordinate subtractions in player-slot
     # painting, not boss identity calculations. Leave all twelve intact.
     presentation=json.loads((ROOT/'presentation-map.json').read_text())
-    boss_hooks=[];footer_hooks=[];canvas_footer_hooks=[];zone_patches=[];arena_update_hooks=[];turn_wait_hooks=[]
+    boss_hooks=[];footer_hooks=[];canvas_footer_hooks=[];zone_patches=[];arena_update_hooks=[];turn_wait_hooks=[];turn_change_hooks=[]
     notes=json.loads((ROOT/'notes-map.json').read_text())
     hooks=[]
     for i,m in enumerate(maps):
@@ -563,6 +564,27 @@ def build_native(old,original,maps):
         ''')
         assert original[m['controller']:m['controller']+4]==asm('stp x28, x27, [sp, #-96]!',0)
         patch(m['controller'],asm(f'b {receive_addr}',m['controller']),f'V{i+1} receive wheel -101 and cache room names -19')
+        change=turn_sequence[i]
+        change_hook,_=emit(f"""
+            stp x29, x30, [sp, #-48]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            {lookup('AGTurnChange',39)}
+            cbz x10, native_change
+            ldp x0, x1, [sp, #16]
+            mov w2, #{i}
+            blr x10
+            b changed
+          native_change:
+            ldp x0, x1, [sp, #16]
+            bl {change['original']}
+          changed:
+            ldp x29, x30, [sp], #48
+            ret
+        """)
+        assert original[change['site']:change['site']+4]==asm(f"bl {change['original']}",change['site'])
+        patch(change['site'],asm(f'bl {change_hook}',change['site']),f'V{i+1} serialize UFO native turn handoff after previous effects')
+        turn_change_hooks.append(dict(**change,hook=change_hook))
         fire_site=turn_map[i]['fire']
         fire_trampoline,_=emit(f'nop; b {fire_site+4}')
         rx[fire_trampoline-rxvm:fire_trampoline-rxvm+4]=original[fire_site:fire_site+4]
@@ -833,7 +855,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()
