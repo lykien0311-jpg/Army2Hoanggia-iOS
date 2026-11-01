@@ -29,6 +29,12 @@ packets=[];commands={};writer_commands={};fail_command=None;blocked=0;wheel=0
 legacy=[];timed=[];watched=0;clear_after=3;leave_canvas=0
 continuation=0;first=0
 primitives={};redirects={};phase_log=[];settling=False;settle_calls={};flying=False;flight_calls={}
+native_calls={}
+for i,(word,) in enumerate(struct.iter_unpack('<I',raw[0x4f0000:0xa60000])):
+    if word&0xfc000000==0x94000000:
+        pc=0x4f0000+i*4;delta=word&0x3ffffff
+        if delta&(1<<25):delta-=1<<26
+        native_calls.setdefault(pc+delta*4,[]).append(pc)
 
 def r(n):return U.reg_read(X[n])
 def branch(a):
@@ -89,15 +95,40 @@ def receive(v,cmd,wire):
     msg=t.message(wire);t.put(msg+0x30,'<B',cmd&255);call('AGTurnReceive',t.ENV,msg,v)
     stream=t.get(msg+0x20,'<Q');assert t.get(stream+0x20,'<i')==0
 
-def setup(v,room_id=8):
+def setup(v,room_id=8,capacity=100,local=2):
     m=turns[v];g=t.alloc(0x400);pg=t.alloc(0x400);ag=t.alloc(0x200);canvas=t.alloc(0x200)
-    arena=t.alloc(0x200);array=t.alloc(0x200);p=t.alloc(0x200);boss=t.alloc(0x200)
+    arena=t.alloc(0x200);p=t.alloc(0x200);boss=t.alloc(0x200)
     room=t.alloc(0x200);proj=t.alloc(0x200)
     for address,value in [(m['arena_class'],g),(m['player_class'],pg),(m['array_class'],ag),
         (m['projectile_class'],proj),(notes[v]['canvas'],canvas),(notes[v]['room_class'],room)]:t.put(B+address,'<Q',value)
-    t.put(g+0xe8,'<Q',arena);t.put(g+0x266,'<B',2);t.put(ag+0xa0,'<Q',array);t.put(ag+0xd0,'<B',2)
-    t.put(canvas+0xb8,'<Q',arena);t.put(array+0x10,'<i',10)
-    t.put(array+0x18+2*8,'<Q',p);t.put(array+0x18+8*8,'<Q',boss)
+    # ServerManager.maxElementFight defaults to100, not the number of living
+    # actors. Run the native capacity setter/getter, object-array allocator
+    # wrapper and array setter used by the arena's own initialization.
+    change=report['turn_change_hooks'][v]['original']
+    set_capacity=change-0x3bc;get_capacity=change-0x3f8;set_array=change-0x300
+    assert raw[set_capacity+0x30:set_capacity+0x34]==bytes.fromhex('13c100b9')
+    calls=native_calls.get(set_array,[])
+    assert len(calls)==1,calls
+    allocate=branch(calls[0]-12)
+    assert branch(calls[0]-28)==get_capacity
+    type_getter=branch(allocate+0x14)
+    def allocate_array():
+        n=r(1);assert n==capacity
+        value=t.alloc(0x18+n*8);t.put(value+0x10,'<i',n);return value
+    primitives[B+type_getter]=lambda:1
+    previous_allocator=primitives.get(B+0x12e7ea8)
+    primitives[B+0x12e7ea8]=allocate_array
+    t.put(B+m['array_class']+9,'<B',2)
+    call_address(B+set_capacity,t.ENV,capacity)
+    assert call_address(B+get_capacity,t.ENV)==capacity
+    array=call_address(B+allocate,t.ENV,capacity)
+    call_address(B+set_array,t.ENV,array)
+    if previous_allocator is None:primitives.pop(B+0x12e7ea8)
+    else:primitives[B+0x12e7ea8]=previous_allocator
+    assert t.get(ag+0xa0,'<Q')==array and t.get(array+0x10,'<i')==capacity
+    t.put(g+0xe8,'<Q',arena);t.put(g+0x266,'<B',local);t.put(ag+0xd0,'<B',local)
+    t.put(canvas+0xb8,'<Q',arena)
+    t.put(array+0x18+local*8,'<Q',p);t.put(array+0x18+8*8,'<Q',boss)
     t.put(p+0x68,'<q',10000);t.put(boss+0x68,'<q',16000)
     t.put(p+0x114,'<i',240);t.put(p+0x118,'<i',350)
     t.put(p+0x11c,'<i',240);t.put(p+0x124,'<i',350)

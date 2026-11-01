@@ -22,6 +22,9 @@ typedef struct {
 static NativeTurn nativeTurns[6];
 static AGUfoDiagnostic diagnostics[6];
 static pthread_mutex_t autoMutex=PTHREAD_MUTEX_INITIALIZER;
+/* maxElementFight is sent as a positive Java byte. It is the roster's
+ * capacity (100 by default), not its number of occupied/live slots. */
+enum { AGUfoMaxActorSlots=127 };
 static double now(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return t.tv_sec+t.tv_nsec/1e9;}
 __attribute__((visibility("default"))) int AGUfoDiagnosticsGet(int v,AGUfoDiagnostic *out){
     if(v<0||v>=6||!out)return 0;
@@ -69,7 +72,7 @@ static int effectsBusy(const Context *c){
     if(c->projectiles&&c->projectiles[0x118])return 1;
     if(c->canvas&&c->canvas[0x13c])return 2;
     int count=c->players?*(int *)(c->players+0x10):0;
-    if(count<1||count>64)return 0x10000;
+    if(count<1||count>AGUfoMaxActorSlots)return 0x10000;
     for(int i=0;i<count;i++){
         uint8_t *p=*(uint8_t **)(c->players+0x18+i*8);
         /* UFO gravity166 and item16a are not movement/flight predicates. */
@@ -114,7 +117,8 @@ static void applyNativeTurn(void *env,int v){
     pthread_mutex_unlock(&autoMutex);if(!ready)return;
     int ok=AGWheelGuard(env,changeNative,&job,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));
     pthread_mutex_lock(&autoMutex);
-    if(n->sequence==sequence){n->applying=0;if(ok>0){n->pending=0;n->applied=sequence;}}
+    n->applying=0;
+    if(n->sequence==sequence&&ok>0){n->pending=0;n->applied=sequence;}
     pthread_mutex_unlock(&autoMutex);
 }
 /* Replaces only the original command24 call to PlayerManager.changeTurn.
@@ -131,11 +135,15 @@ __attribute__((visibility("default"))) int AGTurnChange(void *env,int owner,int 
         nativeTurns[v].applied=nativeTurns[v].sequence;pthread_mutex_unlock(&autoMutex);return 1;
     }
     pthread_mutex_lock(&autoMutex);NativeTurn *n=&nativeTurns[v];
-    n->connection=c.connection;n->arena=(uintptr_t)c.arena;n->owner=owner;n->pending=1;n->applying=0;
+    n->connection=c.connection;n->arena=(uintptr_t)c.arena;n->owner=owner;n->pending=1;
     pthread_mutex_unlock(&autoMutex);
     if(c.playerGlobals)c.playerGlobals[0x1a7]=1;
-    /* Return to the dispatcher without executing its tail. The original
-     * change and tail both run on a subsequent game update after completion. */
+    /* An idle incoming UFO turn must be applied before the following fly/
+     * shoot packet starts its animation. This is the original dispatcher
+     * thread/Env. Busy handoffs remain queued for the game update. */
+    applyNativeTurn(env,v);
+    /* The complete tail was applied above or remains queued. Skip the
+     * dispatcher's own tail so it cannot reset a running UFO effect. */
     return 0;
 }
 __attribute__((visibility("default"))) void AGTurnReceive(void *env,void *message,int v){
@@ -161,8 +169,8 @@ __attribute__((visibility("default"))) void AGTurnReceive(void *env,void *messag
     if(a->connection!=c.connection){AGUfoReset(a,c.connection);nativeTurns[v]=(NativeTurn){0};}
     if(cmd==20){AGUfoStart(a);nativeTurns[v]=(NativeTurn){.sequence=nativeTurns[v].sequence+1};}
     else if(cmd==24){
-        nativeTurns[v].sequence++;nativeTurns[v].pending=nativeTurns[v].applying=0;
-        if(n==17&&be32(b+1)==1429485652U&&b[0]<64)AGUfoTurn(a,b[0],(int32_t)be32(b+5),be64(b+9));
+        nativeTurns[v].sequence++;nativeTurns[v].pending=0;
+        if(n==17&&be32(b+1)==1429485652U&&b[0]<AGUfoMaxActorSlots)AGUfoTurn(a,b[0],(int32_t)be32(b+5),be64(b+9));
         else AGUfoTurn(a,-1,-1,0);
     }else if(n==4){uint32_t mode=be32(b);if((mode&~1U)==0x55464f00U)AGUfoMode(a,mode&1U);}
     else if(n==21){
@@ -186,6 +194,9 @@ static int current(const Dispatch *d){
 }
 /* Original Message constructor/writer/session: existing socket, framing and encryption. */
 static int sendPacket(void *env,const Dispatch *d,int command,const uint8_t *bytes,size_t n){
+    /* Auto can only issue a normal shot or the native POW skill token100.
+     * It never selects or consumes an inventory item. */
+    if(command!=22&&!(command==26&&n==1&&bytes&&bytes[0]==100))return 0;
     const Context *c=&d->context;
     uintptr_t base=(uintptr_t)_dyld_get_image_header(0);const AGNativeMap *m=&AGMaps[c->v];
     void *(*get)(void *)=(void *)(base+m->service);uint8_t *volatile service=get(env);
@@ -205,7 +216,7 @@ static int dispatch(void *env,void *opaque){
     Dispatch *d=opaque;Context *c=&d->context;
     int count=c->players?*(int *)(c->players+0x10):0;
     if(!current(d)||!active(c)||effectsBusy(c)||c->local!=d->plan.owner||c->owner!=d->plan.owner||
-        count<1||count>64||c->local<0||c->local>=count)return 0;
+        count<1||count>AGUfoMaxActorSlots||c->local<0||c->local>=count)return 0;
     uint8_t *volatile p=*(uint8_t **)(c->players+0x18+c->local*8);
     if(!p||*(int64_t *)(p+0x68)<=0||*(int *)(p+0x114)!=d->plan.x||*(int *)(p+0x118)!=d->plan.y)return 0;
     int (*mapBullet)(void *,int)=(void *)((uintptr_t)_dyld_get_image_header(0)+bulletMap[c->v]);
@@ -236,7 +247,7 @@ void AGTurnTick(void *env,int v){
         .local=c.local,.owner=c.owner,.now=now()};
     int count=c.players?*(int *)(c.players+0x10):0;
     pthread_mutex_lock(&autoMutex);dg->active=f.active;dg->ufo=f.ufo;dg->local=c.local;dg->owner=c.owner;dg->count=count;pthread_mutex_unlock(&autoMutex);
-    if(count<1||count>64||c.local<0||c.local>=8||c.local>=count)return;
+    if(count<1||count>AGUfoMaxActorSlots||c.local<0||c.local>=8||c.local>=count)return;
     uint8_t *p=*(uint8_t **)(c.players+0x18+c.local*8);if(!p)return;
     f.alive=*(int64_t *)(p+0x68)>0;f.state=p[0x16f];f.x=*(int *)(p+0x114);f.y=*(int *)(p+0x118);
     int effects=effectsBusy(&c),blockers=effects;
@@ -273,7 +284,7 @@ __attribute__((visibility("default"))) void AGTurnAwait(void *env,void *lock,int
         if(kind==0)busy=c.projectiles&&((volatile uint8_t *)c.projectiles)[0x118];
         else if(kind==1)busy=((volatile uint8_t *)c.canvas)[0x13c];
         else if((kind==2||kind==3)&&c.players){int count=*(int *)(c.players+0x10);
-            if(actor>=0&&actor<count&&count<=64){uint8_t *p=*(uint8_t **)(c.players+0x18+actor*8);busy=p&&((volatile uint8_t *)p)[kind==2?0x167:0x14e];}}
+            if(actor>=0&&actor<count&&count<=AGUfoMaxActorSlots){uint8_t *p=*(uint8_t **)(c.players+0x18+actor*8);busy=p&&((volatile uint8_t *)p)[kind==2?0x167:0x14e];}}
         if(!busy)break;
         void (*wait)(void *,void *,int64_t)=(void *)(base+0xaaa730);wait(env,lock,16);
         c=(Context){.v=v};if(getContext(env,&c)<=0||!active(&c)||c.arena!=arena)break;

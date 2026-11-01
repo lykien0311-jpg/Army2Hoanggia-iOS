@@ -28,8 +28,8 @@ static NSString *reason(AGUfoDiagnostic d){
     return @"Đang chuẩn bị bắn";
 }
 static NSString *statusText(AGUfoDiagnostic d){
-    return [NSString stringWithFormat:@"B252 • %@ • %@\nV%d T%d/%d L%d #%d • rx %llu/%llu/%llu • bắn %llu\nfx=%x w=%d/%d S%d p%d e%d m%llu • (%d,%d)/(%d,%d) • n%d/%d",
-        d.enabled?@"AUTO BẬT":@"AUTO TẮT",reason(d),d.variant+1,d.serverOwner,d.owner,d.local,d.turn,
+    return [NSString stringWithFormat:@"B253 • %@ • %@\nV%d T%d/%d L%d #%d C%d h%llu • rx %llu/%llu/%llu • bắn %llu\nfx=%x w=%d/%d S%d p%d e%d m%llu • (%d,%d)/(%d,%d) • n%d/%d",
+        d.enabled?@"AUTO BẬT":@"AUTO TẮT",reason(d),d.variant+1,d.serverOwner,d.owner,d.local,d.turn,d.count,(unsigned long long)d.ticks,
         (unsigned long long)d.modes,(unsigned long long)d.turns,(unsigned long long)d.aims,
         (unsigned long long)d.shots,d.blocked,d.waitActive,d.waitKind,d.state,d.hasPlan,d.early,
         (unsigned long long)d.manuals,d.x,d.y,d.planX,d.planY,d.last24Length,d.last115Length];
@@ -38,7 +38,7 @@ static UILabel *makeLabel(void){
     UILabel *l=[UILabel new];l.numberOfLines=0;l.font=[UIFont monospacedDigitSystemFontOfSize:10 weight:UIFontWeightMedium];
     l.textColor=UIColor.whiteColor;l.backgroundColor=[UIColor.blackColor colorWithAlphaComponent:.80];
     l.layer.cornerRadius=5;l.clipsToBounds=YES;l.userInteractionEnabled=NO;
-    l.accessibilityLabel=@"Trạng thái chẩn đoán Auto UFO Build252";return l;
+    l.accessibilityLabel=@"Trạng thái chẩn đoán Auto UFO Build253";return l;
 }
 static void logState(AGUfoDiagnostic d){
     static NSString *path;
@@ -47,7 +47,7 @@ static void logState(AGUfoDiagnostic d){
 #undef DF
     NSMutableData *line=[[NSJSONSerialization dataWithJSONObject:record options:0 error:nil]mutableCopy];if(!line)return;
     [line appendData:[@"\n" dataUsingEncoding:NSUTF8StringEncoding]];
-    if(!path)path=[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"AutoUFO-Build252.txt"];
+    if(!path)path=[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"AutoUFO-Build253.txt"];
     if(!path)return;
     if(![NSFileManager.defaultManager fileExistsAtPath:path])[NSFileManager.defaultManager createFileAtPath:path contents:nil attributes:nil];
     NSFileHandle *file=[NSFileHandle fileHandleForWritingAtPath:path];if(!file)return;
@@ -74,7 +74,7 @@ __attribute__((constructor)) static void installMonitor(void){
                 window.userInteractionEnabled=NO;window.rootViewController=[UIViewController new];
                 window.rootViewController.view.backgroundColor=UIColor.clearColor;status=makeLabel();[window.rootViewController.view addSubview:status];
             }
-            window.frame=game.frame;status.text=seen?statusText(best):@"B252 • Đang chờ game khởi động\nChưa thấy callback dữ liệu/trận";
+            window.frame=game.frame;status.text=seen?statusText(best):@"B253 • Đang chờ game khởi động\nChưa thấy callback dữ liệu/trận";
             CGFloat width=MAX(240,window.bounds.size.width-12),top=MAX(8,game.safeAreaInsets.top);
             CGSize size=[status sizeThatFits:CGSizeMake(width,140)];status.frame=CGRectMake(6,top,width,MIN(140,size.height+8));
             window.hidden=NO;if(seen)logState(best);
@@ -86,7 +86,7 @@ __attribute__((constructor)) static void installMonitor(void){
 __attribute__((visibility("default"))) void AGUfoDiagnosticsPreviewCheck(void){
     AGUfoDiagnosticWindow *w=[[AGUfoDiagnosticWindow alloc]initWithFrame:CGRectMake(0,0,390,844)];
     w.rootViewController=[UIViewController new];w.rootViewController.view.backgroundColor=[UIColor colorWithRed:.03 green:.07 blue:.07 alpha:1];
-    UILabel *l=makeLabel();AGUfoDiagnostic d={.contextOK=1,.active=1,.enabled=1,.valid=1,.nativePending=1,.serverOwner=0,.owner=8,.local=0,.turn=3,.modes=1,.turns=5,.aims=12,.blocked=8,.waitActive=1,.waitKind=3,.last24Length=17,.last115Length=21};
+    UILabel *l=makeLabel();AGUfoDiagnostic d={.contextOK=1,.active=1,.enabled=1,.valid=1,.nativePending=1,.serverOwner=0,.owner=8,.local=0,.count=100,.ticks=3200,.turn=3,.modes=1,.turns=5,.aims=12,.blocked=8,.waitActive=1,.waitKind=3,.last24Length=17,.last115Length=21};
     l.text=statusText(d);[w.rootViewController.view addSubview:l];
     for(NSNumber *width in @[@320,@390,@844]){
         l.frame=CGRectMake(6,60,width.doubleValue-12,100);CGSize s=[l sizeThatFits:l.bounds.size];
