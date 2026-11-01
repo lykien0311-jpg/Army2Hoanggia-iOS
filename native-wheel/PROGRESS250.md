@@ -34,3 +34,28 @@ are absent.
 Offline verification and Apple build provenance are recorded with the final
 package. These checks do not establish physical-iPhone or live-VPS acceptance.
 The resulting IPA requires signing with the owner's installation certificate.
+
+## Completed verification
+
+-125 C controller scenarios;234 Apple-compiled ARM64 packet and installed-update
+cases;120 wait cases, including five-second orphaned flags without clearing
+native animation state; native bullet mapping executes for all ten characters
+and all six variants.
+- POW26/item100 is queued before shot22 only at full rage. A shot-write exception
+after POW does not repeat the successful skill request on retry. Both dispatch
+entry points and repeated server messages leave each completed turn consumed.
+- The identical initial animation fixture produces no shot with the supplied
+248 library and the expected shot with250. This is an offline regression;
+the video's actual internal bits remain unobserved.
+-134 static hook/exception cases,86 update/wait/keypad ABI cases and48 V9/input
+cases pass. Apple signing/re-signing, six UIKit viewports and six captcha modes
+also pass. No physical-device or production-server test was performed.
+
+Apple run41274098171 / artifact13070214264; source6256c4110e7e27a0267e9e7e304fbacba340809b;
+tested merge40c6035974af0c987b25677f9aa1aea593bf5a85. Device library SHA256
+2e8c7259c93067f1df74ae40d0aaac7b66deea7082cbc0a6fb0abc0251743a28.
+
+Final IPA Army2Hoanggia-2.4.1-Build250-AutoUFO.ipa:16,563,592 bytes;
+SHA256b93d85219aa402c6108bfa7ce4a24467799bf04c0e56e18088cc24071f5253fd.
+Only AGWheel.dylib and Info.plist differ from the supplied248;523 entries,
+including the original native executable and game resources, are unchanged.
