@@ -13,7 +13,7 @@ def main():
     p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib')
     p.add_argument('--build-info',type=Path,default=ROOT/'build/build-info.json')
     p.add_argument('--output',type=Path,required=True)
-    p.add_argument('--bundle-build',default='248')
+    p.add_argument('--bundle-build',default='249')
     args=p.parse_args()
     r=json.loads((ROOT/'baseline-recovery.json').read_text())
     with zipfile.ZipFile(args.ipa) as src:native=src.read(APP+'Army2Hoanggia')
@@ -67,6 +67,7 @@ def main():
                 plist=plistlib.loads(data)
                 assert plist['CFBundleShortVersionString'] in ('2.4.0','2.4.1')
                 plist['CFBundleShortVersionString']='2.4.1';plist['CFBundleVersion']=args.bundle_build
+                plist['UIFileSharingEnabled']=True;plist['LSSupportsOpeningDocumentsInPlace']=True
                 data=plistlib.dumps(plist,fmt=plistlib.FMT_BINARY,sort_keys=False)
             dst.writestr(zi,data)
     with zipfile.ZipFile(args.ipa) as src,zipfile.ZipFile(args.output) as dst:

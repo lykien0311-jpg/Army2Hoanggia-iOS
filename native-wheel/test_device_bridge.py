@@ -53,6 +53,8 @@ now=100.;sent=[];writers={};titles={0:''};screen=0;raiseWrite=False;lockDepth=0;
 def hook(uc,pc,size,_):
     global lockDepth
     if pc==STOP:uc.emu_stop();return
+    if pc==symbols.get("_AGTurnTrace"):
+        ret(0);return
     if pc==symbols.get("_AGTurnStatusUpdate"):
         ret();return
     if pc in imports:

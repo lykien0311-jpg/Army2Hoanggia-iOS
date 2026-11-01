@@ -3,6 +3,10 @@
 #include <stddef.h>
 #include <string.h>
 #include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <time.h>
 #include <mach-o/dyld.h>
 #include "Turn33.h"
 #include "TurnMap.h"
@@ -18,6 +22,27 @@ typedef struct {
 } Turn;
 static Turn turns[6];
 static pthread_mutex_t turnMutex=PTHREAD_MUTEX_INITIALIZER;
+// Local-only diagnostic build. No chat, network upload, screen label or toast.
+// Bound disk use and sampling; never record account names/passwords/tickets.
+static pthread_mutex_t traceMutex=PTHREAD_MUTEX_INITIALIZER;
+__attribute__((visibility("default"),noinline)) void AGTurnTrace(int v,int event,const char *fmt,...) {
+    if(v<0||v>=6||event<0||event>=8)return;
+    static time_t sampled[6][8];
+    time_t now=time(NULL);
+    pthread_mutex_lock(&traceMutex);
+    if(sampled[v][event]==now){pthread_mutex_unlock(&traceMutex);return;}
+    sampled[v][event]=now;
+    const char *home=getenv("HOME");char path[1024];
+    if(!home||snprintf(path,sizeof path,"%s/Documents/Army2-UFO.log",home)>=(int)sizeof path){pthread_mutex_unlock(&traceMutex);return;}
+    FILE *f=fopen(path,"a+");
+    if(f){
+        if(fseek(f,0,SEEK_END)==0&&ftell(f)>524288){fclose(f);f=fopen(path,"w");}
+        if(f){fprintf(f,"build=249 time=%lld variant=%d event=%d ",(long long)now,v,event);
+            va_list args;va_start(args,fmt);vfprintf(f,fmt,args);va_end(args);
+            fputc('\n',f);fclose(f);}
+    }
+    pthread_mutex_unlock(&traceMutex);
+}
 static uint32_t be32(const uint8_t *b){return (uint32_t)b[0]<<24|(uint32_t)b[1]<<16|(uint32_t)b[2]<<8|b[3];}
 static uint64_t be64(const uint8_t *b){return (uint64_t)be32(b)<<32|be32(b+4);}
 static int short16(const uint8_t *b){return (int16_t)((b[0]<<8)|b[1]);}
@@ -69,6 +94,7 @@ __attribute__((visibility("default"))) void AGTurnAwait(void *env,void *lock,int
                 busy=p&&((volatile uint8_t *)p)[kind==2?PLAYER_MOVING:PLAYER_FLIGHT];
             }
         }
+        AGTurnTrace(v,2,"wait kind=%d actor=%d busy=%d",kind,actor,busy);
         if(!busy)return;
         void (*wait)(void *,void *,int64_t)=(void *)(base+0xaaa730);
         wait(env,lock,16);
@@ -108,6 +134,7 @@ __attribute__((visibility("default"))) void AGTurnReceive(void *env,void *messag
             t->angle=angle;t->force=b[15];t->release=b[16];t->x=short16(b+17);t->y=short16(b+19);t->pending=1;
         }
     }
+    AGTurnTrace(v,cmd==20?7:cmd==24?1:n==4?5:6,"recv cmd=%d bytes=%zu enabled=%d valid=%d pending=%d used=%d owner=%d nativeOwner=%d active=%d ufo=%d",cmd,n,t->enabled,t->valid,t->pending,t->used,t->owner,c.local,active(&c),c.ufo);
     pthread_mutex_unlock(&turnMutex);
 }
 __attribute__((visibility("default"))) void AGTurnManual(int v){
@@ -126,6 +153,17 @@ void AGTurnTick(void *env,int v){
     if(!env||v<0||v>=6)return;
     pthread_mutex_lock(&turnMutex);Turn copy=turns[v];pthread_mutex_unlock(&turnMutex);
     Context c={.v=v};int ok=getContext(env,&c);
+    if(active(&c)||copy.enabled) {
+        AGTurnTrace(v,0,"tick context=%d active=%d ufo=%d enabled=%d valid=%d pending=%d used=%d owner=%d nativeOwner=%d local=%d busy=%d projectile=%d flash=%d modal=%d notes=%d connMatch=%d arenaMatch=%d",ok,active(&c),c.ufo,copy.enabled,copy.valid,copy.pending,copy.used,copy.owner,c.local,c.globals?c.globals[0x266]:-1,c.playerGlobals?c.playerGlobals[0x1a7]:-1,c.projectiles?c.projectiles[0x118]:-1,c.canvas?c.canvas[0x13c]:-1,c.canvas&&*(void **)(c.canvas+0x108)!=NULL,AGNotesBlocksAuto(v),c.connection==copy.connection,!copy.arena||(uintptr_t)c.arena==copy.arena);
+        if(c.players&&copy.owner>=0&&copy.owner<8&&*(int *)(c.players+0x10)>copy.owner) {
+            uint8_t *p=*(uint8_t **)(c.players+0x18+copy.owner*8);
+            if(p)AGTurnTrace(v,3,"player alive=%d state=%d fall=%d move=%d flight=%d x=%d y=%d aimX=%d aimY=%d",*(int64_t *)(p+0x68)>0,p[0x16f],p[PLAYER_FALLING],p[PLAYER_MOVING],p[PLAYER_FLIGHT],*(int *)(p+0x114),*(int *)(p+0x118),copy.x,copy.y);
+        }
+        if(c.players){int count=*(int *)(c.players+0x10);unsigned moving=0,flying=0;
+            if(count>0&&count<=32)for(int i=0;i<count;i++){uint8_t *p=*(uint8_t **)(c.players+0x18+i*8);if(p&&*(int64_t *)(p+0x68)>0){if(p[PLAYER_MOVING])moving|=1U<<i;if(p[PLAYER_FLIGHT])flying|=1U<<i;}}
+            AGTurnTrace(v,4,"actors count=%d movingMask=%x flyingMask=%x",count,moving,flying);
+        }
+    }
     if(!active(&c)||!c.ufo){AGTurnStatusUpdate(v,0);return;}
     if(!copy.enabled){AGTurnStatusUpdate(v,10);return;}
     if(!copy.valid){AGTurnStatusUpdate(v,1);return;}
