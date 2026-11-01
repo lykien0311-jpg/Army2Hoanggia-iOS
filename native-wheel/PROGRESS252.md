@@ -25,3 +25,12 @@ The overlay never becomes key and passes all touches through.
 The auto, native handoff and native waits retain Build251 behavior. Diagnostic
 state does not grant a turn, complete an effect, or issue a shot. Actual device
 observations are required before choosing the next gameplay change.
+
+Apple workflow41282489953 at head6e2a5dd904871cb1aa83c41a574aa8223e8fd899
+(merge810863dfa2f849243de89682dea3b3b1b2b61eda) passed signing/re-signing,
+retained UIKit checks, and the diagnostic layout/touch checks. The packaged
+dylib is byte-identical to the one tested for48 read-only diagnostic and
+60 encounter/12 completion cases. The final IPA changes the dylib and build
+version only;523 other entries, including the native main, match251.
+SHA256c670745855963e24cd29d87edbea59687f5823828ccc50c892037977030c0460.
+This records the test artifact, not a claim that the real-device stall is fixed.
