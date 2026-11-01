@@ -55,7 +55,7 @@ def hook(uc,addr,size,data):
         name=next(k for k,v in CALLBACKS.items()if v==addr)
         calls.append((name,tuple(U.reg_read(r)for r in X[:(8 if name.startswith('AGNotes') else 3)])))
         for reg in X[:18]:U.reg_write(reg,0xbeef)
-        returned(roomHandled if name in ('AGRoomReceive','AGNotesInput','AGNotesSettings') else 0)
+        returned(roomHandled if name in ('AGRoomReceive','AGNotesInput','AGNotesSettings','AGTurnChange') else 0)
     elif addr==speedAddr:
         assert U.reg_read(X[0])==ENV;calls.append(('speed',));returned(7)
     elif addr==buildAddr:

@@ -574,6 +574,7 @@ def build_native(old,original,maps):
             ldp x0, x1, [sp, #16]
             mov w2, #{i}
             blr x10
+            cbz w0, deferred_change
             b changed
           native_change:
             ldp x0, x1, [sp, #16]
@@ -581,6 +582,9 @@ def build_native(old,original,maps):
           changed:
             ldp x29, x30, [sp], #48
             ret
+          deferred_change:
+            ldp x29, x30, [sp], #48
+            b {change['return_site']}
         """)
         assert original[change['site']:change['site']+4]==asm(f"bl {change['original']}",change['site'])
         patch(change['site'],asm(f'bl {change_hook}',change['site']),f'V{i+1} serialize UFO native turn handoff after previous effects')

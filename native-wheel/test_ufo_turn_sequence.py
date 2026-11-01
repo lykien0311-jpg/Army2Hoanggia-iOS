@@ -25,6 +25,17 @@ def init_native(s,v):
     empty=t.alloc(0x20);t.put(s['g']+0x148,'<Q',empty)
     w.primitives[B+w.branch(body+0x34)]=lambda:empty
     s['empty']=empty
+    counter=t.alloc(0x200);t.put(s['g']+0xe0,'<Q',counter);s['counter']=counter
+    controller=t.alloc(0x200);t.put(B+changes[v]['controller_class'],'<Q',controller)
+    t.put(B+changes[v]['controller_class']+9,'<B',2);s['controller']=controller
+    w.primitives[B+changes[v]['input_reset']]=lambda:w.phase_log.append(('input_reset',v))
+    entry=w.t.maps[v]['controller']
+    w.redirects[B+entry+0xc8]=B+changes[v]['case_entry']
+    # Device I/O primitive: the unchanged message reader and case body run.
+    def read_byte():
+        stream=w.r(1);a=t.get(stream+0x10,'<Q');pos=t.get(stream+0x20,'<i')
+        value=t.get(a+0x14+pos,'<b');t.put(stream+0x20,'<i',pos+1);return value
+    w.primitives[B+0xa63e54]=read_byte
     hud=t.alloc(0x200);camera=t.alloc(0x200)
     w.primitives[B+w.branch(body+0x290)]=lambda:hud
     w.primitives[B+w.branch(body+0x2a4)]=lambda:w.phase_log.append(('timer',v))
@@ -68,9 +79,13 @@ def finish_flight(s,v):
 
 def owner(v,who,num):
     ticket=900000+num
-    w.receive(v,24,bytes([who])+struct.pack('>IiQ',1429485652,num,ticket))
-    # Execute the actual installed call-site hook, including its fallback.
-    w.call_address(B+changes[v]['hook'],t.ENV,who)
+    wire=bytes([who])+struct.pack('>IiQ',1429485652,num,ticket)
+    msg=t.message(wire);t.put(msg+0x30,'<B',24)
+    this=t.alloc(0x20)
+    # Original dispatcher frame/exception context, message reader, busy reset,
+    # installed handoff hook and the actual command24 tail all execute.
+    w.call_address(B+w.t.maps[v]['controller'],t.ENV,this,msg)
+    stream=t.get(msg+0x20,'<Q');assert t.get(stream+0x20,'<i')==1
     return ticket
 
 def aim(v,num):
@@ -86,7 +101,7 @@ for v in range(6):
         s=w.setup(v,room);p=s['p'];init_native(s,v);prepare_notifications(v)
         w.packets.clear();w.phase_log.clear()
         # The local player remains index2 while the native current actor is8.
-        owner(v,8,10);assert t.get(s['g']+0x266,'<B')==2
+        owner(v,8,10);w.pulse(v);assert t.get(s['g']+0x266,'<B')==2
         assert t.get(s['ag']+0xd0,'<B')==8,(v,room,t.get(s['ag']+0xd0,'<B'),w.phase_log)
         w.settle(v);assert not w.packets;counts+=1
         for num in (11,13,15):
@@ -96,15 +111,19 @@ for v in range(6):
             w.call_address(B+flight_start[v],t.ENV,s['boss'],x,y)
             assert t.get(s['boss']+0x14e,'<B')==1
             t.put(s['proj']+0x118,'<B',1)
+            t.put(s['counter']+0x4c,'<i',77);t.put(s['controller']+0xb0,'<B',1)
             owner(v,2,num);aim(v,num);w.packets.clear()
             for _ in range(4):w.settle(v)
             assert t.get(s['ag']+0xd0,'<B')==8,('early native handoff',v,room,num)
             assert not w.packets,('shot during UFO',v,room,num)
+            assert t.get(s['counter']+0x4c,'<i')==77,'Native tail reset projectile counter too early'
+            assert t.get(s['controller']+0xb0,'<B')==1
             finish_flight(s,v);w.settle(v)
             assert t.get(s['ag']+0xd0,'<B')==8 and not w.packets,('projectile still active',v)
             finish_projectile(s,v);w.pulse(v)
             assert t.get(s['ag']+0xd0,'<B')==2
             assert t.get(s['g']+0x266,'<B')==2
+            assert t.get(s['counter']+0x4c,'<i')==0 and t.get(s['controller']+0xb0,'<B')==0
             assert not w.packets
             settle_local(s,v)
             t.put(p+0x172,'<B',100)
@@ -129,3 +148,17 @@ for v in range(6):
         assert w.packets==[w.expected(0)],('postponed handoff',v,room,w.packets)
         counts+=1
 print('PASS:',counts,'ARM64 encounter sequences across both UFO rooms and all six variants; real native ownership, flight/projectile completion, gravity, POW then shot, no overlapping turns')
+# Elapsed time must not bypass a still-active UFO effect. The controlled JVM
+# wait clears the predicate only after6.4s, beyond the removed5s shortcut.
+wait_cases=0
+for v in range(6):
+    s=w.setup(v);monitor=t.alloc(0x20)
+    w.watched=s['proj']+0x118;t.put(w.watched,'<B',1)
+    w.clear_after=400;w.timed.clear();w.legacy.clear();before=t.now
+    w.call('AGTurnAwait',t.ENV,monitor,v,0,8)
+    assert len(w.timed)==400 and t.now-before>6.39,(v,len(w.timed),t.now-before)
+    wait_cases+=1
+    t.put(s['room']+0x130,'<B',3);w.timed.clear();w.legacy.clear()
+    w.call('AGTurnAwait',t.ENV,monitor,v,0,8)
+    assert w.legacy==[(t.ENV,monitor)] and not w.timed;wait_cases+=1
+print('PASS:',wait_cases,'UFO completion-over-timeout and unchanged other-room native waits')

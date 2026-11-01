@@ -57,3 +57,26 @@ for t.missing in (False,True):
     assert bool(cb)==(not t.missing)
     cases+=1
 print('PASS:',cases,'native post-update, predicate wait and keypad projection hook ABI/fallback cases')
+
+# New command24 handoff call sites, including missing-module fallback.
+t.CALLBACKS['AGTurnChange']=0x300013000
+t.roomHandled=1
+change_original=0;fallback_owner=[]
+def change_hook(uc,pc,size,_):
+    if pc==change_original:
+        fallback_owner.append(tuple(U.reg_read(r)for r in X[:2]));t.returned()
+U.hook_add(t.UC_HOOK_CODE,change_hook)
+change_cases=0
+body=t.continuation=t.speedAddr=t.buildAddr=0
+for entry in R.get('turn_change_hooks',[]):
+    change_original=B+entry['original']
+    for t.missing in (False,True):
+        for actor in (2,8):
+            t.reset();fallback_owner.clear();U.reg_write(X[1],actor)
+            U.emu_start(B+entry['hook'],t.STOP+4,count=2000);t.preserved()
+            cb=[c for c in t.calls if c[0]=='AGTurnChange']
+            assert bool(cb)==(not t.missing)
+            if cb:assert cb[0][1]==(t.ENV,actor,entry['variant'])
+            assert fallback_owner==([(t.ENV,actor)]if t.missing else [])
+            change_cases+=1
+print('PASS:',change_cases,'native turn-handoff hook ABI, original fallback and player/UFO actor indices')

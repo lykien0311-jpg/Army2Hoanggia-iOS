@@ -28,7 +28,7 @@ for seg in main.segments:
 packets=[];commands={};writer_commands={};fail_command=None;blocked=0;wheel=0
 legacy=[];timed=[];watched=0;clear_after=3;leave_canvas=0
 continuation=0;first=0
-primitives={};phase_log=[];settling=False;settle_calls={};flying=False;flight_calls={}
+primitives={};redirects={};phase_log=[];settling=False;settle_calls={};flying=False;flight_calls={}
 
 def r(n):return U.reg_read(X[n])
 def branch(a):
@@ -39,6 +39,8 @@ def branch(a):
 
 def hook(uc,pc,size,_):
     global fail_command
+    if pc in redirects:
+        U.reg_write(X[19],t.ENV);U.reg_write(UC_ARM64_REG_PC,redirects[pc]);return
     if settling and pc in settle_calls:t.ret(settle_calls[pc]);return
     if flying and pc in flight_calls:
         fn=flight_calls[pc];t.ret(fn() if callable(fn) else fn);return

@@ -63,6 +63,8 @@ static int effectsBusy(const Context *c){
     return 0;
 }
 static const uintptr_t changeTurn[6]={0x5126e8,0x600438,0x6e50fc,0x7c9dc0,0x8aea84,0x993748};
+static const uintptr_t controllerClass[6]={0x2081150,0x20b0950,0x20de640,0x210c330,0x213a020,0x2167d10};
+static const uintptr_t resetInput[6]={0x50c264,0x5fa2fc,0x6defc0,0x7c3c84,0x8a8948,0x98d60c};
 typedef struct {int v,owner;Context c;} NativeChange;
 static int changeNative(void *env,void *opaque){
     NativeChange *j=opaque;
@@ -76,6 +78,15 @@ static int changeNative(void *env,void *opaque){
     if(!g||(int8_t)g[0xd0]!=j->owner){
         if(j->c.playerGlobals)j->c.playerGlobals[0x1a7]=1;
         return 0;
+    }
+    /* The rest of command24 is deferred with ownership: resetting this
+     * projectile/HUD counter early can restart the preceding UFO effect. */
+    uint8_t *projectile=j->c.globals?*(uint8_t **)(j->c.globals+0xe0):NULL;
+    if(projectile)*(int *)(projectile+0x4c)=0;
+    uint8_t *controller=*(uint8_t **)((uintptr_t)_dyld_get_image_header(0)+controllerClass[j->v]);
+    if(controller&&controller[0xb0]){
+        controller[0xb0]=0;
+        void (*reset)(void *)=(void *)((uintptr_t)_dyld_get_image_header(0)+resetInput[j->v]);reset(env);
     }
     return 1;
 }
@@ -94,21 +105,23 @@ static void applyNativeTurn(void *env,int v){
 /* Replaces only the original command24 call to PlayerManager.changeTurn.
  * This defers the native HUD/input handoff too, not merely the auto packet.
  * The original method runs unchanged after the previous effects complete. */
-__attribute__((visibility("default"))) void AGTurnChange(void *env,int owner,int v){
-    if(!env||v<0||v>=6)return;Context c={.v=v};int ok=getContext(env,&c);
+__attribute__((visibility("default"))) int AGTurnChange(void *env,int owner,int v){
+    if(!env||v<0||v>=6)return 1;Context c={.v=v};int ok=getContext(env,&c);
     pthread_mutex_lock(&autoMutex);int enabled=autos[v].enabled,ufo=c.ufo||autos[v].valid;
     pthread_mutex_unlock(&autoMutex);
     if(ok<=0||!active(&c)||!ufo||!enabled){
         void (*change)(void *,int)=(void *)((uintptr_t)_dyld_get_image_header(0)+changeTurn[v]);
         change(env,owner);
         pthread_mutex_lock(&autoMutex);nativeTurns[v].owner=owner;
-        nativeTurns[v].applied=nativeTurns[v].sequence;pthread_mutex_unlock(&autoMutex);return;
+        nativeTurns[v].applied=nativeTurns[v].sequence;pthread_mutex_unlock(&autoMutex);return 1;
     }
     pthread_mutex_lock(&autoMutex);NativeTurn *n=&nativeTurns[v];
     n->connection=c.connection;n->arena=(uintptr_t)c.arena;n->owner=owner;n->pending=1;n->applying=0;
     pthread_mutex_unlock(&autoMutex);
-    if(effectsBusy(&c)&&c.playerGlobals)c.playerGlobals[0x1a7]=1;
-    applyNativeTurn(env,v);
+    if(c.playerGlobals)c.playerGlobals[0x1a7]=1;
+    /* Return to the dispatcher without executing its tail. The original
+     * change and tail both run on a subsequent game update after completion. */
+    return 0;
 }
 __attribute__((visibility("default"))) void AGTurnReceive(void *env,void *message,int v){
     if(!env||!message||v<0||v>=6)return;

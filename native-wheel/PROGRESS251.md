@@ -32,3 +32,17 @@ a postponed native status-string handoff adds a separate regression.
 
 Final Apple provenance and package checks are recorded in validation251.json.
 No physical iPhone or production VPS execution is claimed by these fixtures.
+
+The complete command24 tail is part of the deferred handoff. The original
+handler otherwise resets the projectile/HUD counter after changeTurn returns,
+which can still alter the preceding UFO effect even when ownership was queued.
+The installed hook now returns through the original dispatcher epilogue for a
+deferred turn. Its original changeTurn and the exact counter/input-reset tail
+run together on the game update after effects complete. Non-UFO and missing-
+module fallback paths retain the original native call and tail.
+
+The final encounter driver executes the original command24 frame, message
+reader, busy reset, handoff call site and tail. Only command selection (already
+known from the test packet) bypasses the unrelated switch branches. It checks
+that counter/input state stays unchanged during the UFO's active attack and
+resets only when the original native player turn is applied.
