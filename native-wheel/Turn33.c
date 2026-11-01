@@ -69,7 +69,15 @@ static int changeNative(void *env,void *opaque){
     if(!active(&j->c)||effectsBusy(&j->c))return 0;
     if(j->c.playerGlobals)j->c.playerGlobals[0x1a7]=0;
     void (*change)(void *,int)=(void *)((uintptr_t)_dyld_get_image_header(0)+changeTurn[j->v]);
-    change(env,j->owner);return 1;
+    change(env,j->owner);
+    /* The original method may postpone changing turns while its native
+     * status/chat string is nonempty. A returned call is not a handoff. */
+    uint8_t *g=*(uint8_t **)((uintptr_t)_dyld_get_image_header(0)+AGTurnMaps[j->v].array_class);
+    if(!g||(int8_t)g[0xd0]!=j->owner){
+        if(j->c.playerGlobals)j->c.playerGlobals[0x1a7]=1;
+        return 0;
+    }
+    return 1;
 }
 static void applyNativeTurn(void *env,int v){
     Context c={.v=v};if(getContext(env,&c)<=0||!active(&c)||effectsBusy(&c))return;
