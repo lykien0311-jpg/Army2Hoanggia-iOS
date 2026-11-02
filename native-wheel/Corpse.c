@@ -80,11 +80,11 @@ __attribute__((visibility("default"))) int AGCorpseUpdate(void *env,void *actor,
     CorpseContext c={.variant=v};if(getContext(env,&c)<=0||!airshipRoom(&c))return 0;
     int index=(int8_t)p[0x16b];
     if(index<8||index>=c.count||*(uint8_t **)(c.players+0x18+index*8)!=p)return 0;
-    // The native projectile hurt method can overwrite death5 with hurt8 after
-    // the HP packet. Bypassing Player.update then prevents its hurt -> death
-    // transition forever. The arena counts gravity && state!=5 as an active
-    // actor and withholds endShoot23. Keep a confirmed corpse in native death
-    // state, including the death frame/status cleanup, on every update.
+    // A native turn handoff can reset death5 to idle0 if it targets a part
+    // whose death arrived earlier. Bypassing Player.update then preserves that
+    // stale live state. The arena counts gravity && state!=5 as an active actor
+    // and withholds endShoot23. Keep a confirmed corpse in native death state,
+    // including the death frame/status cleanup, on every update.
     if(p[0x16f]!=5){p[0x16f]=5;*(int *)(p+0xbc)=7;p[0x15f]=0;p[0x160]=0;}
     // A corpse has no live-flight/walking completion branch. Only the marked
     // server destination controls its animation; landed corpses are settled.
