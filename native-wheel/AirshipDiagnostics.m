@@ -11,7 +11,7 @@ static double shipNow(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);
 static NSString *shipText(AGShipTrace d){
     double now=shipNow();
     NSMutableString *s=[NSMutableString stringWithFormat:
-        @"B260 • ĐO LỖI KHÍ CẦU • quay rõ toàn bảng\nV%d R%d A%d E%d | Server #%d → IPA #%d | Cam #%d m%d\n"
+        @"B261 • ĐO LỖI KHÍ CẦU • quay rõ toàn bảng\nV%d R%d A%d E%d | Server #%d → IPA #%d | Cam #%d m%d\n"
         "RX24=%llu RX93=%llu cmd=%d/%d | tick=%llu\n"
         "Đạn=%d ACK=%d FX=%d P=%d/%d | CHỜ=%d:%d/#%d\n"
         "Cập nhật %.1fs | nhận %.1fs | chờ %.1fs\n"
@@ -38,7 +38,7 @@ static UILabel *shipLabel(void){
     l.font=[UIFont monospacedDigitSystemFontOfSize:9 weight:UIFontWeightMedium];
     l.textColor=UIColor.whiteColor;l.backgroundColor=[UIColor.blackColor colorWithAlphaComponent:.82];
     l.layer.cornerRadius=4;l.clipsToBounds=YES;l.userInteractionEnabled=NO;
-    l.accessibilityLabel=@"Bảng đo lỗi khí cầu Build260";return l;
+    l.accessibilityLabel=@"Bảng đo lỗi khí cầu Build261";return l;
 }
 static dispatch_queue_t shipLogQueue(void){
     static dispatch_queue_t queue;static dispatch_once_t once;
@@ -51,7 +51,7 @@ static void shipLog(AGShipTrace d){
     NSString *text=shipText(d);NSString *stamp=NSDate.date.description;
     dispatch_async(shipLogQueue(),^{@autoreleasepool{
         NSString *dir=NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject;
-        if(!dir)return;NSString *path=[dir stringByAppendingPathComponent:@"KhiCau-B260.txt"];
+        if(!dir)return;NSString *path=[dir stringByAppendingPathComponent:@"KhiCau-B261.txt"];
         NSData *line=[[NSString stringWithFormat:@"\n%@\n%@\n",stamp,text]dataUsingEncoding:NSUTF8StringEncoding];
         if(![NSFileManager.defaultManager fileExistsAtPath:path])
             [NSFileManager.defaultManager createFileAtPath:path contents:nil attributes:nil];
@@ -112,8 +112,8 @@ __attribute__((visibility("default"))) void AGShipDiagnosticsPreviewCheck(void){
     UIImage *image=UIGraphicsGetImageFromCurrentImageContext();UIGraphicsEndImageContext();
     NSString *dir=NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject;
     shipLog(d);dispatch_sync(shipLogQueue(),^{});
-    NSString *log=[NSString stringWithContentsOfFile:[dir stringByAppendingPathComponent:@"KhiCau-B260.txt"]encoding:NSUTF8StringEncoding error:nil];
-    NSCAssert([log containsString:@"B260"],@"Airship diagnostic log was written");
+    NSString *log=[NSString stringWithContentsOfFile:[dir stringByAppendingPathComponent:@"KhiCau-B261.txt"]encoding:NSUTF8StringEncoding error:nil];
+    NSCAssert([log containsString:@"B261"],@"Airship diagnostic log was written");
     [UIImagePNGRepresentation(image)writeToFile:[dir stringByAppendingPathComponent:@"airship-diagnostics.png"]atomically:YES];
     NSDictionary *result=@{@"passed":@YES,@"touch_passthrough":@YES,@"widths":@[@320,@390,@844],
         @"airship_room_or_active_stage_only":@YES,@"local_log_written":@YES,

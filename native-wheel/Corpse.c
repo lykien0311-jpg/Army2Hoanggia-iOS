@@ -53,7 +53,8 @@ __attribute__((visibility("default"))) int AGCorpseReceive(void *env,void *messa
     int capacity=*(int *)(array+0x10),length=*(int *)(input+0x18),pos=*(int *)(input+0x20);
     if(capacity<0||length<0||length>capacity||pos<0||pos>length||length-pos!=10)return 0;
     const uint8_t *p=array+0x14+pos;
-    if(p[5]!=0x43||p[6]!=0x50||p[7]!=0x52||p[8]!=0x39)return 0;
+    // Both reference JAR and server constant-pool entries are1129329721.
+    if(p[5]!=0x43||p[6]!=0x50||p[7]!=0x34||p[8]!=0x39)return 0;
     CorpseContext c={.variant=v};if(getContext(env,&c)<=0||!airshipRoom(&c))return 0;
     int actor=p[0];if(actor<8||actor>=c.count)return 1;
     uint8_t *player=*(uint8_t **)(c.players+0x18+actor*8);
@@ -73,17 +74,17 @@ __attribute__((visibility("default"))) int AGCorpseUpdate(void *env,void *actor,
     uint8_t *p=actor;
     if(!airshipPart(p))return 0;
     if(*(int64_t *)(p+0x68)>0){
-        int i=(int8_t)p[0x16b];
-        if(i>=8&&i<127){pthread_mutex_lock(&corpseMutex);
-            if(motions[v][i].player==p)memset(&motions[v][i],0,sizeof(motions[v][i]));
-            pthread_mutex_unlock(&corpseMutex);
-        }return 0;
+        pthread_mutex_lock(&corpseMutex);
+        for(int i=8;i<127;i++)if(motions[v][i].player==p)memset(&motions[v][i],0,sizeof(motions[v][i]));
+        pthread_mutex_unlock(&corpseMutex);return 0;
     }
     CorpseContext c={.variant=v};if(getContext(env,&c)<=0||!airshipRoom(&c))return 0;
-    int index=(int8_t)p[0x16b];
-    int belongs=index>=8&&index<c.count&&*(uint8_t **)(c.players+0x18+index*8)==p;
-    AGShipTraceCorpse(v,index,p[0x16c],belongs);
-    if(!belongs)return 0;
+    // Real airship NPCs all have field16b==0 (37532.mp4); the server packet
+    // addresses the roster slot, not this actor field. Resolve by identity.
+    int index=-1;
+    for(int i=8;i<c.count;i++)if(*(uint8_t **)(c.players+0x18+i*8)==p){index=i;break;}
+    AGShipTraceCorpse(v,index,p[0x16c],index>=8);
+    if(index<8)return 0;
     // A native turn handoff can reset death5 to idle0 if it targets a part
     // whose death arrived earlier. Bypassing Player.update then preserves that
     // stale live state. The arena counts gravity && state!=5 as an active actor

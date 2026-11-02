@@ -1,0 +1,23 @@
+{
+  "wire_command": 93,
+  "wire_length": 10,
+  "magic_decimal": 1129329721,
+  "magic_hex": "43503439",
+  "source_constants": [
+    {
+      "jar": "reference-client.jar",
+      "class": "game/Client497.class",
+      "class_sha256": "b9af2348ee16f79fc0deea2dfc0ce94b32d1f5d89939c1dc0034996c129d8e9f",
+      "constant_pool_index": 56
+    },
+    {
+      "jar": "server.jar",
+      "class": "army2/fight/Corpse497.class",
+      "class_sha256": "fbf937258d6cd47873304ce86e0ba97d088cd1f10ccaa81c5d1ac370b0eb484e",
+      "constant_pool_index": 134
+    }
+  ],
+  "native_video": "37532.mp4",
+  "native_video_actor_slot": 10,
+  "native_video_actor_field16b": 0
+}

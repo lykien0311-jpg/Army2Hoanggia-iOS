@@ -57,7 +57,7 @@ for v,m in enumerate(turns):
     # the ambiguity the recording must expose. Never apply that turn here.
     receive(v,24,b'\x0a'+struct.pack('>IiQ',1429485652,17,900017));d=trace(v)
     assert (d.serverOwner,d.serverTurn,d.owner,d.cameraActor)==(10,17,8,8);cases+=1
-    receive(v,93,struct.pack('>BhhIB',9,440,640,0x43505239,1));d=trace(v)
+    receive(v,93,struct.pack('>BhhIB',9,440,640,int(json.loads((R/'corpse-protocol-reference.json').read_text())['magic_decimal']),1));d=trace(v)
     assert (d.corpsePacketActor,d.corpseTargetX,d.corpseTargetY,d.corpseRemove)==(9,440,640,1);cases+=1
     t.call('_AGShipTraceWait',v,3,9,1);t.call('_AGShipTraceCorpse',v,0,18,0);d=trace(v)
     assert (d.waitActive,d.waitKind,d.waitActor,d.corpseHandled)==(1,3,9,0) and d.corpseRejected>0;cases+=1

@@ -1,4 +1,4 @@
-/* B260 diagnostic: copy numeric observations only; never drive combat. */
+/* Airship diagnostic: copy numeric observations only; never drive combat. */
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
@@ -89,7 +89,7 @@ void AGShipTraceReceive(void *env,void *message,int v){
             d->serverTurn=(int32_t)((uint32_t)p[5]<<24|(uint32_t)p[6]<<16|(uint32_t)p[7]<<8|p[8]);
     }
     if(cmd==93){d->flights++;
-        if(n==10&&p[5]==0x43&&p[6]==0x50&&p[7]==0x52&&p[8]==0x39){
+        if(n==10&&p[5]==0x43&&p[6]==0x50&&p[7]==0x34&&p[8]==0x39){
             d->corpsePacketActor=p[0];d->corpseTargetX=(int16_t)((p[1]<<8)|p[2]);
             d->corpseTargetY=(int16_t)((p[3]<<8)|p[4]);d->corpseRemove=!!p[9];
         }

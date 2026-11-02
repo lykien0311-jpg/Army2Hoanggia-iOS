@@ -5,7 +5,7 @@ Service.endShoot and turn changer/camera setter in ARM64. JVM virtual dispatch
 for unrelated living actors, HUD, session send and message close are controlled.
 No physical iPhone, live server or forced-turn timeout is involved.
 """
-import json,struct
+import json,struct,re
 import capstone
 import ufo_native_encounter as n
 from unicorn import UC_HOOK_CODE
@@ -13,6 +13,11 @@ from unicorn.arm64_const import *
 w=n.w;t=n.t;U=n.U;B=n.B;R=t.ROOT;raw=n.raw;X=w.X
 presentation=json.loads((R/'presentation-map.json').read_text())
 worlds=[p['arena_updates'][1]['entry'] for p in presentation]
+vtables=[]
+for h in w.report['corpse_hooks']:
+    refs=[m.start()for m in re.finditer(re.escape(struct.pack('<Q',B+h['update'])),raw)]
+    assert len(refs)==2
+    vtables.append(B+min(refs)-0x90)
 stop=0;dispatch={};current=None
 for v,a in enumerate(worlds):
     dispatch[B+w.branch(a+0xb7c)]=v # virtual Player.update
@@ -24,7 +29,7 @@ def hook(uc,pc,size,opaque):
     if pc in dispatch:
         v=dispatch[pc]
         if w.r(1)==current['boss']:
-            U.reg_write(UC_ARM64_REG_PC,B+w.report['corpse_hooks'][v]['update'])
+            return # Execute the unchanged native virtual dispatcher/vtable.
         else:t.ret() # unrelated living Player.update boundary
         return
     w.hook(uc,pc,size,opaque)
@@ -63,7 +68,7 @@ def camera_fixture(s,v):
     s.update(camera=camera,camera_global=glob)
 
 def corpse_packet(s,v,y=320,remove=0):
-    msg=t.message(struct.pack('>BhhIB',8,500,y,0x43505239,remove));t.put(msg+0x30,'<B',93)
+    msg=t.message(struct.pack('>BhhIB',8,500,y,int(json.loads((R/'corpse-protocol-reference.json').read_text())['magic_decimal']),remove));t.put(msg+0x30,'<B',93)
     before=t.get(t.get(msg+0x20,'<Q')+0x20,'<i')
     w.call_address(B+t.maps[v]['controller'],t.ENV,t.alloc(0x20),msg)
     assert t.get(t.get(msg+0x20,'<Q')+0x20,'<i')==before
@@ -73,7 +78,8 @@ for v in range(6):
     for room in (10,14,15):
         for typ in (17,18,19,20,21):
             s=w.setup(v,room);n.init_native(s,v);camera_fixture(s,v)
-            a=s['boss'];t.put(a+0x16b,'<B',8);t.put(a+0x16c,'<B',typ)
+            a=s['boss'];t.put(a+0x16b,'<B',0);t.put(a+0x16c,'<B',typ)
+            klass=t.alloc(0x80);t.put(klass+0x28,'<Q',vtables[v]);t.put(a,'<Q',klass)
             t.put(a+0x68,'<q',0);t.put(a+0x16f,'<B',5);t.put(a+0x159,'<B',1)
             t.put(B+w.notes[v]['canvas']+9,'<B',2);t.put(B+w.notes[v]['room_class']+9,'<B',2)
             # A real native handoff to an actor whose death arrived earlier
@@ -121,6 +127,7 @@ result=dict(passed=True,variants=6,rooms=[10,14,15],characters=[17,18,19,20,21],
     native_turn_reset_reproduces_dead_to_idle=True,native_completion_packet=23,
     native_camera_owner_after_server_turn=2,duplicate_completion_packets=0,
     living_moving_actor_still_blocks_completion=True,
+    native_actor_field16b=0,original_virtual_dispatch_and_vtable=True,
     landed_corpses_rearm_gravity=False,synthetic_turns=0,
     physical_device_tested=False,live_requests=0)
 (R/'build/corpse-turn-check.json').write_text(json.dumps(result,indent=2)+'\n')

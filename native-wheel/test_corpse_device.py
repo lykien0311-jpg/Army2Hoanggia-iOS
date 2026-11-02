@@ -46,6 +46,12 @@ def execute(pc,*args,extra=()):
 def branch(a):
     w=struct.unpack_from('<I',raw,a)[0];assert w&0xfc000000==0x94000000
     n=w&0x3ffffff;return a+4*(n-(1<<26)if n&(1<<25)else n)
+virtuals=[branch(p['arena_updates'][1]['entry']+0xb7c)for p in json.loads((R/'presentation-map.json').read_text())]
+vtables=[]
+for h in report['corpse_hooks']:
+    refs=[m.start()for m in re.finditer(re.escape(struct.pack('<Q',B+h['update'])),raw)]
+    assert len(refs)==2
+    vtables.append(B+min(refs)-0x90)
 def setup(v,room=10,capacity=100,index=64,typ=18):
     s={n:t.alloc(size) for n,size in [('g',0x400),('pg',0x400),('ag',0x200),('arena',0x200),
       ('canvas',0x300),('room',0x200),('proj',0x200),('roster',0x18+8*capacity),('actor',0x240)]}
@@ -56,7 +62,8 @@ def setup(v,room=10,capacity=100,index=64,typ=18):
     t.put(s['g']+0xe8,'<Q',s['arena']);t.put(s['g']+0x266,'<B',2)
     t.put(s['canvas']+0xb8,'<Q',s['arena']);t.put(s['ag']+0xa0,'<Q',s['roster'])
     t.put(s['roster']+0x10,'<i',capacity);t.put(s['roster']+0x18+8*index,'<Q',s['actor'])
-    t.put(s['actor']+0x16b,'<B',index);t.put(s['actor']+0x16c,'<B',typ);t.put(s['actor']+0x16f,'<B',5)
+    t.put(s['actor']+0x16b,'<B',0);t.put(s['actor']+0x16c,'<B',typ);t.put(s['actor']+0x16f,'<B',5)
+    klass=t.alloc(0x80);t.put(klass+0x28,'<Q',vtables[v]);t.put(s['actor'],'<Q',klass)
     t.put(s['actor']+0x159,'<B',1);t.put(s['actor']+0x114,'<i',300);t.put(s['actor']+0x118,'<i',100)
     U.mem_write(s['room']+0x130,bytes([room,5]));t.put(t.SERVICE+0x10,'<Q',t.SESSION)
     s.update(index=index,variant=v);return s
@@ -67,10 +74,10 @@ def packet(s,wire,cmd=93,prefix=b''):
     stop=execute(B+entry,t.ENV,t.HEAP+0x9000,msg,extra=[observe_controller])
     assert bytes(U.mem_read(stream,0x30))==saved,'Observer changed the original byte reader'
     return stop==t.STOP
-def wire(s,x=320,y=320,remove=0):return struct.pack('>BhhIB',s['index'],x,y,0x43505239,remove)
+def wire(s,x=320,y=320,remove=0):return struct.pack('>BhhIB',s['index'],x,y,int(json.loads((R/'corpse-protocol-reference.json').read_text())['magic_decimal']),remove)
 def step(s):
     v=s['variant'];a=report['corpse_hooks'][v]['update']
-    return execute(B+a,t.ENV,s['actor'],extra=[B+a+4])==t.STOP
+    return execute(B+virtuals[v],t.ENV,s['actor'],extra=[B+a+4])==t.STOP
 def changed_code(a,data):U.mem_write(B+a,data);U.ctl_remove_cache(B+a,B+a+len(data))
 
 old_cases=new_cases=fallback_cases=0
@@ -142,7 +149,8 @@ for v,mp in enumerate(report['corpse_hooks']):
 result=dict(passed=True,variants=6,old_native_detached_part_flight_stalls=old_cases,
     marked_packet_and_full_fall_sequences=new_cases,stale_live_normal_UFO_and_reset_cases=fallback_cases,
     rooms=[10,14,15],characters=[17,18,19,20,21],roster_capacities=[9,100,127],
-    wire_command=93,wire_length=10,wire_magic='43505239',native_reader_unchanged=True,
+    wire_command=93,wire_length=10,wire_magic=json.loads((R/'corpse-protocol-reference.json').read_text())['magic_hex'],native_reader_unchanged=True,
     no_wait_during_corpse_motion=True,subsequent_controller_packets_reachable=True,
-    animation_matches_JAR_acceleration_and_destination=True,physical_device_tested=False,live_requests=0)
+    animation_matches_JAR_acceleration_and_destination=True,native_actor_field16b=0,
+    original_virtual_dispatch_and_vtable=True,physical_device_tested=False,live_requests=0)
 (R/'build/corpse-device-check.json').write_text(json.dumps(result,indent=2)+'\n');print('PASS',result)
