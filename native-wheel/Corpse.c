@@ -8,6 +8,7 @@
 #include "NativeMap.h"
 #include "NotesMap.h"
 #include "TurnMap.h"
+#include "ShipTrace.h"
 extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
 typedef struct {
     uintptr_t connection;
@@ -43,6 +44,7 @@ static int airshipPart(const uint8_t *p){return p&&p[0x16c]>=17&&p[0x16c]<=21;}
 static int shortBE(const uint8_t *p){return (int16_t)((p[0]<<8)|p[1]);}
 __attribute__((visibility("default"))) int AGCorpseReceive(void *env,void *message,int v){
     if(!env||!message||v<0||v>=6)return 0;
+    AGShipTraceReceive(env,message,v);
     int command=*(int8_t *)((uint8_t *)message+0x30);
     if(command==20){pthread_mutex_lock(&corpseMutex);memset(motions[v],0,sizeof(motions[v]));pthread_mutex_unlock(&corpseMutex);return 0;}
     if(command!=93)return 0;
@@ -79,7 +81,9 @@ __attribute__((visibility("default"))) int AGCorpseUpdate(void *env,void *actor,
     }
     CorpseContext c={.variant=v};if(getContext(env,&c)<=0||!airshipRoom(&c))return 0;
     int index=(int8_t)p[0x16b];
-    if(index<8||index>=c.count||*(uint8_t **)(c.players+0x18+index*8)!=p)return 0;
+    int belongs=index>=8&&index<c.count&&*(uint8_t **)(c.players+0x18+index*8)==p;
+    AGShipTraceCorpse(v,index,p[0x16c],belongs);
+    if(!belongs)return 0;
     // A native turn handoff can reset death5 to idle0 if it targets a part
     // whose death arrived earlier. Bypassing Player.update then preserves that
     // stale live state. The arena counts gravity && state!=5 as an active actor

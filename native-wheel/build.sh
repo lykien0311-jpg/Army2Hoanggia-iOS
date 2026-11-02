@@ -14,7 +14,7 @@ xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=1
   -Wno-unused-parameter -Wno-deprecated-declarations -Wno-unused-function \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
   -Wl,-headerpad,4000 -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
-  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c NativeGuard.S \
+  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c ShipTrace.c AirshipDiagnostics.m NativeGuard.S \
   -o build/AGWheel.dylib
 codesign --force --sign - --timestamp=none build/AGWheel.dylib
 codesign --verify --strict --verbose=2 build/AGWheel.dylib 2>build/code-signing.txt
@@ -34,6 +34,7 @@ for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoo
 assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
 assert '_AGReleaseIdentity' in exports and b'2.4.1-HG78-IPA\0' in p.read_bytes()
 assert '_AGUfoDiagnosticsGet' in exports
+assert '_AGShipTraceGet' in exports and b'AGShipDiagnosticWindow' in p.read_bytes()
 for diagnostic_ui in (b'AGUfoDiagnosticWindow',b'AutoUFO-Build253.txt','B253 •'.encode()):
     assert diagnostic_ui not in p.read_bytes(),'Diagnostic overlay in device dylib'
 info={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
@@ -58,7 +59,7 @@ xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wno-deprecated-declarations \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
   -Wl,-headerpad,4000 -Wl,-install_name,@rpath/libAGWheelPreview.dylib \
-  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c \
+  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c ShipTrace.c AirshipDiagnostics.m \
   -o build/WheelPreview.app/Frameworks/libAGWheelPreview.dylib
 xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -mios-simulator-version-min=16.0 -fobjc-arc -fblocks -O1 -framework UIKit \
@@ -99,6 +100,9 @@ cp "$preview_data"/Documents/captcha-*.png build/
 cp "$preview_data"/Documents/captcha-ui-check.json build/
 cp "$preview_data/Documents/ufo-diagnostics.png" build/
 cp "$preview_data/Documents/ufo-diagnostics-check.json" build/
+cp "$preview_data/Documents/airship-diagnostics.png" build/
+cp "$preview_data/Documents/airship-diagnostics-check.json" build/
+python3 -c 'import json; assert json.load(open("build/airship-diagnostics-check.json"))["passed"]'
 python3 -c 'import json; assert json.load(open("build/ufo-diagnostics-check.json"))["passed"]'
 python3 -c 'import json; assert json.load(open("build/captcha-ui-check.json"))["passed"]'
 python3 -c 'import json; assert json.load(open("build/ui-check.json"))["passed"]'

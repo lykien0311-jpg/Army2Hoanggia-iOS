@@ -12,6 +12,7 @@
 #include "Notes77.h"
 #include "Turn33.h"
 #include "Blind.h"
+#include "ShipTrace.h"
 #import "GameViewport.h"
 extern void AGInventoryTick(int);
 
@@ -44,7 +45,7 @@ static double AGNow(void) { struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);
 // Retained ABI for the bridge; no diagnostic window, label or timer.
 __attribute__((visibility("default"))) void AGTurnStatusUpdate(int variant,int reason) {(void)variant;(void)reason;}
 __attribute__((visibility("default"))) void AGTurnPulse(void *env,int variant) {
-    if(atomic_load(&AGForeground))AGTurnTick(env,variant);
+    if(atomic_load(&AGForeground)){AGTurnTick(env,variant);AGShipTraceTick(env,variant,1);}
 }
 static NSString *AGString(const char *s) {return [NSString stringWithUTF8String:s]?:@"";}
 static NSString *AGMoney(int64_t value) {
@@ -91,6 +92,7 @@ __attribute__((noinline,optnone)) static int AGSendNative(void *env, void *conte
 __attribute__((visibility("default"))) void AGWheelTick(void *env, int variant) {
     if(env){AGViewportCapture(env,variant);AGInventoryTick(variant);AGBlindTick(variant);}
     AGNotesTick(env,variant);
+    AGShipTraceTick(env,variant,0);
     if(atomic_load(&AGForeground))AGTurnTick(env,variant);
     if(!env || variant<0 || variant>=6 || !atomic_load(&AGInterested) || !atomic_load(&AGForeground))return;
     double now=AGNow();AGSendJob job={0};uint64_t generation;int isBet=0;

@@ -3,6 +3,7 @@
 #include "NativeMap.h"
 #include "NotesMap.h"
 #include "TurnMap.h"
+#include "ShipTrace.h"
 extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
 extern void AGTurnAwait(void *,void *,int,int,int);
 typedef struct {
@@ -60,13 +61,16 @@ __attribute__((visibility("default"))) void AGBattleAwait(void *env,void *lock,i
     if(context(env,&c)<=0||!c.airship){AGTurnAwait(env,lock,v,kind,actor);return;}
     if(!active(&c))return;
     uint8_t *arena=c.arena;uintptr_t connection=c.connection;
+    AGShipTraceWait(v,kind,actor,1);AGShipTraceTick(env,v,2);
     // A fast B52 can finish and notify before the controller acquires its
     // monitor. Recheck the real completion flag before waiting, and after
     // each wake. No timer clears flags or forces the next player's turn.
     while(busy(&c,kind,actor)){
         void (*wait)(void *,void *,int64_t)=(void *)(imageBase()+0xaaa730);
         wait(env,lock,16);
+        AGShipTraceTick(env,v,2);
         c=(BattleWaitContext){.variant=v};
         if(context(env,&c)<=0||!active(&c)||!c.airship||c.arena!=arena||c.connection!=connection)break;
     }
+    AGShipTraceWait(v,kind,actor,0);
 }
