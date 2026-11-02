@@ -26,3 +26,19 @@ Validation must replay a real marked corpse packet through the installed
 native controller, the original detached-part switch and patched NPC update,
 then verify a subsequent controller command and untouched live-flight fallback.
 Physical iPhone or live-server acceptance is not available in this environment.
+
+Apple build41401825604 passed. Controlled ARM64 validation reproduces24 old
+detached-part flight stalls across6variants: the original flight starter sets
+14e, then the unchanged NPC type dispatch leaves it set through5updates for
+characters18/19/20/21. The unrelated base Player.update boundary is mocked in
+these dispatch replays. The installed controller and compiled replacement pass
+90complete packet/fall sequences across rooms10/14/15, all characters17..21
+and capacities9/100/127. Another90cases check live actors, plain/malformed
+packets, other rooms, UFO fallback and state invalidation. A following command24
+reaches the original controller while a corpse is still falling. No JVM wait
+is called for a marked corpse packet. The original input reader is unchanged.
+
+Regression checks also pass390prior airship wait cases,150installed UFO wait
+cases,60native UFO encounters,12long UFO-effect/fallback cases,96blindness
+cases,48Apple ARM64 timing cases at30ms,120speed cases and12wheel-return
+transitions, plus the native hook ABI and archive-preservation checks.
