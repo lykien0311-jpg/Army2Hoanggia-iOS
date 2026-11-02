@@ -1,0 +1,359 @@
+{
+  "build": 261,
+  "reference_video": "37532.mp4",
+  "source_commit": "cf61f2abb31524a38d3e82637485c305cd1ff38e",
+  "apple_merge_commit": "02be66ca80b1df3d7e727cefc510ebe9489e8721",
+  "github_run_id": 41426875965,
+  "artifact_id": 13133050310,
+  "artifact_zip_sha256": "eeee3af894ce54fc96514f64014d836e8edab13d06747dffadf9297b679281ff",
+  "ipa_name": "Army2Hoanggia-2.4.1-Build261-FixKhiCau.ipa",
+  "ipa_bytes": 16575283,
+  "ipa_sha256": "f1fd505c3b57e2e308dcaec20610c5485081dd6f9835fb350b3fc690c1a30c0a",
+  "main_sha256": "0d8deab0fda447c08658ab77351cea4e9f088a2de3b7425c4159c924bbc4a679",
+  "dylib_sha256": "da95c02f427207f4302831bcf7027c506ab2eb48a4af54a3e705ff5f2fc1a08a",
+  "accepted_auto_sources": {
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f",
+    "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f"
+  },
+  "device_observation_at30s": {
+    "server_owner": 0,
+    "native_owner": 0,
+    "camera_actor": 10,
+    "last_command": 93,
+    "last_length": 10,
+    "wait_kind": 3,
+    "wait_actor": 10,
+    "actor10_hp": 0,
+    "actor10_state": 5,
+    "actor10_gravity": 0,
+    "actor10_flight": 1,
+    "npc_slots8_to11_field16b": 0
+  },
+  "root_cause": {
+    "wrong_patch_marker": "43505239",
+    "actual_JAR_and_server_marker": "43503439",
+    "actual_marker_decimal": 1129329721,
+    "wrong_index_assumption": "actor16b identifies roster slot; all observed NPCs actually have0",
+    "fix": "Decode the real marker and resolve/revive corpse state by roster pointer identity; preserve server scheduling"
+  },
+  "independent_reference_verification": [
+    {
+      "jar": "reference-client.jar",
+      "class": "game/Client497.class",
+      "class_sha256": "b9af2348ee16f79fc0deea2dfc0ce94b32d1f5d89939c1dc0034996c129d8e9f",
+      "constant_pool_index": 56,
+      "actual_value": 1129329721,
+      "actual_hex": "43503439"
+    },
+    {
+      "jar": "server.jar",
+      "class": "army2/fight/Corpse497.class",
+      "class_sha256": "fbf937258d6cd47873304ce86e0ba97d088cd1f10ccaa81c5d1ac370b0eb484e",
+      "constant_pool_index": 134,
+      "actual_value": 1129329721,
+      "actual_hex": "43503439"
+    }
+  ],
+  "build260_real_marker_regression": {
+    "expected_failure": true,
+    "returncode": 1,
+    "stdout": "PASS: compiled iPhone dylib: 48 wheel bridge/state checks and 36 room-cache/JNI checks across all six variants; exact outgoing bytes, same-nonce retry, stale ack, changed connection, real RoboVM exception recovery; no live server calls\nPASS: compiled device movement pacing, 36 monotonic-clock checks across six variants\n",
+    "stderr": "Traceback (most recent call last):\n  File \"/workspace/scratch/af46863d3171/remove-b253-work/native-wheel/test_corpse_device.py\", line 104, in <module>\n    assert packet(s,wire(s),prefix=b'xx')\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+    "reason": "real43503439 marker and real NPC field16b=0"
+  },
+  "build260_zero_index_regression": {
+    "expected_failure": true,
+    "variant": 0,
+    "roster_slot": 8,
+    "character": 17,
+    "hp": 0,
+    "field16b": 0,
+    "corpse_update_handled": 0
+  },
+  "validation": {
+    "package-check.json": {
+      "passed": true,
+      "input_sha256": "b3ca3da16da28af59826683d5f24c7a0a5943532eae077d652b32ae4963be21a",
+      "output": "Army2Hoanggia-2.4.1-Build261-FixKhiCau.ipa",
+      "sha256": "f1fd505c3b57e2e308dcaec20610c5485081dd6f9835fb350b3fc690c1a30c0a",
+      "bytes": 16575283,
+      "changed_entries": [
+        "Payload/Army2Hoanggia.app/Info.plist",
+        "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+      ],
+      "other_entries_unchanged": 523,
+      "github_build": {
+        "source_commit": "02be66ca80b1df3d7e727cefc510ebe9489e8721",
+        "release_version": "2.4.1",
+        "login_marker": "2.4.1-HG78-IPA",
+        "xcode": "Xcode 16.4\nBuild version 16F6",
+        "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+        "sdk": "18.5",
+        "dylib_sha256": "da95c02f427207f4302831bcf7027c506ab2eb48a4af54a3e705ff5f2fc1a08a",
+        "apple_codesign_strict_verified": true,
+        "apple_resign_strict_verified": true,
+        "physical_device_tested": false
+      },
+      "physical_device_tested": false,
+      "requires_user_certificate_resigning": true
+    },
+    "corpse-device-check.json": {
+      "passed": true,
+      "variants": 6,
+      "old_native_detached_part_flight_stalls": 24,
+      "marked_packet_and_full_fall_sequences": 90,
+      "stale_live_normal_UFO_and_reset_cases": 96,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "roster_capacities": [
+        9,
+        100,
+        127
+      ],
+      "wire_command": 93,
+      "wire_length": 10,
+      "wire_magic": "43503439",
+      "native_reader_unchanged": true,
+      "no_wait_during_corpse_motion": true,
+      "subsequent_controller_packets_reachable": true,
+      "animation_matches_JAR_acceleration_and_destination": true,
+      "native_actor_field16b": 0,
+      "original_virtual_dispatch_and_vtable": true,
+      "physical_device_tested": false,
+      "live_requests": 0,
+      "same_field_distinct_parts_and_revival_sequences": 6
+    },
+    "corpse-turn-check.json": {
+      "passed": true,
+      "variants": 6,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "native_endshoot_and_server_turn_camera_sequences": 90,
+      "native_turn_reset_reproduces_dead_to_idle": true,
+      "native_completion_packet": 23,
+      "native_camera_owner_after_server_turn": 2,
+      "duplicate_completion_packets": 0,
+      "living_moving_actor_still_blocks_completion": true,
+      "native_actor_field16b": 0,
+      "original_virtual_dispatch_and_vtable": true,
+      "landed_corpses_rearm_gravity": false,
+      "synthetic_turns": 0,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "ship-trace-check.json": {
+      "passed": true,
+      "variants": 6,
+      "apple_arm64_observer_cases": 48,
+      "combat_bytes_changed": 0,
+      "original_reader_unchanged": true,
+      "server_native_camera_disagreement_captured": true,
+      "corpse_roster_index_mismatch_captured": true,
+      "history_events": 16,
+      "native_sampling_max_hz": 5,
+      "diagnostics_game_packets": 0,
+      "physical_device_tested": false
+    },
+    "airship-diagnostics-check.json": {
+      "airship_room_or_active_stage_only": true,
+      "game_packets_written": 0,
+      "local_log_written": true,
+      "native_pointer_access_from_UIKit": false,
+      "passed": true,
+      "touch_passthrough": true,
+      "widths": [
+        320,
+        390,
+        844
+      ]
+    },
+    "airship-wait-check.json": {
+      "passed": true,
+      "apple_native_wait_cases": 390,
+      "variants": 6,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "roster_capacities": [
+        9,
+        100,
+        127
+      ],
+      "native_finalizer_lost_notify_replays": 18,
+      "native_part_effect_counter_lost_notify_replays": 18,
+      "native_part_particles": 4,
+      "native_effect_completion_frames": 20,
+      "busy_waits_survive_79_spurious_wakes": true,
+      "timeout_does_not_clear_flags": true,
+      "scene_and_connection_changes_release_wait": true,
+      "other_stages_keep_previous_bridge": true,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "camera-device-check.json": {
+      "passed": true,
+      "apple_arm64_timing_cases": 48,
+      "variants": 6,
+      "manual_camera_and_walk_interval_ms": 30,
+      "independent_axes": true,
+      "frame_rates": [
+        20,
+        60,
+        120,
+        1000
+      ],
+      "live_game_requests": 0
+    },
+    "blind-device-check.json": {
+      "passed": true,
+      "apple_native_cases": 96,
+      "variants": 6,
+      "local_slots": [
+        0,
+        7
+      ],
+      "protocol": 106,
+      "wire_order": [
+        "state",
+        "target"
+      ],
+      "original_reader_unchanged": true,
+      "white_rectangle": [
+        0,
+        0,
+        320,
+        480
+      ],
+      "opaque_white": true,
+      "actual_native_graphics_state_methods": true,
+      "original_HUD_entry_executed": true,
+      "graphics_restored_on_Java_exception": true,
+      "new_match_exit_and_server_clear_reset": true,
+      "live_requests": 0
+    },
+    "speed-maximum-check.json": {
+      "passed": true,
+      "native_level_cases": 120,
+      "variants": 6,
+      "levels_1_to_9_unchanged": true,
+      "level_10_skips_scheduler_sleep": true,
+      "extra_game_ticks": 0,
+      "packet_duplication": false,
+      "physical_device_performance_measured": false
+    },
+    "wheel-home-return-check.json": {
+      "passed": true,
+      "original_native_home_transitions": 12,
+      "build254_empty_home_reproduced": true,
+      "build255_menu_paint_restored": true,
+      "original_layout_and_cleanup_executed": true,
+      "server_ack_required": false,
+      "cases": [
+        {
+          "build": 254,
+          "variant": 0,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 1,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 2,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 3,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 4,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 5,
+          "menu_visible": false
+        },
+        {
+          "build": 255,
+          "variant": 0,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 1,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 2,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 3,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 4,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 5,
+          "menu_visible": true
+        }
+      ]
+    }
+  },
+  "other_regressions": {
+    "native_hook_ABI": 134,
+    "post_update_predicate_keypad_ABI": 86,
+    "native_turn_handoff_ABI": 24,
+    "native_ufo_encounters": 60,
+    "long_ufo_effect_and_fallback_waits": 12,
+    "installed_UFO_wait_sites": 150,
+    "wheel_home_transitions": 12
+  },
+  "diagnostic_file": "Documents/KhiCau-B261.txt",
+  "limits": [
+    "No physical iPhone or live-server acceptance test of Build261.",
+    "Earlier fixture pass counts used the patch implementation wrong marker and invented per-actor indices; they did not prove protocol compatibility.",
+    "Corrected tests use independently verified source constants, NPC16b==0, the native virtual dispatcher/vtables, compiled corpse code and native continuation/camera methods under controlled OS/JVM boundaries.",
+    "Synthetic incoming command24 packets test continuation; these checks do not establish the live server full part/player scheduling."
+  ],
+  "library": {
+    "library_file_id": "libfile_23d4a2aa387c819199e2f4d6912c3f54",
+    "version": 12
+  }
+}

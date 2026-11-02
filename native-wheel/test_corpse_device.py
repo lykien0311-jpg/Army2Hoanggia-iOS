@@ -80,7 +80,7 @@ def step(s):
     return execute(B+virtuals[v],t.ENV,s['actor'],extra=[B+a+4])==t.STOP
 def changed_code(a,data):U.mem_write(B+a,data);U.ctl_remove_cache(B+a,B+a+len(data))
 
-old_cases=new_cases=fallback_cases=0
+old_cases=new_cases=fallback_cases=shared_field_sequences=0
 for v,mp in enumerate(report['corpse_hooks']):
     entry=mp['update'];base_update=B+branch(entry+0x104)
     # Original live-flight start, then original NPC switch for each detached
@@ -127,7 +127,7 @@ for v,mp in enumerate(report['corpse_hooks']):
     assert not step(s);fallback_cases+=1
     # Ordinary5-byte flight, malformed/unmarked extensions, non-airship rooms
     # and native UFO actors take the unchanged controller/update paths.
-    for payload in [wire(s)[:5],wire(s)[:5]+b'xxxx\0',wire(s)[:-1],wire(s)+b'\0']:
+    for payload in [wire(s)[:5],wire(s)[:5]+b'xxxx\0',wire(s)[:-1],wire(s)+b'\0',struct.pack('>BhhIB',s['index'],320,320,0x43505239,0)]:
         assert not packet(s,payload);fallback_cases+=1
     t.put(a+0x68,'<q',0)
     for room,typ in [(8,16),(9,16),(3,18),(14,12),(15,22)]:
@@ -145,6 +145,20 @@ for v,mp in enumerate(report['corpse_hooks']):
         else:t.put(a+0x68,'<q',1);assert not step(s);t.put(a+0x68,'<q',0)
         before=t.get(a+0x118,'<i');assert step(s);assert t.get(a+0x118,'<i')==before
         fallback_cases+=1
+    # Several distinct parts can share native field16b==0. Routing and revival
+    # must use their roster pointers and cannot alias the neighboring corpse.
+    s=setup(v,index=9);a=s['actor'];other=t.alloc(0x240)
+    U.mem_write(other,bytes(U.mem_read(a,0x240)));t.put(other+0x16c,'<B',19);t.put(other+0x118,'<i',160)
+    t.put(s['roster']+0x18+10*8,'<Q',other)
+    assert packet(s,wire(s));assert step(s);assert t.get(a+0x118,'<i')==102
+    assert t.get(other+0x118,'<i')==160
+    s['index']=10;s['actor']=other
+    assert packet(s,wire(s,y=380));assert step(s);assert t.get(other+0x118,'<i')==162
+    s['index']=9;s['actor']=a;assert step(s);assert t.get(a+0x118,'<i')==106
+    t.put(a+0x68,'<q',1);assert not step(s);t.put(a+0x68,'<q',0)
+    assert step(s) and t.get(a+0x118,'<i')==106
+    s['index']=10;s['actor']=other;assert step(s);assert t.get(other+0x118,'<i')==166
+    shared_field_sequences+=1
 
 result=dict(passed=True,variants=6,old_native_detached_part_flight_stalls=old_cases,
     marked_packet_and_full_fall_sequences=new_cases,stale_live_normal_UFO_and_reset_cases=fallback_cases,
@@ -153,4 +167,5 @@ result=dict(passed=True,variants=6,old_native_detached_part_flight_stalls=old_ca
     no_wait_during_corpse_motion=True,subsequent_controller_packets_reachable=True,
     animation_matches_JAR_acceleration_and_destination=True,native_actor_field16b=0,
     original_virtual_dispatch_and_vtable=True,physical_device_tested=False,live_requests=0)
+result['same_field_distinct_parts_and_revival_sequences']=shared_field_sequences
 (R/'build/corpse-device-check.json').write_text(json.dumps(result,indent=2)+'\n');print('PASS',result)

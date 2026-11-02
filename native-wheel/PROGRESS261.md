@@ -27,3 +27,19 @@ indices. Native tests use that source-derived marker, NPC16b==0 and actual
 native virtual dispatch/vtables where applicable, rather than routing directly
 to a presumed NPC update. Build260 must fail the corrected packet regression.
 Apple build and final validation details will be appended after compilation.
+
+Apple build41426875965 passed for sourcecf61f2abb31524a38d3e82637485c305cd1ff38e
+(merge02be66ca80b1df3d7e727cefc510ebe9489e8721). The downloaded ZIP matches
+eeee3af894ce54fc96514f64014d836e8edab13d06747dffadf9297b679281ff.
+Build260 independently fails the corrected marked-packet and zero-field actor
+regressions. The final iPhone library passes90 real-marker fall sequences,96
+fallback/reset cases,6 distinct-part/revival sequences sharing field16b==0, and
+90 native completion/turn/camera sequences. Original virtual dispatch and NPC
+vtables execute instead of redirecting straight to the presumed update entry.
+
+Both independent JAR class constants were re-read and their hashes verified.
+UFO, waits,30ms controls, blindness, speed, wheel, diagnostics and native ABI
+regressions pass. The B261 panel/log remains enabled for physical confirmation.
+The package changes only the verified library and Info.plist relative to
+Build260;523 entries and the main executable remain byte-identical. Full test
+evidence, provenance and limits are in validation261.json.
