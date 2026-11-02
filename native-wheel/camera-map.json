@@ -1,0 +1,44 @@
+[
+  {
+    "pan_x": 5966020,
+    "pan_y": 5966084,
+    "camera_class": 34170400,
+    "mode_get": 5965468,
+    "update": 5966808
+  },
+  {
+    "pan_x": 6917816,
+    "pan_y": 6917880,
+    "camera_class": 34361184,
+    "mode_get": 6917264,
+    "update": 6918604
+  },
+  {
+    "pan_x": 7854972,
+    "pan_y": 7855036,
+    "camera_class": 34548816,
+    "mode_get": 7854420,
+    "update": 7855760
+  },
+  {
+    "pan_x": 8792128,
+    "pan_y": 8792192,
+    "camera_class": 34736448,
+    "mode_get": 8791576,
+    "update": 8792916
+  },
+  {
+    "pan_x": 9729284,
+    "pan_y": 9729348,
+    "camera_class": 34924080,
+    "mode_get": 9728732,
+    "update": 9730072
+  },
+  {
+    "pan_x": 10666440,
+    "pan_y": 10666504,
+    "camera_class": 35111712,
+    "mode_get": 10665888,
+    "update": 10667228
+  }
+]

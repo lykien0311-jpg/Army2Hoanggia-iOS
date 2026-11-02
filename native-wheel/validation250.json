@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "input_sha256": "20a400629803ed2e8ac6faa0070c2b830915ed5f71d79e5fa1abb57d960b9803",
+  "output": "Army2Hoanggia-2.4.1-Build250-AutoUFO.ipa",
+  "sha256": "b93d85219aa402c6108bfa7ce4a24467799bf04c0e56e18088cc24071f5253fd",
+  "bytes": 16563592,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 523,
+  "github_build": {
+    "source_commit": "40c6035974af0c987b25677f9aa1aea593bf5a85",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "2e8c7259c93067f1df74ae40d0aaac7b66deea7082cbc0a6fb0abc0251743a28",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "source_branch_commit": "6256c4110e7e27a0267e9e7e304fbacba340809b",
+  "workflow_run": 41274098171,
+  "workflow_artifact": 13070214264,
+  "test_counts": {
+    "controller_scenarios": 125,
+    "arm64_packet_and_update_scenarios": 234,
+    "arm64_wait_scenarios": 120,
+    "native_hook_and_exception_cases": 134,
+    "native_hook_abi_cases": 86,
+    "battle_v9_input_cases": 48
+  },
+  "red_regression_old248": "The same initial stale-animation fixture emits no command22 with the supplied248 dylib; rebuilt250 emits the expected native packet.",
+  "boundaries": [
+    "JVM allocation and byte writes",
+    "clock and final session queue",
+    "modal state in auto fixtures",
+    "original update body in installed-update fixture"
+  ],
+  "real_device_or_vps_acceptance": false
+}

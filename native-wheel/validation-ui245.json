@@ -1,0 +1,35 @@
+{
+  "build": "245",
+  "native_sha256": "443853641cb93b6c46a678b3afd7893e29ccc63b236f91e85b898588376549ae",
+  "ipa_sha256": "745b50bce5433bb8ba350da6756afc5b95acce0a41c05c4a2269b2e81b3f1381",
+  "dylib_sha256": "c24586ec266a24e70413adfc6829ca150248c91432927d653024736e27420885",
+  "bytes": 16558933,
+  "apple_run_id": 41176019802,
+  "apple_artifact_id": 13033790327,
+  "apple_artifact_sha256": "14db109218c5865cb0d9ae173eb5eb4c631a80a0ce69a83031cd8d447103eb4f",
+  "apple_source_branch_commit": "324c1bd29e5e7d994b4a96570c54a1f0b76a4d94",
+  "apple_tested_merge_commit": "7f80315ace467ea502328b06260e1398b7648464",
+  "apple_signature_and_resign_checks": true,
+  "checks": {
+    "static_hook_and_native_preservation": 122,
+    "sprite_argument_cases": 480,
+    "original_sprite_renderer_image_selection": 96,
+    "base_and_canvas_footer_cases": 54,
+    "area_list_title_waiting_unsigned_labels": 348,
+    "compiled_ufo_turn_guards": 162,
+    "original_shot_packet_cases": 12,
+    "original_walking_then_deferred_and_repeated_shot_cases": 18,
+    "compiled_grid_checks": 624,
+    "compiled_notes_checks": 444,
+    "native_login_cases": 25
+  },
+  "regression_build244": "Actual native position fields (114/118), differing constructor copies (80/84): old compiled bridge emits no shot; corrected compiled bridge emits command22. Original walking method independently proves the live fields.",
+  "unchanged_archive_entries": 522,
+  "mocked_boundaries": [
+    "Java/OS/graphics primitives",
+    "final network transport"
+  ],
+  "physical_device_tested": false,
+  "live_vps_tested": false,
+  "requires_user_certificate_resigning": true
+}

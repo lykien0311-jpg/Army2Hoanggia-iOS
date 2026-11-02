@@ -1,0 +1,140 @@
+[
+  {
+    "canvas": 34069184,
+    "room_class": 34106544,
+    "settings_class": 34137584,
+    "settings_begin": 5800412,
+    "settings_input": 5800940,
+    "settings_paint": 5802708,
+    "settings_origin": 5800388,
+    "settings_ok": 5832492,
+    "inbox_open": 5995056,
+    "dialog_show": 5483092,
+    "callback": 6119756,
+    "font": 6045284,
+    "key_reset": 5950968,
+    "font_get": 6033648,
+    "input": [
+      5305644,
+      5307112,
+      5310388,
+      5310360,
+      5310444
+    ]
+  },
+  {
+    "canvas": 34264896,
+    "room_class": 34299648,
+    "settings_class": 34329408,
+    "settings_begin": 6757128,
+    "settings_input": 6757576,
+    "settings_paint": 6759344,
+    "settings_origin": 6757104,
+    "settings_ok": 6788448,
+    "inbox_open": 6946212,
+    "dialog_show": 6451116,
+    "callback": 7057992,
+    "font": 6995080,
+    "key_reset": 6903404,
+    "font_get": 6983444,
+    "input": [
+      6279844,
+      6281312,
+      6284588,
+      6284560,
+      6284644
+    ]
+  },
+  {
+    "canvas": 34452544,
+    "room_class": 34487280,
+    "settings_class": 34517040,
+    "settings_begin": 7694284,
+    "settings_input": 7694732,
+    "settings_paint": 7696500,
+    "settings_origin": 7694260,
+    "settings_ok": 7725604,
+    "inbox_open": 7883368,
+    "dialog_show": 7388272,
+    "callback": 7995148,
+    "font": 7932236,
+    "key_reset": 7840560,
+    "font_get": 7920600,
+    "input": [
+      7217000,
+      7218468,
+      7221744,
+      7221716,
+      7221800
+    ]
+  },
+  {
+    "canvas": 34640176,
+    "room_class": 34674912,
+    "settings_class": 34704672,
+    "settings_begin": 8631440,
+    "settings_input": 8631888,
+    "settings_paint": 8633656,
+    "settings_origin": 8631416,
+    "settings_ok": 8662760,
+    "inbox_open": 8820524,
+    "dialog_show": 8325428,
+    "callback": 8932304,
+    "font": 8869392,
+    "key_reset": 8777716,
+    "font_get": 8857756,
+    "input": [
+      8154156,
+      8155624,
+      8158900,
+      8158872,
+      8158956
+    ]
+  },
+  {
+    "canvas": 34827808,
+    "room_class": 34862544,
+    "settings_class": 34892304,
+    "settings_begin": 9568596,
+    "settings_input": 9569044,
+    "settings_paint": 9570812,
+    "settings_origin": 9568572,
+    "settings_ok": 9599916,
+    "inbox_open": 9757680,
+    "dialog_show": 9262584,
+    "callback": 9869460,
+    "font": 9806548,
+    "key_reset": 9714872,
+    "font_get": 9794912,
+    "input": [
+      9091312,
+      9092780,
+      9096056,
+      9096028,
+      9096112
+    ]
+  },
+  {
+    "canvas": 35015440,
+    "room_class": 35050176,
+    "settings_class": 35079936,
+    "settings_begin": 10505752,
+    "settings_input": 10506200,
+    "settings_paint": 10507968,
+    "settings_origin": 10505728,
+    "settings_ok": 10537072,
+    "inbox_open": 10694836,
+    "dialog_show": 10199740,
+    "callback": 10806616,
+    "font": 10743704,
+    "key_reset": 10652028,
+    "font_get": 10732068,
+    "input": [
+      10028468,
+      10029936,
+      10033212,
+      10033184,
+      10033268
+    ]
+  }
+]

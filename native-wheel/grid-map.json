@@ -1,0 +1,4026 @@
+{
+  "sites": [
+    {
+      "site": 5720772,
+      "word": 2483049989,
+      "metric": "LAYOUT",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5720804,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5720812,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5720824,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5720836,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5720844,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5720872,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5724256,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5724268,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5724396,
+      "word": 1384122889,
+      "metric": "SHOP_CLIP",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5724416,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5724420,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725028,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725052,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725056,
+      "word": 1384122821,
+      "metric": "SHOP_BG",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725124,
+      "word": 1359034666,
+      "metric": "HALF_ICON",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725128,
+      "word": 1359036706,
+      "metric": "HALF_CLIP",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725140,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725144,
+      "word": 1384122629,
+      "metric": "SHOP_CLIP",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725296,
+      "word": 840595433,
+      "metric": "SHOP_SCROLL_NEG",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725404,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725412,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725416,
+      "word": 1384120970,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725768,
+      "word": 285318441,
+      "metric": "SHOP_MONEY2",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5725796,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726204,
+      "word": 285317450,
+      "metric": "SHOP_MONEY",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726308,
+      "word": 285333219,
+      "metric": "BAR1",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726316,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726348,
+      "word": 285353699,
+      "metric": "BAR2",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726356,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726388,
+      "word": 285374179,
+      "metric": "BAR3",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726396,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726448,
+      "word": 285334251,
+      "metric": "TEXT1",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726460,
+      "word": 1359035721,
+      "metric": "HALF_TEXT",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726532,
+      "word": 285354309,
+      "metric": "TEXT2",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726600,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5726644,
+      "word": 285374821,
+      "metric": "TEXT3",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5728196,
+      "word": 1359026506,
+      "metric": "SHOP_SCROLL",
+      "variant": 0,
+      "kind": 2
+    },
+    {
+      "site": 5834812,
+      "word": 2550130343,
+      "metric": "LAYOUT",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5834848,
+      "word": 840827880,
+      "metric": "COLS",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5834852,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5834860,
+      "word": 840894440,
+      "metric": "COLS",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5834864,
+      "word": 840829929,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5836696,
+      "word": 1384125449,
+      "metric": "HIT_W",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5836712,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5836716,
+      "word": 1384122884,
+      "metric": "INV_CLIP",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5837848,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5837872,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5837876,
+      "word": 1384124005,
+      "metric": "INV_BG",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5837944,
+      "word": 1359034633,
+      "metric": "HALF_ICON",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5837948,
+      "word": 1359036674,
+      "metric": "HALF_CLIP",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5837960,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5837964,
+      "word": 1384123685,
+      "metric": "INV_CLIP",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5838120,
+      "word": 285298952,
+      "metric": "INV_FOCUS",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5838232,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5838240,
+      "word": 310378857,
+      "metric": "NEG_HIGHLIGHT",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5838248,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5838252,
+      "word": 1384120971,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5839120,
+      "word": 285364488,
+      "metric": "INV_NAME",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5839264,
+      "word": 285382920,
+      "metric": "INV_MONEY",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5840148,
+      "word": 1359067434,
+      "metric": "INV_SCROLL",
+      "variant": 0,
+      "kind": 0
+    },
+    {
+      "site": 5885752,
+      "word": 2550117608,
+      "metric": "LAYOUT",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5885784,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5885792,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5885804,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5885816,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5885824,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5885852,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5888140,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5888148,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5888276,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5888280,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5889084,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5889120,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5889124,
+      "word": 1384122827,
+      "metric": "SHOP_BG",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5889420,
+      "word": 1359034632,
+      "metric": "HALF_ICON",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5889432,
+      "word": 1384122633,
+      "metric": "SHOP_CLIP",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5889436,
+      "word": 1359036680,
+      "metric": "HALF_CLIP",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5889448,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5889752,
+      "word": 1384125768,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5890200,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5890284,
+      "word": 1384121608,
+      "metric": "CELL",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5890460,
+      "word": 285263112,
+      "metric": "SHOP_FOCUS",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5891044,
+      "word": 285318408,
+      "metric": "SHOP_MONEY2",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5891144,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5892416,
+      "word": 285317384,
+      "metric": "SHOP_MONEY",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5892580,
+      "word": 1384125780,
+      "metric": "INNER_W",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5892588,
+      "word": 285332744,
+      "metric": "BAR1",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5892728,
+      "word": 285353224,
+      "metric": "BAR2",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5892852,
+      "word": 285373704,
+      "metric": "BAR3",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5893140,
+      "word": 1359035656,
+      "metric": "HALF_TEXT",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5893152,
+      "word": 285333768,
+      "metric": "TEXT1",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5893340,
+      "word": 285354248,
+      "metric": "TEXT2",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5893520,
+      "word": 285374728,
+      "metric": "TEXT3",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 5894276,
+      "word": 1359026473,
+      "metric": "SHOP_SCROLL",
+      "variant": 0,
+      "kind": 1
+    },
+    {
+      "site": 6679776,
+      "word": 2483049347,
+      "metric": "LAYOUT",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6679808,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6679816,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6679828,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6679840,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6679848,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6679876,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6683220,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6683232,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6683360,
+      "word": 1384122889,
+      "metric": "SHOP_CLIP",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6683380,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6683384,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6683992,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684016,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684020,
+      "word": 1384122821,
+      "metric": "SHOP_BG",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684088,
+      "word": 1359034666,
+      "metric": "HALF_ICON",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684092,
+      "word": 1359036706,
+      "metric": "HALF_CLIP",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684104,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684108,
+      "word": 1384122629,
+      "metric": "SHOP_CLIP",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684260,
+      "word": 840595433,
+      "metric": "SHOP_SCROLL_NEG",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684368,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684376,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684380,
+      "word": 1384120970,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684732,
+      "word": 285318441,
+      "metric": "SHOP_MONEY2",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6684760,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685168,
+      "word": 285317450,
+      "metric": "SHOP_MONEY",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685272,
+      "word": 285333219,
+      "metric": "BAR1",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685280,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685312,
+      "word": 285353699,
+      "metric": "BAR2",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685320,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685352,
+      "word": 285374179,
+      "metric": "BAR3",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685360,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685412,
+      "word": 285334251,
+      "metric": "TEXT1",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685424,
+      "word": 1359035721,
+      "metric": "HALF_TEXT",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685496,
+      "word": 285354309,
+      "metric": "TEXT2",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685564,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6685608,
+      "word": 285374821,
+      "metric": "TEXT3",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6687160,
+      "word": 1359026506,
+      "metric": "SHOP_SCROLL",
+      "variant": 1,
+      "kind": 2
+    },
+    {
+      "site": 6790688,
+      "word": 2550130483,
+      "metric": "LAYOUT",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6790724,
+      "word": 840827880,
+      "metric": "COLS",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6790728,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6790736,
+      "word": 840894440,
+      "metric": "COLS",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6790740,
+      "word": 840829929,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6792572,
+      "word": 1384125449,
+      "metric": "HIT_W",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6792588,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6792592,
+      "word": 1384122884,
+      "metric": "INV_CLIP",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6793724,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6793748,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6793752,
+      "word": 1384124005,
+      "metric": "INV_BG",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6793820,
+      "word": 1359034633,
+      "metric": "HALF_ICON",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6793824,
+      "word": 1359036674,
+      "metric": "HALF_CLIP",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6793836,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6793840,
+      "word": 1384123685,
+      "metric": "INV_CLIP",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6793996,
+      "word": 285298952,
+      "metric": "INV_FOCUS",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6794108,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6794116,
+      "word": 310378857,
+      "metric": "NEG_HIGHLIGHT",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6794124,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6794128,
+      "word": 1384120971,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6794996,
+      "word": 285364488,
+      "metric": "INV_NAME",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6795140,
+      "word": 285382920,
+      "metric": "INV_MONEY",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6796024,
+      "word": 1359067434,
+      "metric": "INV_SCROLL",
+      "variant": 1,
+      "kind": 0
+    },
+    {
+      "site": 6839468,
+      "word": 2550118288,
+      "metric": "LAYOUT",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6839500,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6839508,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6839520,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6839532,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6839540,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6839568,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6841816,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6841824,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6841952,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6841956,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6842760,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6842796,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6842800,
+      "word": 1384122827,
+      "metric": "SHOP_BG",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6843096,
+      "word": 1359034632,
+      "metric": "HALF_ICON",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6843108,
+      "word": 1384122633,
+      "metric": "SHOP_CLIP",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6843112,
+      "word": 1359036680,
+      "metric": "HALF_CLIP",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6843124,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6843428,
+      "word": 1384125768,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6843876,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6843960,
+      "word": 1384121608,
+      "metric": "CELL",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6844136,
+      "word": 285263112,
+      "metric": "SHOP_FOCUS",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6844720,
+      "word": 285318408,
+      "metric": "SHOP_MONEY2",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6844820,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6846092,
+      "word": 285317384,
+      "metric": "SHOP_MONEY",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6846256,
+      "word": 1384125780,
+      "metric": "INNER_W",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6846264,
+      "word": 285332744,
+      "metric": "BAR1",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6846404,
+      "word": 285353224,
+      "metric": "BAR2",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6846528,
+      "word": 285373704,
+      "metric": "BAR3",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6846816,
+      "word": 1359035656,
+      "metric": "HALF_TEXT",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6846828,
+      "word": 285333768,
+      "metric": "TEXT1",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6847016,
+      "word": 285354248,
+      "metric": "TEXT2",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6847196,
+      "word": 285374728,
+      "metric": "TEXT3",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 6847952,
+      "word": 1359026473,
+      "metric": "SHOP_SCROLL",
+      "variant": 1,
+      "kind": 1
+    },
+    {
+      "site": 7616932,
+      "word": 2483049347,
+      "metric": "LAYOUT",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7616964,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7616972,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7616984,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7616996,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7617004,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7617032,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7620376,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7620388,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7620516,
+      "word": 1384122889,
+      "metric": "SHOP_CLIP",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7620536,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7620540,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621148,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621172,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621176,
+      "word": 1384122821,
+      "metric": "SHOP_BG",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621244,
+      "word": 1359034666,
+      "metric": "HALF_ICON",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621248,
+      "word": 1359036706,
+      "metric": "HALF_CLIP",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621260,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621264,
+      "word": 1384122629,
+      "metric": "SHOP_CLIP",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621416,
+      "word": 840595433,
+      "metric": "SHOP_SCROLL_NEG",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621524,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621532,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621536,
+      "word": 1384120970,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621888,
+      "word": 285318441,
+      "metric": "SHOP_MONEY2",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7621916,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622324,
+      "word": 285317450,
+      "metric": "SHOP_MONEY",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622428,
+      "word": 285333219,
+      "metric": "BAR1",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622436,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622468,
+      "word": 285353699,
+      "metric": "BAR2",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622476,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622508,
+      "word": 285374179,
+      "metric": "BAR3",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622516,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622568,
+      "word": 285334251,
+      "metric": "TEXT1",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622580,
+      "word": 1359035721,
+      "metric": "HALF_TEXT",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622652,
+      "word": 285354309,
+      "metric": "TEXT2",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622720,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7622764,
+      "word": 285374821,
+      "metric": "TEXT3",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7624316,
+      "word": 1359026506,
+      "metric": "SHOP_SCROLL",
+      "variant": 2,
+      "kind": 2
+    },
+    {
+      "site": 7727844,
+      "word": 2550130483,
+      "metric": "LAYOUT",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7727880,
+      "word": 840827880,
+      "metric": "COLS",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7727884,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7727892,
+      "word": 840894440,
+      "metric": "COLS",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7727896,
+      "word": 840829929,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7729728,
+      "word": 1384125449,
+      "metric": "HIT_W",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7729744,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7729748,
+      "word": 1384122884,
+      "metric": "INV_CLIP",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7730880,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7730904,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7730908,
+      "word": 1384124005,
+      "metric": "INV_BG",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7730976,
+      "word": 1359034633,
+      "metric": "HALF_ICON",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7730980,
+      "word": 1359036674,
+      "metric": "HALF_CLIP",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7730992,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7730996,
+      "word": 1384123685,
+      "metric": "INV_CLIP",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7731152,
+      "word": 285298952,
+      "metric": "INV_FOCUS",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7731264,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7731272,
+      "word": 310378857,
+      "metric": "NEG_HIGHLIGHT",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7731280,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7731284,
+      "word": 1384120971,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7732152,
+      "word": 285364488,
+      "metric": "INV_NAME",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7732296,
+      "word": 285382920,
+      "metric": "INV_MONEY",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7733180,
+      "word": 1359067434,
+      "metric": "INV_SCROLL",
+      "variant": 2,
+      "kind": 0
+    },
+    {
+      "site": 7776624,
+      "word": 2550118288,
+      "metric": "LAYOUT",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7776656,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7776664,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7776676,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7776688,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7776696,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7776724,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7778972,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7778980,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7779108,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7779112,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7779916,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7779952,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7779956,
+      "word": 1384122827,
+      "metric": "SHOP_BG",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7780252,
+      "word": 1359034632,
+      "metric": "HALF_ICON",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7780264,
+      "word": 1384122633,
+      "metric": "SHOP_CLIP",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7780268,
+      "word": 1359036680,
+      "metric": "HALF_CLIP",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7780280,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7780584,
+      "word": 1384125768,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7781032,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7781116,
+      "word": 1384121608,
+      "metric": "CELL",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7781292,
+      "word": 285263112,
+      "metric": "SHOP_FOCUS",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7781876,
+      "word": 285318408,
+      "metric": "SHOP_MONEY2",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7781976,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7783248,
+      "word": 285317384,
+      "metric": "SHOP_MONEY",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7783412,
+      "word": 1384125780,
+      "metric": "INNER_W",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7783420,
+      "word": 285332744,
+      "metric": "BAR1",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7783560,
+      "word": 285353224,
+      "metric": "BAR2",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7783684,
+      "word": 285373704,
+      "metric": "BAR3",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7783972,
+      "word": 1359035656,
+      "metric": "HALF_TEXT",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7783984,
+      "word": 285333768,
+      "metric": "TEXT1",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7784172,
+      "word": 285354248,
+      "metric": "TEXT2",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7784352,
+      "word": 285374728,
+      "metric": "TEXT3",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 7785108,
+      "word": 1359026473,
+      "metric": "SHOP_SCROLL",
+      "variant": 2,
+      "kind": 1
+    },
+    {
+      "site": 8554088,
+      "word": 2483049347,
+      "metric": "LAYOUT",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8554120,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8554128,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8554140,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8554152,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8554160,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8554188,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8557532,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8557544,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8557672,
+      "word": 1384122889,
+      "metric": "SHOP_CLIP",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8557692,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8557696,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558304,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558328,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558332,
+      "word": 1384122821,
+      "metric": "SHOP_BG",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558400,
+      "word": 1359034666,
+      "metric": "HALF_ICON",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558404,
+      "word": 1359036706,
+      "metric": "HALF_CLIP",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558416,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558420,
+      "word": 1384122629,
+      "metric": "SHOP_CLIP",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558572,
+      "word": 840595433,
+      "metric": "SHOP_SCROLL_NEG",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558680,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558688,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8558692,
+      "word": 1384120970,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559044,
+      "word": 285318441,
+      "metric": "SHOP_MONEY2",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559072,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559480,
+      "word": 285317450,
+      "metric": "SHOP_MONEY",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559584,
+      "word": 285333219,
+      "metric": "BAR1",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559592,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559624,
+      "word": 285353699,
+      "metric": "BAR2",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559632,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559664,
+      "word": 285374179,
+      "metric": "BAR3",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559672,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559724,
+      "word": 285334251,
+      "metric": "TEXT1",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559736,
+      "word": 1359035721,
+      "metric": "HALF_TEXT",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559808,
+      "word": 285354309,
+      "metric": "TEXT2",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559876,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8559920,
+      "word": 285374821,
+      "metric": "TEXT3",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8561472,
+      "word": 1359026506,
+      "metric": "SHOP_SCROLL",
+      "variant": 3,
+      "kind": 2
+    },
+    {
+      "site": 8665000,
+      "word": 2550130483,
+      "metric": "LAYOUT",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8665036,
+      "word": 840827880,
+      "metric": "COLS",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8665040,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8665048,
+      "word": 840894440,
+      "metric": "COLS",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8665052,
+      "word": 840829929,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8666884,
+      "word": 1384125449,
+      "metric": "HIT_W",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8666900,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8666904,
+      "word": 1384122884,
+      "metric": "INV_CLIP",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668036,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668060,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668064,
+      "word": 1384124005,
+      "metric": "INV_BG",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668132,
+      "word": 1359034633,
+      "metric": "HALF_ICON",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668136,
+      "word": 1359036674,
+      "metric": "HALF_CLIP",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668148,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668152,
+      "word": 1384123685,
+      "metric": "INV_CLIP",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668308,
+      "word": 285298952,
+      "metric": "INV_FOCUS",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668420,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668428,
+      "word": 310378857,
+      "metric": "NEG_HIGHLIGHT",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668436,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8668440,
+      "word": 1384120971,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8669308,
+      "word": 285364488,
+      "metric": "INV_NAME",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8669452,
+      "word": 285382920,
+      "metric": "INV_MONEY",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8670336,
+      "word": 1359067434,
+      "metric": "INV_SCROLL",
+      "variant": 3,
+      "kind": 0
+    },
+    {
+      "site": 8713780,
+      "word": 2550118288,
+      "metric": "LAYOUT",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8713812,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8713820,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8713832,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8713844,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8713852,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8713880,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8716128,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8716136,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8716264,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8716268,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8717072,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8717108,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8717112,
+      "word": 1384122827,
+      "metric": "SHOP_BG",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8717408,
+      "word": 1359034632,
+      "metric": "HALF_ICON",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8717420,
+      "word": 1384122633,
+      "metric": "SHOP_CLIP",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8717424,
+      "word": 1359036680,
+      "metric": "HALF_CLIP",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8717436,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8717740,
+      "word": 1384125768,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8718188,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8718272,
+      "word": 1384121608,
+      "metric": "CELL",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8718448,
+      "word": 285263112,
+      "metric": "SHOP_FOCUS",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8719032,
+      "word": 285318408,
+      "metric": "SHOP_MONEY2",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8719132,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8720404,
+      "word": 285317384,
+      "metric": "SHOP_MONEY",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8720568,
+      "word": 1384125780,
+      "metric": "INNER_W",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8720576,
+      "word": 285332744,
+      "metric": "BAR1",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8720716,
+      "word": 285353224,
+      "metric": "BAR2",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8720840,
+      "word": 285373704,
+      "metric": "BAR3",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8721128,
+      "word": 1359035656,
+      "metric": "HALF_TEXT",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8721140,
+      "word": 285333768,
+      "metric": "TEXT1",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8721328,
+      "word": 285354248,
+      "metric": "TEXT2",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8721508,
+      "word": 285374728,
+      "metric": "TEXT3",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 8722264,
+      "word": 1359026473,
+      "metric": "SHOP_SCROLL",
+      "variant": 3,
+      "kind": 1
+    },
+    {
+      "site": 9491244,
+      "word": 2483049347,
+      "metric": "LAYOUT",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9491276,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9491284,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9491296,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9491308,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9491316,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9491344,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9494688,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9494700,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9494828,
+      "word": 1384122889,
+      "metric": "SHOP_CLIP",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9494848,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9494852,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495460,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495484,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495488,
+      "word": 1384122821,
+      "metric": "SHOP_BG",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495556,
+      "word": 1359034666,
+      "metric": "HALF_ICON",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495560,
+      "word": 1359036706,
+      "metric": "HALF_CLIP",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495572,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495576,
+      "word": 1384122629,
+      "metric": "SHOP_CLIP",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495728,
+      "word": 840595433,
+      "metric": "SHOP_SCROLL_NEG",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495836,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495844,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9495848,
+      "word": 1384120970,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496200,
+      "word": 285318441,
+      "metric": "SHOP_MONEY2",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496228,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496636,
+      "word": 285317450,
+      "metric": "SHOP_MONEY",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496740,
+      "word": 285333219,
+      "metric": "BAR1",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496748,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496780,
+      "word": 285353699,
+      "metric": "BAR2",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496788,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496820,
+      "word": 285374179,
+      "metric": "BAR3",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496828,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496880,
+      "word": 285334251,
+      "metric": "TEXT1",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496892,
+      "word": 1359035721,
+      "metric": "HALF_TEXT",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9496964,
+      "word": 285354309,
+      "metric": "TEXT2",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9497032,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9497076,
+      "word": 285374821,
+      "metric": "TEXT3",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9498628,
+      "word": 1359026506,
+      "metric": "SHOP_SCROLL",
+      "variant": 4,
+      "kind": 2
+    },
+    {
+      "site": 9602156,
+      "word": 2550130483,
+      "metric": "LAYOUT",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9602192,
+      "word": 840827880,
+      "metric": "COLS",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9602196,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9602204,
+      "word": 840894440,
+      "metric": "COLS",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9602208,
+      "word": 840829929,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9604040,
+      "word": 1384125449,
+      "metric": "HIT_W",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9604056,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9604060,
+      "word": 1384122884,
+      "metric": "INV_CLIP",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605192,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605216,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605220,
+      "word": 1384124005,
+      "metric": "INV_BG",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605288,
+      "word": 1359034633,
+      "metric": "HALF_ICON",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605292,
+      "word": 1359036674,
+      "metric": "HALF_CLIP",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605304,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605308,
+      "word": 1384123685,
+      "metric": "INV_CLIP",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605464,
+      "word": 285298952,
+      "metric": "INV_FOCUS",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605576,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605584,
+      "word": 310378857,
+      "metric": "NEG_HIGHLIGHT",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605592,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9605596,
+      "word": 1384120971,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9606464,
+      "word": 285364488,
+      "metric": "INV_NAME",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9606608,
+      "word": 285382920,
+      "metric": "INV_MONEY",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9607492,
+      "word": 1359067434,
+      "metric": "INV_SCROLL",
+      "variant": 4,
+      "kind": 0
+    },
+    {
+      "site": 9650936,
+      "word": 2550118288,
+      "metric": "LAYOUT",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9650968,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9650976,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9650988,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9651000,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9651008,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9651036,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9653284,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9653292,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9653420,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9653424,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9654228,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9654264,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9654268,
+      "word": 1384122827,
+      "metric": "SHOP_BG",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9654564,
+      "word": 1359034632,
+      "metric": "HALF_ICON",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9654576,
+      "word": 1384122633,
+      "metric": "SHOP_CLIP",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9654580,
+      "word": 1359036680,
+      "metric": "HALF_CLIP",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9654592,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9654896,
+      "word": 1384125768,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9655344,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9655428,
+      "word": 1384121608,
+      "metric": "CELL",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9655604,
+      "word": 285263112,
+      "metric": "SHOP_FOCUS",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9656188,
+      "word": 285318408,
+      "metric": "SHOP_MONEY2",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9656288,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9657560,
+      "word": 285317384,
+      "metric": "SHOP_MONEY",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9657724,
+      "word": 1384125780,
+      "metric": "INNER_W",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9657732,
+      "word": 285332744,
+      "metric": "BAR1",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9657872,
+      "word": 285353224,
+      "metric": "BAR2",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9657996,
+      "word": 285373704,
+      "metric": "BAR3",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9658284,
+      "word": 1359035656,
+      "metric": "HALF_TEXT",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9658296,
+      "word": 285333768,
+      "metric": "TEXT1",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9658484,
+      "word": 285354248,
+      "metric": "TEXT2",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9658664,
+      "word": 285374728,
+      "metric": "TEXT3",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 9659420,
+      "word": 1359026473,
+      "metric": "SHOP_SCROLL",
+      "variant": 4,
+      "kind": 1
+    },
+    {
+      "site": 10428400,
+      "word": 2483049347,
+      "metric": "LAYOUT",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10428432,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10428440,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10428452,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10428464,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10428472,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10428500,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10431844,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10431856,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10431984,
+      "word": 1384122889,
+      "metric": "SHOP_CLIP",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432004,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432008,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432616,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432640,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432644,
+      "word": 1384122821,
+      "metric": "SHOP_BG",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432712,
+      "word": 1359034666,
+      "metric": "HALF_ICON",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432716,
+      "word": 1359036706,
+      "metric": "HALF_CLIP",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432728,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432732,
+      "word": 1384122629,
+      "metric": "SHOP_CLIP",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432884,
+      "word": 840595433,
+      "metric": "SHOP_SCROLL_NEG",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10432992,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433000,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433004,
+      "word": 1384120970,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433356,
+      "word": 285318441,
+      "metric": "SHOP_MONEY2",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433384,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433792,
+      "word": 285317450,
+      "metric": "SHOP_MONEY",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433896,
+      "word": 285333219,
+      "metric": "BAR1",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433904,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433936,
+      "word": 285353699,
+      "metric": "BAR2",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433944,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433976,
+      "word": 285374179,
+      "metric": "BAR3",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10433984,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10434036,
+      "word": 285334251,
+      "metric": "TEXT1",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10434048,
+      "word": 1359035721,
+      "metric": "HALF_TEXT",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10434120,
+      "word": 285354309,
+      "metric": "TEXT2",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10434188,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10434232,
+      "word": 285374821,
+      "metric": "TEXT3",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10435784,
+      "word": 1359026506,
+      "metric": "SHOP_SCROLL",
+      "variant": 5,
+      "kind": 2
+    },
+    {
+      "site": 10539312,
+      "word": 2550130483,
+      "metric": "LAYOUT",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10539348,
+      "word": 840827880,
+      "metric": "COLS",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10539352,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10539360,
+      "word": 840894440,
+      "metric": "COLS",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10539364,
+      "word": 840829929,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10541196,
+      "word": 1384125449,
+      "metric": "HIT_W",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10541212,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10541216,
+      "word": 1384122884,
+      "metric": "INV_CLIP",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542348,
+      "word": 1359041794,
+      "metric": "HALF_INNER",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542372,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542376,
+      "word": 1384124005,
+      "metric": "INV_BG",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542444,
+      "word": 1359034633,
+      "metric": "HALF_ICON",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542448,
+      "word": 1359036674,
+      "metric": "HALF_CLIP",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542460,
+      "word": 1384125764,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542464,
+      "word": 1384123685,
+      "metric": "INV_CLIP",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542620,
+      "word": 285298952,
+      "metric": "INV_FOCUS",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542732,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542740,
+      "word": 310378857,
+      "metric": "NEG_HIGHLIGHT",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542748,
+      "word": 1384121610,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10542752,
+      "word": 1384120971,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10543620,
+      "word": 285364488,
+      "metric": "INV_NAME",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10543764,
+      "word": 285382920,
+      "metric": "INV_MONEY",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10544648,
+      "word": 1359067434,
+      "metric": "INV_SCROLL",
+      "variant": 5,
+      "kind": 0
+    },
+    {
+      "site": 10588092,
+      "word": 2550118288,
+      "metric": "LAYOUT",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10588124,
+      "word": 3103830324,
+      "metric": "COLS",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10588132,
+      "word": 1384120618,
+      "metric": "ICON_X",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10588144,
+      "word": 1384120490,
+      "metric": "ICON_Y",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10588156,
+      "word": 1384121609,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10588164,
+      "word": 840762346,
+      "metric": "COLS",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10588192,
+      "word": 1384120969,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10590440,
+      "word": 1384121611,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10590448,
+      "word": 1358995753,
+      "metric": "SHOP_SCROLL",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10590576,
+      "word": 1384125443,
+      "metric": "HIT_W",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10590580,
+      "word": 1384122884,
+      "metric": "SHOP_CLIP",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10591384,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10591420,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10591424,
+      "word": 1384122827,
+      "metric": "SHOP_BG",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10591720,
+      "word": 1359034632,
+      "metric": "HALF_ICON",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10591732,
+      "word": 1384122633,
+      "metric": "SHOP_CLIP",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10591736,
+      "word": 1359036680,
+      "metric": "HALF_CLIP",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10591748,
+      "word": 1384125770,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10592052,
+      "word": 1384125768,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10592500,
+      "word": 840828904,
+      "metric": "HIGHLIGHT",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10592584,
+      "word": 1384121608,
+      "metric": "CELL",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10592760,
+      "word": 285263112,
+      "metric": "SHOP_FOCUS",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10593344,
+      "word": 285318408,
+      "metric": "SHOP_MONEY2",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10593444,
+      "word": 1359041800,
+      "metric": "HALF_INNER",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10594716,
+      "word": 285317384,
+      "metric": "SHOP_MONEY",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10594880,
+      "word": 1384125780,
+      "metric": "INNER_W",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10594888,
+      "word": 285332744,
+      "metric": "BAR1",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10595028,
+      "word": 285353224,
+      "metric": "BAR2",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10595152,
+      "word": 285373704,
+      "metric": "BAR3",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10595440,
+      "word": 1359035656,
+      "metric": "HALF_TEXT",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10595452,
+      "word": 285333768,
+      "metric": "TEXT1",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10595640,
+      "word": 285354248,
+      "metric": "TEXT2",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10595820,
+      "word": 285374728,
+      "metric": "TEXT3",
+      "variant": 5,
+      "kind": 1
+    },
+    {
+      "site": 10596576,
+      "word": 1359026473,
+      "metric": "SHOP_SCROLL",
+      "variant": 5,
+      "kind": 1
+    }
+  ],
+  "classes": [
+    [
+      34149200,
+      34157440,
+      34122144
+    ],
+    [
+      34340864,
+      34348624,
+      34314544
+    ],
+    [
+      34528496,
+      34536256,
+      34502176
+    ],
+    [
+      34716128,
+      34723888,
+      34689808
+    ],
+    [
+      34903760,
+      34911520,
+      34877440
+    ],
+    [
+      35091392,
+      35099152,
+      35065072
+    ]
+  ]
+}

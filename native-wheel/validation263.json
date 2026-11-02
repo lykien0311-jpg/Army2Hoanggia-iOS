@@ -1,0 +1,275 @@
+{
+  "build": 263,
+  "reference_video": "37539.mp4",
+  "source_commit": "4ac9f7e2ba9c43dbd5857ea93a1d69d608750804",
+  "apple_merge_commit": "b763a8977249cc0787c423ef91fed347a01b225e",
+  "github_run_id": 41439894541,
+  "artifact_id": 13138855236,
+  "artifact_zip_sha256": "0aa148991ad54311dbd0160733be253a0fa52b763d158e11f6a2a7cb042378bf",
+  "ipa_name": "Army2Hoanggia-2.4.1-Build263-FixCamera.ipa",
+  "ipa_bytes": 16570208,
+  "ipa_sha256": "3d81b5ff81c9f9343e233bc823bf4f27e883b4f79f8de08cdb71495e88a50413",
+  "main_sha256": "0237c8afc3a3d6653a5fb3ed2f6d37d512da46dc7971a06e7d81d9c9f44c48cc",
+  "dylib_sha256": "a3efcdc076fd7310527603cb6679ce045abe9472d5cb533afec66e554bd0f901",
+  "root_cause": {
+    "41": [
+      "AGBlindPaint",
+      "AGCorpseUpdate"
+    ],
+    "40": [
+      "AGCameraAllow",
+      "AGCorpseReceive"
+    ]
+  },
+  "build262_regression": {
+    "expected_failure": true,
+    "returncode": 1,
+    "stdout": "PASS: compiled iPhone dylib: 48 wheel bridge/state checks and 36 room-cache/JNI checks across all six variants; exact outgoing bytes, same-nonce retry, stale ack, changed connection, real RoboVM exception recovery; no live server calls\nPASS: compiled device movement pacing, 36 monotonic-clock checks across six variants\n",
+    "stderr": "Traceback (most recent call last):\n  File \"/workspace/scratch/af46863d3171/remove-b253-work/native-wheel/test_camera_cache_device.py\", line 79, in <module>\n    assert not failures,failures[:12]\n           ^^^^^^^^^^^^\nAssertionError: [(0, 'controller_first', 'dead NPC uses its own function after HUD'), (0, 'controller_first', 'manual direction and30ms gate'), (0, 'controller_first', 'pan calls camera function only'), (0, 'controller_first', 'pan calls camera function only'), (0, 'controller_first', 'manual direction and30ms gate'), (0, 'controller_first', 'pan calls camera function only'), (0, 'controller_first', 'manual direction and30ms gate'), (0, 'controller_first', 'pan calls camera function only'), (0, 'controller_first', 'pan calls camera function only'), (0, 'controller_first', 'manual direction and30ms gate'), (0, 'controller_first', 'pan calls camera function only'), (0, 'controller_first', 'manual direction and30ms gate')]\n"
+  },
+  "fix": "Keep camera40 and blindness41; move corpse receive/update to42/43; claim every data slot and reject collisions",
+  "gameplay_sources_unchanged": {
+    "Corpse.c": "acc16cc559c22c8e626b8ca53dd9a293d0de08fe522415ca14d65d639be4edd0",
+    "BattleWait.c": "c54edf13615fda9b0cc20f6e6198f9c9a55339a359d25a7dfa566fa8e3301141",
+    "AGWheel.m": "2ddf9a806f830e199c5229b9ac1f5cbb5a687424dfeaa5a75534d5576ad20c55",
+    "Movement.c": "ec0a2826cea10f334b30d22afc35bf395935c546788bd735823ab8e190ca7586",
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "ShipTraceDisabled.c": "4d7804eb8191b43827c2730bf3fb8ff7873244a16931bd2361cab553100d3a94",
+    "build.sh": "a89fcc291fc0f2cf2d5b17a0ce8be6aa767e1f16321ddb9cbd6636f13b24c945"
+  },
+  "accepted_auto_sources": {
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f",
+    "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f"
+  },
+  "validation": {
+    "package-check.json": {
+      "passed": true,
+      "input_sha256": "f9718a278eee87087942b199c475892229aa6da19c816bfd97c1663ad66111e8",
+      "output": "Army2Hoanggia-2.4.1-Build263-FixCamera.ipa",
+      "sha256": "3d81b5ff81c9f9343e233bc823bf4f27e883b4f79f8de08cdb71495e88a50413",
+      "bytes": 16570208,
+      "changed_entries": [
+        "Payload/Army2Hoanggia.app/Army2Hoanggia",
+        "Payload/Army2Hoanggia.app/Info.plist"
+      ],
+      "other_entries_unchanged": 523,
+      "github_build": {
+        "source_commit": "b763a8977249cc0787c423ef91fed347a01b225e",
+        "release_version": "2.4.1",
+        "login_marker": "2.4.1-HG78-IPA",
+        "xcode": "Xcode 16.4\nBuild version 16F6",
+        "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+        "sdk": "18.5",
+        "dylib_sha256": "a3efcdc076fd7310527603cb6679ce045abe9472d5cb533afec66e554bd0f901",
+        "apple_codesign_strict_verified": true,
+        "apple_resign_strict_verified": true,
+        "physical_device_tested": false
+      },
+      "physical_device_tested": false,
+      "requires_user_certificate_resigning": true
+    },
+    "cache-isolation-check.json": {
+      "passed": true,
+      "native_sha256": "0237c8afc3a3d6653a5fb3ed2f6d37d512da46dc7971a06e7d81d9c9f44c48cc",
+      "changed_native_bytes": 24,
+      "all_changes_in_injected_code": true,
+      "code_size": 29664,
+      "cache_slots": {
+        "5": "literal:wheel",
+        "6": "literal:room3",
+        "7": "literal:room4",
+        "8": "literal:room5",
+        "9": "literal:room6",
+        "10": "literal:room7",
+        "11": "literal:room8",
+        "12": "literal:room9",
+        "13": "literal:room10",
+        "14": "literal:room11",
+        "15": "literal:room12",
+        "16": "literal:room13",
+        "17": "literal:room14",
+        "18": "literal:room15",
+        "19": "literal:room16",
+        "20": "callback:variant0",
+        "21": "callback:variant1",
+        "22": "callback:variant2",
+        "23": "callback:variant3",
+        "24": "callback:variant4",
+        "25": "callback:variant5",
+        "31": "literal:login",
+        "37": "dlsym:AGViewportKeypad",
+        "32": "dlsym:AGGridAdjust",
+        "41": "dlsym:AGBlindPaint",
+        "35": "dlsym:AGWheelSuppressFooter",
+        "0": "dlsym:AGWheelOpen",
+        "26": "dlsym:AGMoveAllow",
+        "40": "dlsym:AGCameraAllow",
+        "42": "dlsym:AGCorpseReceive",
+        "33": "dlsym:AGTurnReceive",
+        "3": "dlsym:AGRoomReceive",
+        "27": "dlsym:AGNotesReceive",
+        "2": "dlsym:AGWheelReceive",
+        "43": "dlsym:AGCorpseUpdate",
+        "39": "dlsym:AGTurnChange",
+        "34": "dlsym:AGTurnManual",
+        "38": "dlsym:AGBattleAwait",
+        "36": "dlsym:AGTurnPulse",
+        "4": "dlsym:AGRoomRebuild",
+        "1": "dlsym:AGWheelTick",
+        "29": "dlsym:AGNotesSettings",
+        "28": "dlsym:AGNotesInput",
+        "30": "dlsym:AGNotesInbox"
+      },
+      "dylib_identical_to262": true,
+      "diagnostic_UI_enabled": false
+    },
+    "camera-cache-check.json": {
+      "passed": true,
+      "variants": 6,
+      "warmup_orders": 3,
+      "shared_cache_native_cases": 546,
+      "four_manual_directions": true,
+      "manual_pan_interval_ms": 30,
+      "automatic_mode_unchanged": true,
+      "corpse_HUD_and_camera_have_independent_callbacks": true,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "camera-hook-check.json": {
+      "passed": true,
+      "native_pan_cases": 120,
+      "variants": 6,
+      "axes": 2,
+      "manual_pan_interval_ms": 30,
+      "automatic_modes_unchanged": true,
+      "separate_walk_clock": true,
+      "optional_symbol_fallback": true,
+      "native_setter_and_abi_executed": true
+    },
+    "camera-device-check.json": {
+      "passed": true,
+      "apple_arm64_timing_cases": 48,
+      "variants": 6,
+      "manual_camera_and_walk_interval_ms": 30,
+      "independent_axes": true,
+      "frame_rates": [
+        20,
+        60,
+        120,
+        1000
+      ],
+      "live_game_requests": 0
+    },
+    "blind-device-check.json": {
+      "passed": true,
+      "apple_native_cases": 96,
+      "variants": 6,
+      "local_slots": [
+        0,
+        7
+      ],
+      "protocol": 106,
+      "wire_order": [
+        "state",
+        "target"
+      ],
+      "original_reader_unchanged": true,
+      "white_rectangle": [
+        0,
+        0,
+        320,
+        480
+      ],
+      "opaque_white": true,
+      "actual_native_graphics_state_methods": true,
+      "original_HUD_entry_executed": true,
+      "graphics_restored_on_Java_exception": true,
+      "new_match_exit_and_server_clear_reset": true,
+      "live_requests": 0
+    },
+    "corpse-device-check.json": {
+      "passed": true,
+      "variants": 6,
+      "old_native_detached_part_flight_stalls": 24,
+      "marked_packet_and_full_fall_sequences": 90,
+      "stale_live_normal_UFO_and_reset_cases": 96,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "roster_capacities": [
+        9,
+        100,
+        127
+      ],
+      "wire_command": 93,
+      "wire_length": 10,
+      "wire_magic": "43503439",
+      "native_reader_unchanged": true,
+      "no_wait_during_corpse_motion": true,
+      "subsequent_controller_packets_reachable": true,
+      "animation_matches_JAR_acceleration_and_destination": true,
+      "native_actor_field16b": 0,
+      "original_virtual_dispatch_and_vtable": true,
+      "physical_device_tested": false,
+      "live_requests": 0,
+      "same_field_distinct_parts_and_revival_sequences": 6
+    },
+    "corpse-turn-check.json": {
+      "passed": true,
+      "variants": 6,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "native_endshoot_and_server_turn_camera_sequences": 90,
+      "native_turn_reset_reproduces_dead_to_idle": true,
+      "native_completion_packet": 23,
+      "native_camera_owner_after_server_turn": 2,
+      "duplicate_completion_packets": 0,
+      "living_moving_actor_still_blocks_completion": true,
+      "native_actor_field16b": 0,
+      "original_virtual_dispatch_and_vtable": true,
+      "landed_corpses_rearm_gravity": false,
+      "synthetic_turns": 0,
+      "physical_device_tested": false,
+      "live_requests": 0
+    }
+  },
+  "other_run_checks": {
+    "native_UFO_encounters": 60,
+    "long_UFO_effect_fallbacks": 12,
+    "native_hook_ABI": 134,
+    "post_update_wait_keypad_ABI": 86,
+    "turn_handoff_ABI": 24
+  },
+  "recovery_round_trip_verified": true,
+  "limits": [
+    "No physical iPhone/live-server test.",
+    "Installed ARM64 camera setters, controller/corpse code and HUD hooks run with controlled OS/JVM/graphics boundaries.",
+    "Warm-cache regression reproduces the observed block in Build262; all546 shared-cache cases pass with the final native binary and byte-identical Apple library."
+  ],
+  "library": {
+    "library_file_id": "libfile_23d4a2aa387c819199e2f4d6912c3f54",
+    "version": 14
+  }
+}

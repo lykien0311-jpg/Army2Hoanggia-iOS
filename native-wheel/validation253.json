@@ -1,0 +1,110 @@
+{
+  "passed": true,
+  "input_sha256": "c670745855963e24cd29d87edbea59687f5823828ccc50c892037977030c0460",
+  "output": "Army2Hoanggia-2.4.1-Build253-AutoUFO.ipa",
+  "sha256": "6741c3319411ecfbd209f1af40ec24328f4c60eb07f51c6e1e9a381abe19ccfa",
+  "bytes": 16571787,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 523,
+  "github_build": {
+    "source_commit": "a1756514163085a95b5ddae67552f3ad9607b6ad",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "8fd10fb0d9e300ce5346bcd14dd8f5fcfa7b7f8c9373150d5b23167c700bbd30",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "source_head": "bed986312f6f118af554d38ff74b17dc17a2f43c",
+  "workflow_run": 41293403427,
+  "workflow_conclusion": "success",
+  "artifact_id": 13077854426,
+  "artifact_zip_sha256": "b4d97ea0c24fac90f0a4e141a5c379b41da1ebef948724186c55074d4991919e",
+  "reference_videos": [
+    "35378.mp4",
+    "35379.mp4"
+  ],
+  "confirmed_code_defect": "The64-slot cap rejects the native server-configured100-slot roster before coordinates and pending turn handoff can be processed.",
+  "native_capacity_contract": {
+    "default": 100,
+    "positive_byte_max": 127,
+    "allocation": "Original native capacity getter/setter, Player[] allocator wrapper and array setter execute in fixtures."
+  },
+  "combat_scope": {
+    "normal_weapon_shots": true,
+    "POW_when_rage_equals100": true,
+    "inventory_item_selection": false,
+    "permitted_auto_combat_requests": [
+      "command22 normal weapon",
+      "command26 native POW token100 only"
+    ]
+  },
+  "verification": {
+    "native_capacity_first_NPC_and_high_slot_wait_cases": 60,
+    "native_full_encounter_cases": 60,
+    "completion_and_other_room_wait_cases": 12,
+    "normal_weapon_and_skill_cases": 180,
+    "readonly_diagnostic_snapshots": 48,
+    "retained_wheel_and_room_bridge": 84,
+    "retained_movement_clock": 36,
+    "pure_controller_cases": 125,
+    "native_player_slots_tested": [
+      10,
+      64,
+      65,
+      100,
+      127
+    ],
+    "native_local_slots_tested": [
+      0,
+      7
+    ],
+    "normal_weapons_tested": 10,
+    "native_variants_tested": 6,
+    "rage_values_tested": [
+      0,
+      99,
+      100
+    ]
+  },
+  "old252_regressions": {
+    "100_slot_video_state_reproduced": {
+      "count": 100,
+      "enabled": 1,
+      "hasPlan": 1,
+      "nativePending": 1,
+      "applied": 0,
+      "x": 0,
+      "y": 0,
+      "shots": 0
+    },
+    "initial_NPC_handoff_delayed_even_with10_slots": true
+  },
+  "new253_fixture_snapshot": {
+    "count": 100,
+    "enabled": 1,
+    "valid": 1,
+    "hasPlan": 0,
+    "nativePending": 0,
+    "sequence": 2,
+    "applied": 2,
+    "x": 240,
+    "y": 350,
+    "blocked": 0,
+    "shots": 1,
+    "sent": 1
+  },
+  "boundaries": [
+    "OS/JVM allocation and I/O, terrain/math, HUD/camera and transport endpoints are controlled",
+    "Compiled Apple ARM64 dylib and original native capacity, turn, flight, projectile, gravity and command24 bodies execute",
+    "No production game account or physical iPhone acceptance run"
+  ]
+}

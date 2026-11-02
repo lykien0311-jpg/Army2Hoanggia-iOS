@@ -1,0 +1,230 @@
+{
+  "build": 262,
+  "purpose": "Remove diagnostic display, sampling and log recording from the device IPA",
+  "source_commit": "6540d9023c248404e3f994e1a6bfeb973167ac3d",
+  "apple_merge_commit": "b8951756daa866a5e4a623a79073bcd2f7264fdd",
+  "github_run_id": 41435278986,
+  "artifact_id": 13135694528,
+  "artifact_zip_sha256": "0b8e72682588330dfc87d34063f73ba32cd0904f2db170ee64c82caaebc6ca2a",
+  "ipa_name": "Army2Hoanggia-2.4.1-Build262-BoDo.ipa",
+  "ipa_bytes": 16570198,
+  "ipa_sha256": "f9718a278eee87087942b199c475892229aa6da19c816bfd97c1663ad66111e8",
+  "main_sha256": "0d8deab0fda447c08658ab77351cea4e9f088a2de3b7425c4159c924bbc4a679",
+  "dylib_sha256": "a3efcdc076fd7310527603cb6679ce045abe9472d5cb533afec66e554bd0f901",
+  "accepted_auto_sources": {
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f",
+    "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f"
+  },
+  "validation": {
+    "package-check.json": {
+      "passed": true,
+      "input_sha256": "f1fd505c3b57e2e308dcaec20610c5485081dd6f9835fb350b3fc690c1a30c0a",
+      "output": "Army2Hoanggia-2.4.1-Build262-BoDo.ipa",
+      "sha256": "f9718a278eee87087942b199c475892229aa6da19c816bfd97c1663ad66111e8",
+      "bytes": 16570198,
+      "changed_entries": [
+        "Payload/Army2Hoanggia.app/Info.plist",
+        "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+      ],
+      "other_entries_unchanged": 523,
+      "github_build": {
+        "source_commit": "b8951756daa866a5e4a623a79073bcd2f7264fdd",
+        "release_version": "2.4.1",
+        "login_marker": "2.4.1-HG78-IPA",
+        "xcode": "Xcode 16.4\nBuild version 16F6",
+        "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+        "sdk": "18.5",
+        "dylib_sha256": "a3efcdc076fd7310527603cb6679ce045abe9472d5cb533afec66e554bd0f901",
+        "apple_codesign_strict_verified": true,
+        "apple_resign_strict_verified": true,
+        "physical_device_tested": false
+      },
+      "physical_device_tested": false,
+      "requires_user_certificate_resigning": true
+    },
+    "diagnostic-removal-check.json": {
+      "passed": true,
+      "diagnostic_window_absent": true,
+      "diagnostic_log_writer_absent": true,
+      "diagnostic_sample_storage_absent": true,
+      "gameplay_source_hashes_unchanged": {
+        "Corpse.c": "acc16cc559c22c8e626b8ca53dd9a293d0de08fe522415ca14d65d639be4edd0",
+        "BattleWait.c": "c54edf13615fda9b0cc20f6e6198f9c9a55339a359d25a7dfa566fa8e3301141",
+        "AGWheel.m": "2ddf9a806f830e199c5229b9ac1f5cbb5a687424dfeaa5a75534d5576ad20c55",
+        "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+        "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f",
+        "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+        "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f",
+        "Movement.c": "ec0a2826cea10f334b30d22afc35bf395935c546788bd735823ab8e190ca7586"
+      },
+      "main_executable_unchanged": true,
+      "bundle_build": 262
+    },
+    "corpse-device-check.json": {
+      "passed": true,
+      "variants": 6,
+      "old_native_detached_part_flight_stalls": 24,
+      "marked_packet_and_full_fall_sequences": 90,
+      "stale_live_normal_UFO_and_reset_cases": 96,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "roster_capacities": [
+        9,
+        100,
+        127
+      ],
+      "wire_command": 93,
+      "wire_length": 10,
+      "wire_magic": "43503439",
+      "native_reader_unchanged": true,
+      "no_wait_during_corpse_motion": true,
+      "subsequent_controller_packets_reachable": true,
+      "animation_matches_JAR_acceleration_and_destination": true,
+      "native_actor_field16b": 0,
+      "original_virtual_dispatch_and_vtable": true,
+      "physical_device_tested": false,
+      "live_requests": 0,
+      "same_field_distinct_parts_and_revival_sequences": 6
+    },
+    "corpse-turn-check.json": {
+      "passed": true,
+      "variants": 6,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "native_endshoot_and_server_turn_camera_sequences": 90,
+      "native_turn_reset_reproduces_dead_to_idle": true,
+      "native_completion_packet": 23,
+      "native_camera_owner_after_server_turn": 2,
+      "duplicate_completion_packets": 0,
+      "living_moving_actor_still_blocks_completion": true,
+      "native_actor_field16b": 0,
+      "original_virtual_dispatch_and_vtable": true,
+      "landed_corpses_rearm_gravity": false,
+      "synthetic_turns": 0,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "camera-device-check.json": {
+      "passed": true,
+      "apple_arm64_timing_cases": 48,
+      "variants": 6,
+      "manual_camera_and_walk_interval_ms": 30,
+      "independent_axes": true,
+      "frame_rates": [
+        20,
+        60,
+        120,
+        1000
+      ],
+      "live_game_requests": 0
+    },
+    "wheel-home-return-check.json": {
+      "passed": true,
+      "original_native_home_transitions": 12,
+      "build254_empty_home_reproduced": true,
+      "build255_menu_paint_restored": true,
+      "original_layout_and_cleanup_executed": true,
+      "server_ack_required": false,
+      "cases": [
+        {
+          "build": 254,
+          "variant": 0,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 1,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 2,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 3,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 4,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 5,
+          "menu_visible": false
+        },
+        {
+          "build": 255,
+          "variant": 0,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 1,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 2,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 3,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 4,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 5,
+          "menu_visible": true
+        }
+      ]
+    }
+  },
+  "other_run_checks": {
+    "native_UFO_encounters": 60,
+    "long_UFO_effect_fallbacks": 12,
+    "native_hook_ABI": 134,
+    "post_update_wait_keypad_ABI": 86,
+    "turn_handoff_ABI": 24
+  },
+  "scope": "Device target uses no-op diagnostic ABI; overlay, timer, native snapshots and local diagnostic log writer are absent. Gameplay source files and main executable are unchanged from Build261.",
+  "limits": [
+    "No physical-device test.",
+    "Simulator diagnostic fixtures remain development-only and are excluded from the packaged device library."
+  ],
+  "library": {
+    "library_file_id": "libfile_23d4a2aa387c819199e2f4d6912c3f54",
+    "version": 13
+  }
+}

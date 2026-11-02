@@ -1,0 +1,44 @@
+[
+  {
+    "variant": 0,
+    "calculate": 5936964,
+    "apply_site": 5938692,
+    "player_get": 5701436,
+    "character_get": 5326984
+  },
+  {
+    "variant": 1,
+    "calculate": 6889880,
+    "apply_site": 6891608,
+    "player_get": 6661360,
+    "character_get": 6300624
+  },
+  {
+    "variant": 2,
+    "calculate": 7827036,
+    "apply_site": 7828764,
+    "player_get": 7598516,
+    "character_get": 7237780
+  },
+  {
+    "variant": 3,
+    "calculate": 8764192,
+    "apply_site": 8765920,
+    "player_get": 8535672,
+    "character_get": 8174936
+  },
+  {
+    "variant": 4,
+    "calculate": 9701348,
+    "apply_site": 9703076,
+    "player_get": 9472828,
+    "character_get": 9112092
+  },
+  {
+    "variant": 5,
+    "calculate": 10638504,
+    "apply_site": 10640232,
+    "player_get": 10409984,
+    "character_get": 10049248
+  }
+]

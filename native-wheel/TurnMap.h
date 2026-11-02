@@ -1,0 +1,10 @@
+// Native player and arena fields validated against guarded instructions.
+typedef struct { uintptr_t arena_class,player_class,array_class,fire,projectile_class; } AGTurnMap;
+static const AGTurnMap AGTurnMaps[6]={
+    {0x2082e30, 0x2091b80, 0x207f060, 0x597614, 0x208c790},
+    {0x20b23a0, 0x20c0670, 0x20aec70, 0x680568, 0x20bb5b0},
+    {0x20e0090, 0x20ee360, 0x20dc970, 0x76522c, 0x20e92a0},
+    {0x210dd80, 0x211c050, 0x210a660, 0x849ef0, 0x2116f90},
+    {0x213ba70, 0x2149d40, 0x2138350, 0x92ebb4, 0x2144c80},
+    {0x2169760, 0x2177a30, 0x2166040, 0xa13878, 0x2172970},
+};

@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "input_sha256": "efa2cfaf794e9456383a54e0f421fb4dc85aa6decce184c5e8717fbda581f4a9",
+  "output": "Army2Hoanggia-2.4.1-Build248-GitHub.ipa",
+  "sha256": "20a400629803ed2e8ac6faa0070c2b830915ed5f71d79e5fa1abb57d960b9803",
+  "bytes": 16562591,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 523,
+  "github_build": {
+    "source_commit": "56c85d4cc328a28c8dcb20920d49ef4bc4e8535e",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "9d0da73301f9f72cdd4773af976105555f370d775461711d1a4cec79577e6f44",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "source_branch_commit": "21417183cdda50a04be4c2efe6193888487bed65",
+  "workflow_run": 41198183405,
+  "workflow_artifact": 13041521742,
+  "main_identical_to247": true,
+  "silent_status_callback_ret": true,
+  "test_counts": {
+    "native_actor_to_wire": 48,
+    "turn_guards": 174,
+    "predicate_waits": 150,
+    "update_to_wire": 36,
+    "native_walk_to_wire": 18,
+    "hook_exception": 134,
+    "hook_abi": 86,
+    "keypad_projection": 32,
+    "grid_pointer": 624,
+    "notes": 444
+  },
+  "red_regression_old247": "native actor/item flags: expected command22, observed no packet",
+  "boundaries": [
+    "Java/OS/allocation/graphics",
+    "terrain collision in gravity fixture",
+    "original arena update body in update-to-wire fixture",
+    "final network transport"
+  ],
+  "real_device_or_vps_acceptance": false
+}

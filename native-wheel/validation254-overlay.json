@@ -1,0 +1,54 @@
+{
+  "passed": true,
+  "input_sha256": "6741c3319411ecfbd209f1af40ec24328f4c60eb07f51c6e1e9a381abe19ccfa",
+  "output": "Army2Hoanggia-2.4.1-Build254-BoDongDo.ipa",
+  "sha256": "f1cd1291f9d3c5e0f7f05abbc19edc6a0aa3079f8d997835ad84ac45e5b81811",
+  "bytes": 16565715,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 523,
+  "github_build": {
+    "source_commit": "527ef747285882759c8191d6b06a2647f2ff5310",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "1dd5c1bb5b55f4bfe7a58c790c22d4678759094d52699c2e01e14da72ebe6a7e",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "scope": "Remove B253 diagnostic overlay from the user-confirmed working253 implementation",
+  "source_head": "8a4376b33254211eed46cd91fbf508af58f4e10d",
+  "source_branch": "codex/army-ios-remove-b253",
+  "workflow_run": 41296244636,
+  "workflow_conclusion": "success",
+  "artifact_id": 13079491626,
+  "artifact_zip_sha256": "b9d3a2fe4742b708943bba7d9db1dc820685f480f18816110dc03c93bfd840ee",
+  "auto_sources_identical_to_working253": true,
+  "native_main_identical_to_working253": true,
+  "diagnostic_ui_absent_from_device_dylib": true,
+  "diagnostic_polling_and_file_writer_absent": true,
+  "normal_shots_and_conditional_POW_retained": true,
+  "inventory_item_policy_unchanged": true,
+  "baseline253_confirmed_by_user": true,
+  "new_build_physical_device_tested": false,
+  "verification": {
+    "compiled_ARM64_full_encounter_cases": 60,
+    "completion_and_other_room_wait_cases": 12,
+    "retained_wheel_and_room_bridge_cases": 84,
+    "movement_clock_cases": 36,
+    "apple_strict_sign_and_resign": true
+  },
+  "auto_source_sha256": {
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f"
+  }
+}

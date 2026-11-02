@@ -1,0 +1,191 @@
+{
+  "build": 258,
+  "reference_video": "37525.mp4",
+  "source_commit": "8e470f93f6f061bf367a47febd2e36ee00307078",
+  "apple_merge_commit": "41bf005d7bf1c8e1d29d5d0c9b67f50fb1c00fc7",
+  "github_run_id": 41401825604,
+  "artifact_id": 13121836265,
+  "artifact_zip_sha256": "a4a1179e14b11170ad699f56dc80ce54b21f7efd484bf1df7b4bd5cd1ff5120f",
+  "ipa_name": "Army2Hoanggia-2.4.1-Build258-KhiCau-30ms.ipa",
+  "ipa_bytes": 16569986,
+  "ipa_sha256": "0d3638b4ba4c1814c8810c9890aa8154bd7f533871c59216248c288d3317c7a1",
+  "main_sha256": "0d8deab0fda447c08658ab77351cea4e9f088a2de3b7425c4159c924bbc4a679",
+  "dylib_sha256": "703e8e859e3c264b7131d78a9ffc0474204b029daee1c1785c628412592354f1",
+  "accepted_auto_sources": {
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f",
+    "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f"
+  },
+  "root_cause": {
+    "server": "Corpse497.sync sends command93 with10bytes and magic43505239",
+    "JAR": "Client497.move consumes the extension and animates dead actors separately",
+    "IPA257": "Native5-byte flight reader treats dead parts as flying, but NPC switch18..21 has no flight completion and leaves14e set",
+    "fix": "Consume only marked airship corpse93 in rooms10/14/15, animate on NPC updates without waiting; retain native live-flight fallback"
+  },
+  "validation": {
+    "package-check.json": {
+      "passed": true,
+      "input_sha256": "8d6529a612c2f514c3f803bbdc3c181093997468deede6b8e7008ac7ca97aa15",
+      "output": "Army2Hoanggia-2.4.1-Build258-KhiCau-30ms.ipa",
+      "sha256": "0d3638b4ba4c1814c8810c9890aa8154bd7f533871c59216248c288d3317c7a1",
+      "bytes": 16569986,
+      "changed_entries": [
+        "Payload/Army2Hoanggia.app/Army2Hoanggia",
+        "Payload/Army2Hoanggia.app/Info.plist",
+        "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+      ],
+      "other_entries_unchanged": 522,
+      "github_build": {
+        "source_commit": "41bf005d7bf1c8e1d29d5d0c9b67f50fb1c00fc7",
+        "release_version": "2.4.1",
+        "login_marker": "2.4.1-HG78-IPA",
+        "xcode": "Xcode 16.4\nBuild version 16F6",
+        "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+        "sdk": "18.5",
+        "dylib_sha256": "703e8e859e3c264b7131d78a9ffc0474204b029daee1c1785c628412592354f1",
+        "apple_codesign_strict_verified": true,
+        "apple_resign_strict_verified": true,
+        "physical_device_tested": false
+      },
+      "physical_device_tested": false,
+      "requires_user_certificate_resigning": true
+    },
+    "corpse-device-check.json": {
+      "passed": true,
+      "variants": 6,
+      "old_native_detached_part_flight_stalls": 24,
+      "marked_packet_and_full_fall_sequences": 90,
+      "stale_live_normal_UFO_and_reset_cases": 90,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "roster_capacities": [
+        9,
+        100,
+        127
+      ],
+      "wire_command": 93,
+      "wire_length": 10,
+      "wire_magic": "43505239",
+      "native_reader_unchanged": true,
+      "no_wait_during_corpse_motion": true,
+      "subsequent_controller_packets_reachable": true,
+      "animation_matches_JAR_acceleration_and_destination": true,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "airship-wait-check.json": {
+      "passed": true,
+      "apple_native_wait_cases": 390,
+      "variants": 6,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "roster_capacities": [
+        9,
+        100,
+        127
+      ],
+      "native_finalizer_lost_notify_replays": 18,
+      "native_part_effect_counter_lost_notify_replays": 18,
+      "native_part_particles": 4,
+      "native_effect_completion_frames": 20,
+      "busy_waits_survive_79_spurious_wakes": true,
+      "timeout_does_not_clear_flags": true,
+      "scene_and_connection_changes_release_wait": true,
+      "other_stages_keep_previous_bridge": true,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "camera-device-check.json": {
+      "passed": true,
+      "apple_arm64_timing_cases": 48,
+      "variants": 6,
+      "manual_camera_and_walk_interval_ms": 30,
+      "independent_axes": true,
+      "frame_rates": [
+        20,
+        60,
+        120,
+        1000
+      ],
+      "live_game_requests": 0
+    },
+    "camera-pacing-check.json": {
+      "passed": true,
+      "frame_rate_direction_cases": 18,
+      "pan_interval_ms": 30,
+      "independent_axes": true,
+      "walking_independent": true,
+      "no_sleep_or_queued_steps": true
+    },
+    "blind-device-check.json": {
+      "passed": true,
+      "apple_native_cases": 96,
+      "variants": 6,
+      "local_slots": [
+        0,
+        7
+      ],
+      "protocol": 106,
+      "wire_order": [
+        "state",
+        "target"
+      ],
+      "original_reader_unchanged": true,
+      "white_rectangle": [
+        0,
+        0,
+        320,
+        480
+      ],
+      "opaque_white": true,
+      "actual_native_graphics_state_methods": true,
+      "original_HUD_entry_executed": true,
+      "graphics_restored_on_Java_exception": true,
+      "new_match_exit_and_server_clear_reset": true,
+      "live_requests": 0
+    },
+    "speed-maximum-check.json": {
+      "passed": true,
+      "native_level_cases": 120,
+      "variants": 6,
+      "levels_1_to_9_unchanged": true,
+      "level_10_skips_scheduler_sleep": true,
+      "extra_game_ticks": 0,
+      "packet_duplication": false,
+      "physical_device_performance_measured": false
+    }
+  },
+  "other_regressions": {
+    "native_hook_ABI": 134,
+    "post_update_predicate_keypad_ABI": 86,
+    "native_turn_handoff_ABI": 24,
+    "native_ufo_encounters": 60,
+    "long_ufo_effect_and_fallback_waits": 12,
+    "installed_UFO_wait_sites": 150,
+    "wheel_home_transitions": 12
+  },
+  "limits": [
+    "No physical iPhone or live-server test.",
+    "Old detached-part NPC dispatch replay mocks only its unrelated base Player.update boundary; flight starter and detached-part type dispatch run unchanged.",
+    "Controller and replacement animations execute compiled Apple ARM64 with controlled OS/JVM boundaries.",
+    "Following command24 reaches the original controller; real device manual shooting and leaving remain acceptance checks."
+  ],
+  "library": {
+    "library_file_id": "libfile_23d4a2aa387c819199e2f4d6912c3f54",
+    "version": 9
+  }
+}

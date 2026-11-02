@@ -1,0 +1,41 @@
+{
+  "passed": true,
+  "input_sha256": "085067dcedd0c9b7eb4a4a74d746d43b948dbc77cd6c0a6a9b1e4a7255b3b133",
+  "output": "Army2Hoanggia-2.4.1-Build244-GitHub.ipa",
+  "sha256": "56067284ff6946c081c01d462f8a882ef2b3c03f499a9f44a5cb0f45a798b732",
+  "size_bytes": 16558984,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Army2Hoanggia",
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "retained_entries": 522,
+  "main_sha256": "fb80bd5ea3ca1319ca7560e2e99d00749d49835ca25d63ef79ee8c4085198d5f",
+  "github_build": {
+    "source_commit": "35df6a9509a4e02b8665ccad067cd12756dfe8e0",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "fce1eeb2762245d852f52b5c4cfd9e8d8a3da75d9c1e2ebd4b5526cefdb21e8d",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "github_run": 41170599642,
+  "source_branch_commit": "4071fc510742d0a089a6a185df67da7f85620674",
+  "validation": {
+    "boss_sprite_calls": 480,
+    "footer_entry_cases": 18,
+    "ufo_bridge_cases": 156,
+    "native_shoot_wire_cases": 12,
+    "grid_layout_input_cases": 624,
+    "notes_bridge_cases": 444,
+    "manual_captcha_modes": 6,
+    "simulator_viewports": 6
+  },
+  "physical_device_tested": false,
+  "live_server_tested": false,
+  "requires_user_certificate_resigning": true
+}
