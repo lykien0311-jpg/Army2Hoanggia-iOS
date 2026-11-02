@@ -3,7 +3,7 @@ import test_hooks as t
 import struct
 
 U=t.U;X=t.X;B=t.BASE;R=t.R
-t.CALLBACKS['AGTurnAwait']=0x300012000
+t.CALLBACKS['AGBattleAwait']=0x300012000
 body=0;body_done=False;old_waits=0
 def hook(uc,pc,size,data):
     global body_done,old_waits
@@ -40,7 +40,7 @@ for wait in R['turn_wait_hooks']:
         U.emu_start(B+wait['hook'],t.STOP+4,count=2000)
         assert U.reg_read(t.UC_ARM64_REG_SP)==t.SP and U.reg_read(X[29])==frame
         assert all(U.reg_read(X[i])==0xc000+i for i in range(19,29))
-        calls=[c for c in t.calls if c[0]=='AGTurnAwait']
+        calls=[c for c in t.calls if c[0]=='AGBattleAwait']
         assert bool(calls)==(not t.missing) and old_waits==int(t.missing)
         if calls:
             # test_hooks logs three args; the callback's first three carry

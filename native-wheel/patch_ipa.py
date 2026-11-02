@@ -66,7 +66,7 @@ def build_native(old,original,maps):
     camera_maps=json.loads((ROOT/'camera-map.json').read_text())
     camera_hooks=[]
     blind_maps=json.loads((ROOT/'blind-map.json').read_text());blind_hooks=[]
-    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnAwait','AGTurnChange','AGViewportKeypad','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
+    for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGTurnPulse','AGBattleAwait','AGTurnChange','AGViewportKeypad','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     raw=b'AGCameraAllow\0';symbols['AGCameraAllow']=rxvm+strcursor
     rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
@@ -710,7 +710,7 @@ def build_native(old,original,maps):
                 mov x29, sp
                 stp x0, x1, [sp, #16]
                 str w9, [sp, #32]
-                {lookup('AGTurnAwait',38)}
+                {lookup('AGBattleAwait',38)}
                 cbz x10, old_wait
                 ldp x0, x1, [sp, #16]
                 mov w2, #{i}
