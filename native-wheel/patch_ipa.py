@@ -80,9 +80,20 @@ def build_native(old,original,maps):
     for title in REFERENCE_TITLES.values():
         rx[strcursor:strcursor+8]=struct.pack('<iI',symbols[title]-(rxvm+strcursor),len(title.encode('utf-16-le'))//2)
         strcursor+=8
+    cache_slots={}
+    def claim_cache(slot,label):
+        assert 0<=slot<64,('Cache outside reserved data section',slot,label)
+        previous=cache_slots.get(slot)
+        assert previous is None or previous==label,('Shared native cache slot',slot,previous,label)
+        cache_slots[slot]=label
+    claim_cache(5,'literal:wheel')
+    for j,room_id in enumerate(REFERENCE_TITLES):claim_cache(6+j,f'literal:room{room_id}')
+    for j in range(6):claim_cache(20+j,f'callback:variant{j}')
+    claim_cache(31,'literal:login')
     def lookup(symbol,slot):
         # Aligned 64-bit function pointer cache. All racing resolvers write the
         # same address. Cache pages are RW, never executable.
+        claim_cache(slot,'dlsym:'+symbol)
         ptr=rwvm+slot*8;string=symbols[symbol]
         return f'''
             adrp x9, {ptr&-4096}
@@ -577,7 +588,7 @@ def build_native(old,original,maps):
             mov x29, sp
             stp x0, x1, [sp, #16]
             str x2, [sp, #32]
-            {lookup('AGCorpseReceive',40)}
+            {lookup('AGCorpseReceive',42)}
             cbz x10, corpse_observed
             ldr x0, [sp, #16]
             ldr x1, [sp, #32]
@@ -679,7 +690,7 @@ def build_native(old,original,maps):
             stp x29, x30, [sp, #-48]!
             mov x29, sp
             stp x0, x1, [sp, #16]
-            {lookup('AGCorpseUpdate',41)}
+            {lookup('AGCorpseUpdate',43)}
             cbz x10, corpse_native_update
             ldp x0, x1, [sp, #16]
             mov w2, #{i}
@@ -1006,7 +1017,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,camera_hooks=camera_hooks,blind_hooks=blind_hooks,corpse_hooks=corpse_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(cache_slots=cache_slots,hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,camera_hooks=camera_hooks,blind_hooks=blind_hooks,corpse_hooks=corpse_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()
