@@ -24,5 +24,12 @@
     "Balance494.send",
     "Balance494.ability"
   ],
-  "limitation": "User screenshot does not expose base/allocated/equipment inputs; no account was contacted. Screenshot HP is not hardcoded."
+  "limitation": "User screenshot does not expose base/allocated/equipment inputs; no account was contacted. Screenshot HP is not hardcoded.",
+  "release_2_4_1_class_identical_to_reference": true,
+  "summary_array_uses": [
+    "C431 constructor",
+    "C431 equipment calculation",
+    "C431 equipment painting"
+  ],
+  "summary_array_read_by_combat": false
 }
