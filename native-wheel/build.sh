@@ -8,13 +8,14 @@ python3 test_rooms.py
 python3 test_movement.py
 python3 test_camera_pacing.py
 python3 test_blind_state.py
+python3 test_stats.py
 sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
 xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=12.0 \
   -dynamiclib -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wall -Wextra \
   -Wno-unused-parameter -Wno-deprecated-declarations -Wno-unused-function \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
   -Wl,-headerpad,4000 -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
-  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c ShipTraceDisabled.c NativeGuard.S \
+  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c Stats.c ShipTraceDisabled.c NativeGuard.S \
   -o build/AGWheel.dylib
 codesign --force --sign - --timestamp=none build/AGWheel.dylib
 codesign --verify --strict --verbose=2 build/AGWheel.dylib 2>build/code-signing.txt
@@ -35,6 +36,7 @@ assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
 assert '_AGReleaseIdentity' in exports and b'2.4.1-HG78-IPA\0' in p.read_bytes()
 assert '_AGUfoDiagnosticsGet' in exports
 assert '_AGShipTraceGet' in exports
+assert '_AGStatsApply' in exports
 for diagnostic_ui in (b'AGUfoDiagnosticWindow',b'AutoUFO-Build253.txt','B253 •'.encode(),
                       b'AGShipDiagnosticWindow',b'KhiCau-B260.txt',b'KhiCau-B261.txt',
                       'B260 •'.encode(),'B261 •'.encode(),b'vn.army2hoanggia.airship-log'):
@@ -61,7 +63,7 @@ xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wno-deprecated-declarations \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
   -Wl,-headerpad,4000 -Wl,-install_name,@rpath/libAGWheelPreview.dylib \
-  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c ShipTrace.c AirshipDiagnostics.m \
+  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c Stats.c ShipTrace.c AirshipDiagnostics.m \
   -o build/WheelPreview.app/Frameworks/libAGWheelPreview.dylib
 xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -mios-simulator-version-min=16.0 -fobjc-arc -fblocks -O1 -framework UIKit \

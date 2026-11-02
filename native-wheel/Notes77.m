@@ -11,6 +11,7 @@
 #include "NotesMap.h"
 #include "NativeMap.h"
 #include "Blind.h"
+#include "Stats.h"
 #include "NotesProtocol.h"
 #import "GameViewport.h"
 extern int AGWheelInput(int,int,int,int);
@@ -114,6 +115,7 @@ void AGNotesTick(void *env,int variant){
 }
 __attribute__((visibility("default"))) int AGNotesReceive(void *env,void *message,int variant){
     if(!env||!message||variant<0||variant>=6)return 0;int command=*(int8_t *)((uint8_t *)message+0x30);
+    if(command==-110)return AGStatsReceive(env,message,variant);
     if(command==106||command==20){AGBlindReceive(env,message,variant);return 0;}
     if(command!=-122&&command!=-123)return 0;NInit();
     uint8_t *in=*(uint8_t **)((uint8_t *)message+0x20);if(!in)return 1;uint8_t *a=*(uint8_t **)(in+0x10);if(!a)return 1;

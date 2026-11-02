@@ -66,6 +66,7 @@ def build_native(old,original,maps):
     camera_maps=json.loads((ROOT/'camera-map.json').read_text())
     camera_hooks=[]
     corpse_maps=json.loads((ROOT/'corpse-map.json').read_text());corpse_hooks=[]
+    stats_maps=json.loads((ROOT/'stats-map.json').read_text());stats_hooks=[]
     blind_maps=json.loads((ROOT/'blind-map.json').read_text());blind_hooks=[]
     for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGTurnPulse','AGBattleAwait','AGTurnChange','AGViewportKeypad','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
@@ -73,7 +74,7 @@ def build_native(old,original,maps):
     rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     raw=b'AGBlindPaint\0';symbols['AGBlindPaint']=rxvm+strcursor
     rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
-    for name in ('AGCorpseReceive','AGCorpseUpdate'):
+    for name in ('AGCorpseReceive','AGCorpseUpdate','AGStatsApply'):
         raw=name.encode()+b'\0';symbols[name]=rxvm+strcursor
         rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
@@ -116,6 +117,37 @@ def build_native(old,original,maps):
         assert old[at:at+len(raw)]==original[at:at+len(raw)],(hex(at),label)
         records.append(dict(offset=at,label=label,before=b[at:at+len(raw)].hex(),after=raw.hex()))
         b[at:at+len(raw)]=raw
+    # All six original equipment calculators retain their own gear/costume
+    # aggregation. Apply server Balance494 rules only to their display result.
+    stats_apply,_=emit(f'''
+        stp x29, x30, [sp, #-32]!
+        str w1, [sp, #16]
+        {lookup('AGStatsApply',44)}
+        cbz x10, stats_return
+        mov x0, x19
+        ldr w1, [sp, #16]
+        ldur x2, [x29, #-40]
+        ldur x3, [x29, #-48]
+        ldur x4, [x29, #-64]
+        ldur x5, [x29, #-72]
+        blr x10
+      stats_return:
+        ldp x29, x30, [sp], #32
+        sub sp, x29, #32
+        ret
+    ''')
+    for m in stats_maps:
+        i=m['variant'];site=m['apply_site'];start=m['calculate']
+        assert original[start:start+16]==asm('stp x22,x21,[sp,#-48]!;stp x20,x19,[sp,#16];stp x29,x30,[sp,#32];add x29,sp,#32',start)
+        assert original[start+32:start+36]==asm('stur x1,[x29,#-40]',0)
+        assert original[start+40:start+44]==asm('stur x0,[x29,#-48]',0)
+        assert original[start+64:start+68]==asm('stur x0,[x29,#-64]',0)
+        assert original[start+80:start+84]==asm('stur x0,[x29,#-72]',0)
+        assert site==start+0x6c0
+        assert original[site:site+20]==asm('sub sp,x29,#32;ldp x29,x30,[sp,#32];ldp x20,x19,[sp,#16];ldp x22,x21,[sp],#48;ret',site)
+        stub,_=emit(f'mov w1,#{i}; b {stats_apply}')
+        patch(site,asm(f'bl {stub}',site),f'V{i+1} use server character balance in equipment summary')
+        stats_hooks.append(dict(**m,hook=stub))
     keypad_paint=0x1fcbc4
     assert original[keypad_paint:keypad_paint+4]==asm('stp x22, x21, [sp, #-48]!',0)
     keypad_hook,_=emit(f'''
@@ -625,6 +657,8 @@ def build_native(old,original,maps):
             b.eq wheel
             cmn w9, #122
             b.eq notes77
+            cmn w9, #110
+            b.eq notes77
             cmn w9, #123
             b.eq notes77
             cmn w9, #19
@@ -1017,7 +1051,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(cache_slots=cache_slots,hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,camera_hooks=camera_hooks,blind_hooks=blind_hooks,corpse_hooks=corpse_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(cache_slots=cache_slots,hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,camera_hooks=camera_hooks,blind_hooks=blind_hooks,corpse_hooks=corpse_hooks,stats_hooks=stats_hooks,stats_apply_hook=stats_apply,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()

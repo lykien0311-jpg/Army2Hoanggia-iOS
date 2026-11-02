@@ -56,6 +56,7 @@ def main():
     assert len(signatures)==1 and all(v>0 for v in signatures[0])
     assert signatures[0][0]+signatures[0][1]<=len(lib)
     assert b'_AGWheelPreview' not in lib
+    assert b'_AGStatsApply\0' in lib,'Equipment balance callback missing'
     for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGCameraAllow','AGBlindPaint','AGBlindReceive','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGWheelSuppressFooter','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnChange','AGTurnAwait','AGBattleAwait','AGCorpseReceive','AGCorpseUpdate','AGViewportKeypad'):
         assert ('_'+name+'\0').encode() in lib,name
     args.output.parent.mkdir(parents=True,exist_ok=True)
