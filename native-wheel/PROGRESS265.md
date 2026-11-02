@@ -22,6 +22,25 @@ JAR, including all ten characters, all five gem families, 0/1/3/15 gems, and
 modern/legacy modes. 682 malformed packets are rejected atomically. The 134
 existing static ARM64 hook/ABI checks pass against the rebuilt native main.
 
-The installable library must come from the macOS/Xcode workflow and pass Apple
-codesign verification. Device-emulation and packaging results are recorded
-after that build. No physical iPhone or live account testing is claimed.
+Apple build completed successfully: Actions run `41544345642`, artifact
+`13188850376`, Xcode 16.4 / SDK 18.5. Codesign strict verification and a second
+ad-hoc signing verification both passed. The compiled library SHA256 is
+`d79780407415b66f5f124b65e9f10140130b46b4b03c4a9ccc129e257c8d6e6f`.
+
+The actual Apple ARM64 library and original native equipment calculator pass
+3,000 matching/preview checks from 400 actual Sua12 server fixtures across all
+six variants, plus 24 checks covering six slots including the selected costume.
+The existing 186 native stats integration checks pass, including connection
+isolation, malformed updates, unchanged combat inputs, stack/register ABI and
+stream positions. Static camera, turn, blind, footer, clan and login checks pass.
+
+Output: `Army2Hoanggia-2.4.1-Build265-Sua12.ipa`, 16,573,432 bytes, SHA256
+`df0262cae94806bb36f55fc35b395b0b346e9890edee63192fc93177d60e9932`.
+Exactly the native main, AGWheel library and Info.plist changed; the other 522
+entries match the user's IPA. Version remains 2.4.1; bundle build is 265.
+The native main can be restored using the new baseline-recovery entry.
+See validation265.json for source hashes and build provenance.
+
+No physical iPhone or live account testing is claimed. The user must re-sign
+the IPA with their own certificate. The APK still awaits the matching Sua08
+private key; the duplicate Sua11 ZIP supplied alongside the IPA has no such key.

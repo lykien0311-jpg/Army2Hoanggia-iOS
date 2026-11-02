@@ -660,6 +660,8 @@ def build_native(old,original,maps):
             b.eq notes77
             cmn w9, #110
             b.eq notes77
+            cmn w9, #124
+            b.eq notes77
             cmn w9, #123
             b.eq notes77
             cmn w9, #19

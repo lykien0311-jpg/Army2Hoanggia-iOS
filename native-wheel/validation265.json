@@ -1,0 +1,100 @@
+{
+  "passed": true,
+  "input_sha256": "feb2fe694bd2240c4804bce46f443403693223fcade11e35c661aa6f3ad8f9cf",
+  "output": "Army2Hoanggia-2.4.1-Build265-Sua12.ipa",
+  "sha256": "df0262cae94806bb36f55fc35b395b0b346e9890edee63192fc93177d60e9932",
+  "bytes": 16573432,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Army2Hoanggia",
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 522,
+  "github_build": {
+    "source_commit": "086947917f4985bbabaad03e9b39cc27737e0c8c",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "d79780407415b66f5f124b65e9f10140130b46b4b03c4a9ccc129e257c8d6e6f",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "github_actions_run": 41544345642,
+  "github_artifact_id": 13188850376,
+  "github_artifact_sha256": "bb468f0e578bb59e9a8a2f83939f60027f5aefce13ff5ec09f2477188799fef1",
+  "library_source_commit": "39ada07371da6942a97cdbc3c71522fb84101ccd",
+  "main_sha256": "0f5e4244a1853517ad704d55645668e2723d1e0a44463e5bbd51027842be52d9",
+  "native_hook_code_bytes": 29952,
+  "source_sha256": {
+    "Stats.c": "706a1717ad8914984c259c25f28d09b2877b63ec372b8d9b8bf5bdaa5cd03a32",
+    "Stats.h": "7d2185e377a0a225d19e62e88657db481d3c89c9f84ecdc6c5b283e468338412",
+    "Notes77.m": "9f755dfed03f0eefd30de972f759ffb1a787bffa4f663c643380aed682ba3c41",
+    "patch_ipa.py": "c995bf11eb805cea70dfbaea528765502f74d37091d4ee909fad896e98c84071"
+  },
+  "stats-check": {
+    "passed": true,
+    "formula_cases": 1000,
+    "malformed_packets": 462,
+    "unmodified_JAR_oracle_cases": 1000,
+    "five_attributes": true,
+    "disabled_rules_keep_legacy": true,
+    "no_partial_packet_updates": true,
+    "no_combat_writes": true
+  },
+  "stats265-check": {
+    "passed": true,
+    "gem_formula_cases": 1000,
+    "Sua12_JAR_oracle_cases": 1000,
+    "malformed_packets": 220,
+    "exact_selection_guards": 21,
+    "physical_device_tested": false
+  },
+  "stats-device-check": {
+    "passed": true,
+    "variants": 6,
+    "characters": [
+      0,
+      4,
+      9
+    ],
+    "native_controller_and_calculator_calls": 186,
+    "original_equipment_and_costume_aggregation": true,
+    "five_attributes": true,
+    "above_uint16": true,
+    "disabled_and_missing_rules_keep_legacy": true,
+    "reconnect_isolation": true,
+    "malformed_update_atomic": true,
+    "combat_and_inputs_unchanged": true,
+    "callee_saved_registers_preserved": true,
+    "stream_positions_unchanged": true,
+    "physical_device_tested": false,
+    "live_requests": 0
+  },
+  "stats265-device-check": {
+    "passed": true,
+    "server_fixtures": 400,
+    "variants": 6,
+    "matching_and_preview_checks": 3000,
+    "all_five_stats": true,
+    "actual_Sua12_server_packets": true,
+    "actual_Apple_ARM64_library": true,
+    "original_native_calculator": true,
+    "streams_and_callee_saved_registers_preserved": true,
+    "live_requests": 0,
+    "physical_device_tested": false
+  },
+  "stats265-costume-check": {
+    "passed": true,
+    "variants": 6,
+    "checks": 24,
+    "six_equipped_handles": true,
+    "costume_pointer_from_original_calculator": true,
+    "gem_preview_and_snapshot_guards": true,
+    "physical_device_tested": false
+  }
+}
