@@ -3,7 +3,9 @@
 Java wait releases/reacquires a monitor in the real app. Here only that OS/JVM
 boundary is mocked, so animation completion and spurious wakes are controlled.
 """
-import test_turn_wire as w
+# Use the current native-turn fixture; the historical wire fixture assumes
+# AGTurnTick immediately shoots without applying command24 ownership first.
+import ufo_sequence_harness as w
 from unicorn import UC_HOOK_CODE
 from unicorn.arm64_const import *
 import struct
@@ -21,7 +23,8 @@ def hook(uc,pc,size,_):
         t.ret()
     elif pc==stop_at:
         U.reg_write(UC_ARM64_REG_PC,t.STOP);U.emu_stop()
-U.hook_add(UC_HOOK_CODE,hook)
+    else:w.hook(uc,pc,size,_)
+U.hook_del(w.NATIVE_HOOK);U.hook_add(UC_HOOK_CODE,hook)
 def run(site,actor=3):
     global stop_at
     stop_at=B+site+4;legacy.clear();timed.clear()

@@ -82,7 +82,7 @@ def hook(uc,pc,size,_):
         U.reg_write(UC_ARM64_REG_SP,sp-imm*8);t.ret();return
     t.hook(uc,pc,size,_)
 
-U.hook_del(t.BASE_HOOK);U.hook_add(UC_HOOK_CODE,hook)
+U.hook_del(t.BASE_HOOK);NATIVE_HOOK=U.hook_add(UC_HOOK_CODE,hook)
 def call_address(address,*args):
     U.reg_write(UC_ARM64_REG_SP,t.STACK+0x30000);U.reg_write(UC_ARM64_REG_LR,t.STOP)
     for i,arg in enumerate(args):U.reg_write(X[i],arg&((1<<64)-1))
