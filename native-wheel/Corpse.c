@@ -80,15 +80,22 @@ __attribute__((visibility("default"))) int AGCorpseUpdate(void *env,void *actor,
     CorpseContext c={.variant=v};if(getContext(env,&c)<=0||!airshipRoom(&c))return 0;
     int index=(int8_t)p[0x16b];
     if(index<8||index>=c.count||*(uint8_t **)(c.players+0x18+index*8)!=p)return 0;
-    // Dead parts have no live-flight completion branch in the original NPC
-    // switch. Do not run its attached-part movement while awaiting corpse93.
-    p[0x166]=1;
+    // The native projectile hurt method can overwrite death5 with hurt8 after
+    // the HP packet. Bypassing Player.update then prevents its hurt -> death
+    // transition forever. The arena counts gravity && state!=5 as an active
+    // actor and withholds endShoot23. Keep a confirmed corpse in native death
+    // state, including the death frame/status cleanup, on every update.
+    if(p[0x16f]!=5){p[0x16f]=5;*(int *)(p+0xbc)=7;p[0x15f]=0;p[0x160]=0;}
+    // A corpse has no live-flight/walking completion branch. Only the marked
+    // server destination controls its animation; landed corpses are settled.
+    p[0x14e]=0;p[0x167]=0;p[0x166]=0;
     pthread_mutex_lock(&corpseMutex);CorpseMotion *m=&motions[v][index];
     if(m->connection==c.connection&&m->arena==c.arena&&m->player==p){
         if(m->y<m->targetY){m->speed+=2;if(m->speed>24)m->speed=24;
             m->y=m->targetY-m->y<m->speed?m->targetY:m->y+m->speed;
         }else m->y=m->targetY;
         *(int *)(p+0x114)=m->targetX;*(int *)(p+0x118)=m->y;
+        p[0x166]=m->y!=m->targetY;
         if(m->remove&&m->y==m->targetY)p[0x159]=0;
     }
     pthread_mutex_unlock(&corpseMutex);return 1;
