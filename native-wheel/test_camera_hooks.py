@@ -36,7 +36,8 @@ with tempfile.TemporaryDirectory() as d:
                 U.reg_write(X[1],(-20)&0xffffffff)
                 U.emu_start(B+h['site'],t.STOP+4,count=2000);t.preserved()
                 accepted+=int.from_bytes(U.mem_read(field,4),'little',signed=True)==-20
-            assert accepted==(20 if mode==0 else 120),(h['variant'],h['axis'],mode,accepted)
+            expected=119*1000000000//120//30000000+1
+            assert accepted==(expected if mode==0 else 120),(h['variant'],h['axis'],mode,accepted)
             assert len(received)==(120 if mode==0 else 0)
             steps+=accepted;checks+=1
         # A missing optional symbol keeps the native setter usable.
@@ -44,7 +45,7 @@ with tempfile.TemporaryDirectory() as d:
         U.emu_start(B+h['site'],t.STOP+4,count=2000);t.preserved()
         assert int.from_bytes(U.mem_read(field,4),'little')==20
         checks+=1
-report=dict(passed=True,native_pan_cases=checks,variants=6,axes=2,manual_pan_steps_per_second=20,
+report=dict(passed=True,native_pan_cases=checks,variants=6,axes=2,manual_pan_interval_ms=30,
     automatic_modes_unchanged=True,separate_walk_clock=True,optional_symbol_fallback=True,
     native_setter_and_abi_executed=True)
 (t.ROOT/'build/camera-hook-check.json').write_text(json.dumps(report,indent=2)+'\n')

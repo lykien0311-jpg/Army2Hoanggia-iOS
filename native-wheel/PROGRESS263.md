@@ -21,3 +21,19 @@ The release library remains free of diagnostic windows, sampling and logs.
 Gameplay C sources, the airship protocol fix and accepted auto remain unchanged.
 
 Record the old collisions/failure and the final package/provenance after testing.
+
+Apple build41439894541 passed for source4ac9f7e2ba9c43dbd5857ea93a1d69d608750804
+(mergeb763a8977249cc0787c423ef91fed347a01b225e). The artifact ZIP matches
+0aa148991ad54311dbd0160733be253a0fa52b763d158e11f6a2a7cb042378bf.
+The new regression fails on Build262 after ordinary controller/HUD warmup and
+passes546 shared-cache cases across6variants and3warmup orders after the fix.
+All four directions,30ms gating, auto-camera bypass and typed dispatch remain
+correct.120 native pan/ABI cases,48 Apple timing cases,96 blindness cases,
+corrected corpse routing/falls/turns,60 UFO encounters and native hooks pass.
+
+Only24 bytes in the injected native code differ from Build262; gameplay C
+sources and the complete Apple device library are byte-identical. The IPA
+changes its native executable and Info.plist;523 other entries are unchanged.
+No diagnostic UI or logging is re-enabled. The supported native recovery entry
+was added and its round trip verified. validation263.json records provenance
+and controlled-runtime limits.
