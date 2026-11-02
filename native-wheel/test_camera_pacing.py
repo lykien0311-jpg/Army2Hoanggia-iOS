@@ -18,14 +18,15 @@ with tempfile.TemporaryDirectory() as d:
                 now=frame*1000000000//fps
                 for axis in (0,1):steps[axis]+=f(clocks,123,axis,delta,now)
                 walks+=walk(C.byref(walker),456,0,now)
-            assert steps==[20,20] and walks==20,(fps,delta,steps,walks)
+            expected=min(fps,((fps-1)*1000000000//fps)//30000000+1)
+            assert steps==[expected,expected] and walks==expected,(fps,delta,steps,walks)
             checks+=1
     clocks=(Clock*2)()
     assert f(clocks,123,0,-20,0)==1
-    assert f(clocks,123,0,-20,49000000)==0
-    assert f(clocks,123,1,-20,49000000)==1
-    assert f(clocks,123,0,20,49000001)==1
-    assert f(clocks,124,0,20,49000002)==1
+    assert f(clocks,123,0,-20,29999999)==0
+    assert f(clocks,123,1,-20,29999999)==1
+    assert f(clocks,123,0,20,30000000)==1
+    assert f(clocks,124,0,20,30000001)==1
     assert f(clocks,124,0,20,5000000000)==1
     assert f(clocks,124,0,20,5000000001)==0
     assert f(clocks,124,0,20,1)==1
@@ -33,7 +34,7 @@ with tempfile.TemporaryDirectory() as d:
     assert f(clocks,124,2,20,2)==0
     assert f(clocks,124,-1,20,2)==0
     assert f(clocks,124,0,0,2)==0
-report=dict(passed=True,frame_rate_direction_cases=checks,pan_steps_per_second=20,
+report=dict(passed=True,frame_rate_direction_cases=checks,pan_interval_ms=30,
     independent_axes=True,walking_independent=True,no_sleep_or_queued_steps=True)
 (R/'build').mkdir(exist_ok=True)
 (R/'build/camera-pacing-check.json').write_text(json.dumps(report,indent=2)+'\n')

@@ -9,10 +9,10 @@ int AGMoveAllowAt(AGMoveClock *c,uintptr_t player,int direction,uint64_t now){
         *c=(AGMoveClock){player,now,direction,1};return 1;
     }
     uint64_t elapsed=now-c->step;
-    if(elapsed<50000000)return 0;
+    if(elapsed<30000000)return 0;
     // Retain sub-frame time so 60/120/144 Hz do not become a slower walk.
     // Discard a long pause instead of replaying missed movement steps.
-    c->step=elapsed>=100000000?now:c->step+50000000;return 1;
+    c->step=elapsed>=60000000?now:c->step+30000000;return 1;
 }
 __attribute__((visibility("default"))) int AGMoveAllow(int variant,void *player,int direction){
     static AGMoveClock clocks[6];

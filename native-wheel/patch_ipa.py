@@ -13,7 +13,7 @@ APP='Payload/Army2Hoanggia.app/'
 EXPECTED_IPA='8c4779afad7981f4bf8cf5e756bdf03450437cc4e56cf949c805e2d2affc636d'
 EXPECTED_ORIGINAL='34778a89dac9103a1fd62a6e712dce1bedd012da3bbb47c7ce908724b1d4c7d6'
 PAGE=0x8000
-CODE_LIMIT=0x7200
+CODE_LIMIT=0x7800
 KS=Ks(KS_ARCH_ARM64,KS_MODE_LITTLE_ENDIAN)
 # Exact text read from the user's seven-second reference video (video 2).
 # IDs are the protocol IDs stored in each room, never their display row.
@@ -65,6 +65,7 @@ def build_native(old,original,maps):
     symbols={};strcursor=CODE_LIMIT
     camera_maps=json.loads((ROOT/'camera-map.json').read_text())
     camera_hooks=[]
+    corpse_maps=json.loads((ROOT/'corpse-map.json').read_text());corpse_hooks=[]
     blind_maps=json.loads((ROOT/'blind-map.json').read_text());blind_hooks=[]
     for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGTurnReceive','AGTurnManual','AGTurnPulse','AGBattleAwait','AGTurnChange','AGViewportKeypad','AGWheelSuppressFooter','VÒNG XOAY MAY MẮN',*REFERENCE_TITLES.values(),'2.4.1-HG78-IPA'):
         raw=name.encode('utf-8')+b'\0';symbols[name]=rxvm+strcursor;rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
@@ -72,6 +73,9 @@ def build_native(old,original,maps):
     rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     raw=b'AGBlindPaint\0';symbols['AGBlindPaint']=rxvm+strcursor
     rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
+    for name in ('AGCorpseReceive','AGCorpseUpdate'):
+        raw=name.encode()+b'\0';symbols[name]=rxvm+strcursor
+        rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
     for title in REFERENCE_TITLES.values():
         rx[strcursor:strcursor+8]=struct.pack('<iI',symbols[title]-(rxvm+strcursor),len(title.encode('utf-16-le'))//2)
@@ -573,6 +577,16 @@ def build_native(old,original,maps):
             mov x29, sp
             stp x0, x1, [sp, #16]
             str x2, [sp, #32]
+            {lookup('AGCorpseReceive',40)}
+            cbz x10, corpse_observed
+            ldr x0, [sp, #16]
+            ldr x1, [sp, #32]
+            mov w2, #{i}
+            blr x10
+            cbz w0, corpse_observed
+            ldp x29, x30, [sp], #48
+            ret
+          corpse_observed:
             {lookup('AGTurnReceive',33)}
             cbz x10, turn_observed
             ldr x0, [sp, #16]
@@ -659,6 +673,28 @@ def build_native(old,original,maps):
         ''')
         assert original[m['controller']:m['controller']+4]==asm('stp x28, x27, [sp, #-96]!',0)
         patch(m['controller'],asm(f'b {receive_addr}',m['controller']),f'V{i+1} receive wheel -101 and cache room names -19')
+        corpse=corpse_maps[i];site=corpse['update'];first=original[site:site+4]
+        assert first.hex()==corpse['first'] and first==asm('stp x28, x27, [sp, #-80]!',0)
+        corpse_hook,_=emit(f'''
+            stp x29, x30, [sp, #-48]!
+            mov x29, sp
+            stp x0, x1, [sp, #16]
+            {lookup('AGCorpseUpdate',41)}
+            cbz x10, corpse_native_update
+            ldp x0, x1, [sp, #16]
+            mov w2, #{i}
+            blr x10
+            cbz w0, corpse_native_update
+            ldp x29, x30, [sp], #48
+            ret
+          corpse_native_update:
+            ldp x0, x1, [sp, #16]
+            ldp x29, x30, [sp], #48
+            stp x28, x27, [sp, #-80]!
+            b {site+4}
+        ''')
+        patch(site,asm(f'b {corpse_hook}',site),f'V{i+1} keep dead airship parts out of live-flight state')
+        corpse_hooks.append(dict(**corpse,hook=corpse_hook))
         change=turn_sequence[i]
         change_hook,_=emit(f"""
             stp x29, x30, [sp, #-48]!
@@ -970,7 +1006,7 @@ def build_native(old,original,maps):
     load.append(struct.pack('<6I',12,sz,24,0,0,0)+dylib+bytes(sz-24-len(dylib)))
     header=b''.join(load);assert 32+len(header)<0x8000
     b[32:32+len(header)]=header;struct.pack_into('<II',b,16,len(load),len(header))
-    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,camera_hooks=camera_hooks,blind_hooks=blind_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
+    return bytes(b),dict(hooks=hooks,patches=records,rxvm=rxvm,rxoff=rxoff,rwvm=rwvm,rwoff=rwoff,code_size=cursor,dlsym=dlsym,linkedit_shift=delta,label_hook=label_addr,room_title_hook=room_title_addr,room_reference_titles=REFERENCE_TITLES,boss_hooks=boss_hooks,footer_hooks=footer_hooks,canvas_footer_hooks=canvas_footer_hooks,camera_hooks=camera_hooks,blind_hooks=blind_hooks,corpse_hooks=corpse_hooks,arena_update_hooks=arena_update_hooks,turn_wait_hooks=turn_wait_hooks,turn_change_hooks=turn_change_hooks,zone_patches=zone_patches,turn_map=turn_map,keypad_hook=keypad_hook,keypad_paint=keypad_paint,grid_hook=grid_hook,grid_sites=grid_map["sites"],login_hook=login_hook,release_version='2.4.1',login_marker='2.4.1-HG78-IPA')
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--prepare',action='store_true');p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib');p.add_argument('--output',type=Path,default=Path('deliverables/Army2Hoanggia-LuckyWheel-Test.ipa'));args=p.parse_args()

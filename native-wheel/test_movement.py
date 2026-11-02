@@ -7,17 +7,17 @@ with tempfile.TemporaryDirectory()as d:
  l=C.CDLL(str(p));f=l.AGMoveAllowAt;f.argtypes=[C.POINTER(Clock),C.c_size_t,C.c_int,C.c_uint64];f.restype=C.c_int
  for tick in (1,2,5,10,25,50):
   c=Clock();times=[ms for ms in range(0,1000,tick) if f(C.byref(c),123,0,ms*1000000)]
-  assert len(times)==20,(tick,times)
+  assert len(times)==min(len(range(0,1000,tick)),((999//tick)*tick)//30+1),(tick,times)
  for fps in (30,60,90,120,144,240,1000):
   c=Clock();times=[i for i in range(fps)if f(C.byref(c),123,0,i*1000000000//fps)]
-  assert len(times)==20,(fps,times)
+  assert len(times)==min(fps,((fps-1)*1000000000//fps)//30000000+1),(fps,times)
  c=Clock();assert f(C.byref(c),123,0,0)==1
- assert f(C.byref(c),123,0,49000000)==0
- assert f(C.byref(c),123,0,50000000)==1
- assert f(C.byref(c),123,1,50000001)==1
- assert f(C.byref(c),124,1,50000002)==1
- assert f(C.byref(c),124,1,5000000000)==1
- assert f(C.byref(c),124,1,5000000001)==0
+ assert f(C.byref(c),123,0,29999999)==0
+ assert f(C.byref(c),123,0,30000000)==1
+ assert f(C.byref(c),123,1,30000001)==1
+ assert f(C.byref(c),124,1,30000002)==1
+ assert f(C.byref(c),124,1,3000000000)==1
+ assert f(C.byref(c),124,1,3000000001)==0
  assert f(C.byref(c),124,1,1)==1
  assert f(C.byref(c),0,1,2)==0
-print('PASS: same 20 walking steps/second at 20–1000 input ticks/second; immediate direction/player change; no catch-up burst, no queued steps after release')
+print('PASS: 30ms walking pace across20–1000 input ticks/second; immediate direction/player change; no catch-up burst, no queued steps after release')

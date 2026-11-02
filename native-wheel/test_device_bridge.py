@@ -160,7 +160,7 @@ if '_AGMoveAllow' in symbols:
     for variant in range(6):
         now=100.;assert call('_AGMoveAllow',variant,HEAP+0x9000,0)==1
         now=100.01;assert call('_AGMoveAllow',variant,HEAP+0x9000,0)==0
-        now=100.06;assert call('_AGMoveAllow',variant,HEAP+0x9000,0)==1
+        now=100.04;assert call('_AGMoveAllow',variant,HEAP+0x9000,0)==1
         assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==1
         now=105.;assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==1
         assert call('_AGMoveAllow',variant,HEAP+0x9000,1)==0
