@@ -27,3 +27,19 @@ next actor; the unchanged native turn changer then selects that actor's camera.
 Keep all accepted UFO/POW code and 30ms movement/manual camera unchanged.
 Validation and Apple build provenance will be appended after compilation.
 No physical iPhone or live game-server acceptance is available here.
+
+Apple build41406604542 passed for source5af6fd25f786a1e1a743e2846b51ab7f52248fda
+(Apple merge77e2bc97af7b421ad5a29fdef1197429a400ffec). The downloaded ZIP
+matched digest7d620ae9687457e087bd0c1d1b771cdd9ef5721eb9b7c7c4599e97060e38aee5.
+The compiled iPhone library passes90 full native completion/next-turn/camera
+sequences across all six variants, rooms10/14/15 and characters17..21. The
+regression fails on Build258 after a real native command24 resets death5 to0.
+A living moving actor still prevents completion; a landed corpse cannot re-arm
+gravity, pin live flight/walking, duplicate ACK23 or steal the next camera.
+
+Previous corpse routing/fall/reset, airship and UFO waits, native UFO encounters,
+bomb blindness,30ms camera/walking, speed10, wheel return and hook ABI/preservation
+checks also pass on the final Apple library. See validation259.json for counts,
+hashes, archive preservation and controlled-boundary limits. The packaged IPA
+changes only the verified library and Info.plist relative to Build258;523 other
+archive entries, including the main executable, are byte-identical.

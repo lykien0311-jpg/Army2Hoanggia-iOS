@@ -83,6 +83,11 @@ for v in range(6):
             assert t.get(a+0x16f,'<B')==0,'Native turn reset no longer reproduces the edge'
             assert t.get(s['camera']+0x20,'<i')==8
             corpse_packet(s,v);w.packets.clear();t.put(s['proj']+0x115,'<B',1)
+            # A living actor still moving remains a real completion blocker.
+            t.put(s['p']+0x166,'<B',1)
+            world_step(s,v)
+            assert not w.packets and t.get(s['proj']+0x115,'<B')==1
+            t.put(s['p']+0x166,'<B',0)
             world_step(s,v)
             assert t.get(a+0x16f,'<B')==5,('dead part retained live state',v,room,typ)
             assert w.packets==[(23,b'')],('native endShoot withheld',v,room,typ,w.packets)
@@ -115,6 +120,7 @@ result=dict(passed=True,variants=6,rooms=[10,14,15],characters=[17,18,19,20,21],
     native_endshoot_and_server_turn_camera_sequences=cases,
     native_turn_reset_reproduces_dead_to_idle=True,native_completion_packet=23,
     native_camera_owner_after_server_turn=2,duplicate_completion_packets=0,
+    living_moving_actor_still_blocks_completion=True,
     landed_corpses_rearm_gravity=False,synthetic_turns=0,
     physical_device_tested=False,live_requests=0)
 (R/'build/corpse-turn-check.json').write_text(json.dumps(result,indent=2)+'\n')
