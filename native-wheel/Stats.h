@@ -22,4 +22,5 @@ int AGStatsCalculate(const AGStatsRules *,int,const int64_t *,const int64_t *,co
 int AGStatsExtended(const AGStatsRules *,int,const int64_t *,const int64_t *,const int64_t *,const int64_t *,int32_t,int64_t *);
 int AGStatsReceive(void *,void *,int);
 void AGStatsApply(void *,int,void *,void *,void *,void *,void *);
+void AGStatsRefresh(void *,int,void *);
 #endif

@@ -4,41 +4,71 @@
     "calculate": 5936964,
     "apply_site": 5938692,
     "player_get": 5701436,
-    "character_get": 5326984
+    "character_get": 5326984,
+    "paint": 5930804,
+    "flags_get": 5701376,
+    "costume_get": 5336276,
+    "incoming_ctor": 5216032,
+    "incoming_epilogue": 5216160
   },
   {
     "variant": 1,
     "calculate": 6889880,
     "apply_site": 6891608,
     "player_get": 6661360,
-    "character_get": 6300624
+    "character_get": 6300624,
+    "paint": 6883880,
+    "flags_get": 6661300,
+    "costume_get": 6309836,
+    "incoming_ctor": 6193232,
+    "incoming_epilogue": 6193360
   },
   {
     "variant": 2,
     "calculate": 7827036,
     "apply_site": 7828764,
     "player_get": 7598516,
-    "character_get": 7237780
+    "character_get": 7237780,
+    "paint": 7821036,
+    "flags_get": 7598456,
+    "costume_get": 7246992,
+    "incoming_ctor": 7130388,
+    "incoming_epilogue": 7130516
   },
   {
     "variant": 3,
     "calculate": 8764192,
     "apply_site": 8765920,
     "player_get": 8535672,
-    "character_get": 8174936
+    "character_get": 8174936,
+    "paint": 8758192,
+    "flags_get": 8535612,
+    "costume_get": 8184148,
+    "incoming_ctor": 8067544,
+    "incoming_epilogue": 8067672
   },
   {
     "variant": 4,
     "calculate": 9701348,
     "apply_site": 9703076,
     "player_get": 9472828,
-    "character_get": 9112092
+    "character_get": 9112092,
+    "paint": 9695348,
+    "flags_get": 9472768,
+    "costume_get": 9121304,
+    "incoming_ctor": 9004700,
+    "incoming_epilogue": 9004828
   },
   {
     "variant": 5,
     "calculate": 10638504,
     "apply_site": 10640232,
     "player_get": 10409984,
-    "character_get": 10049248
+    "character_get": 10049248,
+    "paint": 10632504,
+    "flags_get": 10409924,
+    "costume_get": 10058460,
+    "incoming_ctor": 9941856,
+    "incoming_epilogue": 9941984
   }
 ]

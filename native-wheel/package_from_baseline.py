@@ -13,7 +13,7 @@ def main():
     p.add_argument('--dylib',type=Path,default=ROOT/'build/AGWheel.dylib')
     p.add_argument('--build-info',type=Path,default=ROOT/'build/build-info.json')
     p.add_argument('--output',type=Path,required=True)
-    p.add_argument('--bundle-build',default='265')
+    p.add_argument('--bundle-build',default='266')
     args=p.parse_args()
     r=json.loads((ROOT/'baseline-recovery.json').read_text())
     with zipfile.ZipFile(args.ipa) as src:native=src.read(APP+'Army2Hoanggia')
@@ -57,6 +57,7 @@ def main():
     assert signatures[0][0]+signatures[0][1]<=len(lib)
     assert b'_AGWheelPreview' not in lib
     assert b'_AGStatsApply\0' in lib,'Equipment balance callback missing'
+    assert b'_AGStatsRefresh\0' in lib,'Live equipment paint refresh missing'
     for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGCameraAllow','AGBlindPaint','AGBlindReceive','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGWheelSuppressFooter','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnChange','AGTurnAwait','AGBattleAwait','AGCorpseReceive','AGCorpseUpdate','AGViewportKeypad'):
         assert ('_'+name+'\0').encode() in lib,name
     args.output.parent.mkdir(parents=True,exist_ok=True)

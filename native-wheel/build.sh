@@ -38,6 +38,7 @@ assert '_AGReleaseIdentity' in exports and b'2.4.1-HG78-IPA\0' in p.read_bytes()
 assert '_AGUfoDiagnosticsGet' in exports
 assert '_AGShipTraceGet' in exports
 assert '_AGStatsApply' in exports
+assert '_AGStatsRefresh' in exports
 for diagnostic_ui in (b'AGUfoDiagnosticWindow',b'AutoUFO-Build253.txt','B253 •'.encode(),
                       b'AGShipDiagnosticWindow',b'KhiCau-B260.txt',b'KhiCau-B261.txt',
                       'B260 •'.encode(),'B261 •'.encode(),b'vn.army2hoanggia.airship-log'):

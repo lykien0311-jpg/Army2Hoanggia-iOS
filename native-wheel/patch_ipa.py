@@ -74,7 +74,7 @@ def build_native(old,original,maps):
     rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     raw=b'AGBlindPaint\0';symbols['AGBlindPaint']=rxvm+strcursor
     rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
-    for name in ('AGCorpseReceive','AGCorpseUpdate','AGStatsApply'):
+    for name in ('AGCorpseReceive','AGCorpseUpdate','AGStatsApply','AGStatsRefresh'):
         raw=name.encode()+b'\0';symbols[name]=rxvm+strcursor
         rx[strcursor:strcursor+len(raw)]=raw;strcursor+=len(raw)
     strcursor=align(strcursor,16);room_table=rxvm+strcursor
@@ -149,6 +149,58 @@ def build_native(old,original,maps):
         stub,_=emit(f'mov w1,#{i}; b {stats_apply}')
         patch(site,asm(f'bl {stub}',site),f'V{i+1} use server character balance in equipment summary')
         stats_hooks.append(dict(**m,hook=stub))
+    # Read-only refresh at paint also covers replies arriving after calculate.
+    stats_refresh,_=emit(f'''
+        stp x29, x30, [sp, #-64]!
+        stp x0, x1, [sp, #16]
+        stp x2, x4, [sp, #32]
+        str w3, [sp, #48]
+        {lookup('AGStatsRefresh',45)}
+        cbz x10, stats_paint_original
+        ldr x0, [sp, #16]
+        ldr w1, [sp, #48]
+        ldr x2, [sp, #24]
+        blr x10
+      stats_paint_original:
+        ldp x0, x1, [sp, #16]
+        ldp x2, x9, [sp, #32]
+        ldp x29, x30, [sp], #64
+        stp x28, x27, [sp, #-96]!
+        br x9
+    ''')
+    # Observe the completed incoming Message constructor before dispatchers
+    # can consume/route/drop an unknown extension packet during login.
+    stats_incoming,_=emit(f'''
+        stp x29, x30, [sp, #-32]!
+        str w2, [sp, #16]
+        ldrsb w9, [x22, #48]
+        cmn w9, #110
+        b.eq stats_incoming_read
+        cmn w9, #124
+        b.ne stats_incoming_return
+      stats_incoming_read:
+        {lookup('AGNotesReceive',27)}
+        cbz x10, stats_incoming_return
+        mov x0, x21
+        mov x1, x22
+        ldr w2, [sp, #16]
+        blr x10
+      stats_incoming_return:
+        ldp x29, x30, [sp], #32
+        sub sp, x29, #32
+        ret
+    ''')
+    for m in stats_maps:
+        i=m['variant'];paint=m['paint'];incoming=m['incoming_ctor'];site=m['incoming_epilogue'];resume=paint+4
+        assert original[paint:paint+4]==asm('stp x28,x27,[sp,#-96]!',paint)
+        assert original[incoming:incoming+16]==asm('stp x22,x21,[sp,#-48]!;stp x20,x19,[sp,#16];stp x29,x30,[sp,#32];add x29,sp,#32',incoming)
+        assert original[incoming+0x3c:incoming+0x40]==asm('strb w20,[x22,#48]',0)
+        assert site==incoming+0x80
+        assert original[site:site+20]==asm('sub sp,x29,#32;ldp x29,x30,[sp,#32];ldp x20,x19,[sp,#16];ldp x22,x21,[sp],#48;ret',site)
+        stub,_=emit(f'mov w3,#{i}; adrp x4,{resume&-4096}; add x4,x4,#{resume&4095}; b {stats_refresh}')
+        patch(paint,asm(f'b {stub}',paint),f'V{i+1} refresh equipment display before native paint')
+        stub,_=emit(f'mov w2,#{i}; b {stats_incoming}')
+        patch(site,asm(f'bl {stub}',site),f'V{i+1} capture stats at incoming Message construction')
     keypad_paint=0x1fcbc4
     assert original[keypad_paint:keypad_paint+4]==asm('stp x22, x21, [sp, #-48]!',0)
     keypad_hook,_=emit(f'''

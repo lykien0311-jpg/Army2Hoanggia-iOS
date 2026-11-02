@@ -117,6 +117,7 @@ int AGStatsExtended(const AGStatsRules *r,int c,const int64_t *points,const int6
 #include <pthread.h>
 #include <mach-o/dyld.h>
 #include "NativeMap.h"
+#include "StatsNativeMap.h"
 extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
 typedef struct {int variant;uintptr_t connection;} StatsConnection;
 typedef struct {uintptr_t connection;AGStatsRules rules;AGStatsSnapshot snapshot;int32_t nativeBase[10];uint32_t count;uint8_t *gems;int extended;} StatsCache;
@@ -170,13 +171,11 @@ static void collect(uint8_t *item,StatsCache *cache,int32_t *handles,int *count,
     uint32_t index=(uint32_t)handle&65535;
     if(cache->extended&&index<cache->count)for(int j=0;j<5;j++)gems[j]+=cache->gems[index*5+j];
 }
-__attribute__((visibility("default"))) void AGStatsApply(void *env,int v,void *screen,void *player,void *flat,void *percent,void *costume){
-    if(!env||v<0||v>=6||!screen||!player)return;
-    uintptr_t id=currentConnection(env,v);if(!id)return;
+static void applyValues(uintptr_t id,int v,void *screen,void *player,const int64_t *f,const int64_t *pct,void *costume){
     uint8_t *p=player,*s=screen;
     int64_t *points=array5(*(uint8_t **)(p+0x28));
     int64_t *out=array5(*(uint8_t **)(s+0xa0));
-    int64_t *f=array5(flat),*pct=array5(percent);if(!points||!out||!f||!pct)return;
+    if(!points||!out||!f||!pct)return;
     pthread_mutex_lock(&statsMutex);StatsCache *cache=&caches[v];
     if(cache->connection==id){
         int32_t handles[6]={0};int count=0;int64_t gems[5]={0};
@@ -189,5 +188,50 @@ __attribute__((visibility("default"))) void AGStatsApply(void *env,int v,void *s
         }
     }
     pthread_mutex_unlock(&statsMutex);
+}
+__attribute__((visibility("default"))) void AGStatsApply(void *env,int v,void *screen,void *player,void *flat,void *percent,void *costume){
+    if(!env||v<0||v>=6||!screen||!player)return;
+    uintptr_t id=currentConnection(env,v);if(id)applyValues(id,v,screen,player,array5(flat),array5(percent),costume);
+}
+typedef struct {int variant;uint8_t *screen,*player,*costume;int64_t flat[5],percent[5];} StatsRefresh;
+static int sumItem(StatsRefresh *r,uint8_t *item){
+    if(!item)return 1;
+    int64_t *flat=array5(*(uint8_t **)(item+0x48)),*pct=array5(*(uint8_t **)(item+0x50));
+    if(!flat||!pct)return 0;
+    for(int j=0;j<5;j++){r->flat[j]=add(r->flat[j],flat[j]);r->percent[j]=add(r->percent[j],pct[j]);}return 1;
+}
+static int refreshNative(void *env,void *opaque){
+    StatsRefresh *r=opaque;uintptr_t base=(uintptr_t)_dyld_get_image_header(0);
+    const AGStatsNativeMap *m=&AGStatsMaps[r->variant];
+    uint8_t *(*playerGet)(void *)=(void *)(base+m->player);
+    uint8_t *(*flagsGet)(void *)=(void *)(base+m->flags);
+    int64_t (*costumeGet)(void *)=(void *)(base+m->costume);
+    r->player=playerGet(env);if(!r->player||r->player[0xd9]>=10)return 0;
+    uint8_t *outfit=*(uint8_t **)(r->player+0x78),*slots=outfit?*(uint8_t **)(outfit+0x10):0;
+    if(!slots||*(int32_t *)(slots+0x10)<5)return 0;
+    for(int j=0;j<5;j++)if(!sumItem(r,*(uint8_t **)(slots+0x18+j*8)))return 0;
+    uint8_t *flags=flagsGet(env);int hero=r->player[0xd9];
+    if(!flags||*(int32_t *)(flags+0x10)<=hero)return 0;
+    if(flags[0x14+hero]){
+        uint8_t *vector=*(uint8_t **)(r->screen+0xb0),*items=vector?*(uint8_t **)(vector+0x18):0;
+        int count=vector?*(int32_t *)(vector+0x24):0;
+        if(count<0||count>65536||(!items&&count)||(items&&count>*(int32_t *)(items+0x10)))return 0;
+        int64_t handle=costumeGet(env);
+        for(int i=0;i<count;i++){
+            uint8_t *item=*(uint8_t **)(items+0x18+i*8);
+            if(item&&*(int64_t *)(item+0x80)==handle){r->costume=item;break;}
+        }
+        if(!sumItem(r,r->costume))return 0;
+    }
+    return 1;
+}
+/* A reply can arrive after the screen calculated its totals. Refresh the
+ * display before paint, using C stack totals and the current selection only. */
+__attribute__((visibility("default"))) void AGStatsRefresh(void *env,int v,void *screen){
+    if(!env||v<0||v>=6||!screen)return;
+    uintptr_t id=currentConnection(env,v);if(!id)return;
+    StatsRefresh r={.variant=v,.screen=screen};
+    if(AGWheelGuard(env,refreshNative,&r,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54))>0)
+        applyValues(id,v,screen,r.player,r.flat,r.percent,r.costume);
 }
 #endif

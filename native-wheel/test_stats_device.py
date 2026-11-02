@@ -16,7 +16,7 @@ def hook(uc,pc,size,opaque):
     if pc in stops:U.emu_stop();return
     w.hook(uc,pc,size,opaque)
 U.hook_del(w.NATIVE_HOOK);U.hook_add(UC_HOOK_CODE,hook)
-def execute(pc,*args,extra=()):
+def execute(pc,*args,extra=(),stack_delta=0):
     global stops,checks
     stops={t.STOP,*extra};sp=t.STACK+0x30000
     U.reg_write(UC_ARM64_REG_SP,sp);U.reg_write(UC_ARM64_REG_LR,t.STOP)
@@ -29,7 +29,7 @@ def execute(pc,*args,extra=()):
         print('native failure',v,c,hex(U.reg_read(UC_ARM64_REG_PC)),hex(U.reg_read(UC_ARM64_REG_LR)),[hex(w.r(i))for i in range(6)])
         raise
     assert U.reg_read(UC_ARM64_REG_PC)in stops,hex(U.reg_read(UC_ARM64_REG_PC))
-    assert U.reg_read(UC_ARM64_REG_SP)==sp
+    assert U.reg_read(UC_ARM64_REG_SP)==sp+stack_delta
     assert [U.reg_read(X[i])for i in range(19,30)]==saved,'callee saved registers'
     assert t.lockDepth==0 and t.get(t.ENV+0x10,'<Q')==0 and t.get(t.ENV+0x38,'<Q')==0
     checks+=1
