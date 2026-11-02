@@ -39,7 +39,10 @@ jobs:
             native-wheel/build/wheel-single-preview.png
             native-wheel/build/ufo-diagnostics.png
             native-wheel/build/ufo-diagnostics-check.json
+            native-wheel/build/airship-diagnostics.png
+            native-wheel/build/airship-diagnostics-check.json
           if-no-files-found: error
           retention-days: 14
+
 
 

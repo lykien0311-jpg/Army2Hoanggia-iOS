@@ -16,8 +16,10 @@ accept/reject observations; and the recent command/first-byte sequence.
 Native callbacks copy numeric snapshots on their own Env under the existing
 RoboVM exception guard. UIKit and the file queue access copied scalars only.
 Sample native state at most5Hz and append a bounded local KhiCau-B260.txt log
-at most1Hz. The panel never becomes key, accepts no touches and is hidden
-outside the active airship battle. The file is in the app's Documents folder,
+at most1Hz. The panel never becomes key, accepts no touches and is armed in
+standalone room10 or an active airship stage in linked rooms14/15. Room10
+also shows A0/E when battle recognition fails, so that failure is recordable.
+The file is in the app's Documents folder,
 already exposed through iOS Files by the accepted package settings.
 
 This is a diagnostic build for the user to sign and record. It adds no packet

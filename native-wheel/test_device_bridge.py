@@ -66,7 +66,7 @@ def hook(uc,pc,size,_):
         elif name=='_malloc':ret(alloc(reg(0)))
         elif name in ('_free','_dispatch_async'):ret()
         elif name=='_bzero':u.mem_write(reg(0),bytes(reg(1)));ret()
-        elif name=='_memcpy':u.mem_write(reg(0),bytes(u.mem_read(reg(1),reg(2))));ret(reg(0))
+        elif name in ('_memcpy','_memmove'):u.mem_write(reg(0),bytes(u.mem_read(reg(1),reg(2))));ret(reg(0))
         elif name=='_snprintf':
             # Notice text is tested by UI preview, not by this state test.
             u.mem_write(reg(0),b'notice\0');ret(6)

@@ -11,12 +11,12 @@ static double shipNow(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);
 static NSString *shipText(AGShipTrace d){
     double now=shipNow();
     NSMutableString *s=[NSMutableString stringWithFormat:
-        @"B260 • ĐO LỖI KHÍ CẦU • quay rõ toàn bảng\nV%d R%d | Server #%d → IPA #%d | Cam #%d mode%d\n"
+        @"B260 • ĐO LỖI KHÍ CẦU • quay rõ toàn bảng\nV%d R%d A%d E%d | Server #%d → IPA #%d | Cam #%d m%d\n"
         "RX24=%llu RX93=%llu cmd=%d/%d | tick=%llu\n"
         "Đạn=%d ACK=%d FX=%d P=%d/%d | CHỜ=%d:%d/#%d\n"
         "Cập nhật %.1fs | nhận %.1fs | chờ %.1fs\n"
         "Xác93 #%d → %d,%d rm%d | xử lý #%d ok%d lỗi%llu\n",
-        d.variant+1,d.room,d.turns?d.serverOwner:-1,d.owner,d.cameraActor,d.cameraMode,
+        d.variant+1,d.room,d.active,d.contextOK,d.turns?d.serverOwner:-1,d.owner,d.cameraActor,d.cameraMode,
         (unsigned long long)d.turns,(unsigned long long)d.flights,d.lastCommand,d.lastLength,
         (unsigned long long)d.pulses,d.projectileBusy,d.completionReady,d.canvasBusy,d.pending,d.notified,
         d.waitActive,d.waitKind,d.waitActor,MAX(0,now-d.sampleTime),d.receives?MAX(0,now-d.receiveTime):0,
@@ -40,13 +40,16 @@ static UILabel *shipLabel(void){
     l.layer.cornerRadius=4;l.clipsToBounds=YES;l.userInteractionEnabled=NO;
     l.accessibilityLabel=@"Bảng đo lỗi khí cầu Build260";return l;
 }
-static void shipLog(AGShipTrace d){
+static dispatch_queue_t shipLogQueue(void){
     static dispatch_queue_t queue;static dispatch_once_t once;
     dispatch_once(&once,^{queue=dispatch_queue_create("vn.army2hoanggia.airship-log",DISPATCH_QUEUE_SERIAL);});
+    return queue;
+}
+static void shipLog(AGShipTrace d){
     // Copy only scalar state/text onto the file queue. No Java reference,
     // game Env or native memory is accessed by UIKit or the file worker.
     NSString *text=shipText(d);NSString *stamp=NSDate.date.description;
-    dispatch_async(queue,^{@autoreleasepool{
+    dispatch_async(shipLogQueue(),^{@autoreleasepool{
         NSString *dir=NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject;
         if(!dir)return;NSString *path=[dir stringByAppendingPathComponent:@"KhiCau-B260.txt"];
         NSData *line=[[NSString stringWithFormat:@"\n%@\n%@\n",stamp,text]dataUsingEncoding:NSUTF8StringEncoding];
@@ -66,7 +69,9 @@ __attribute__((constructor)) static void shipInstall(void){
             for(int v=0;v<6;v++){AGShipTrace d;if(!AGShipTraceGet(v,&d))continue;
                 if(!seen||d.sampleTime>best.sampleTime){best=d;seen=YES;}}
             UIWindow *game=UIApplication.sharedApplication.keyWindow;
-            if(!seen||!best.active||!game||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive){window.hidden=YES;return;}
+            // Keep the standalone room armed even if battle recognition
+            // fails: an A0/E value must itself be recordable for diagnosis.
+            if(!seen||(!best.active&&best.room!=10)||!game||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive){window.hidden=YES;return;}
             if(!window){
                 if(@available(iOS 13.0,*)){if(game.windowScene)window=[[AGShipDiagnosticWindow alloc]initWithWindowScene:game.windowScene];}
                 if(!window)window=[[AGShipDiagnosticWindow alloc]initWithFrame:game.bounds];
@@ -106,9 +111,13 @@ __attribute__((visibility("default"))) void AGShipDiagnosticsPreviewCheck(void){
     UIGraphicsBeginImageContextWithOptions(w.bounds.size,YES,2);[w.rootViewController.view.layer renderInContext:UIGraphicsGetCurrentContext()];
     UIImage *image=UIGraphicsGetImageFromCurrentImageContext();UIGraphicsEndImageContext();
     NSString *dir=NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject;
+    shipLog(d);dispatch_sync(shipLogQueue(),^{});
+    NSString *log=[NSString stringWithContentsOfFile:[dir stringByAppendingPathComponent:@"KhiCau-B260.txt"]encoding:NSUTF8StringEncoding error:nil];
+    NSCAssert([log containsString:@"B260"],@"Airship diagnostic log was written");
     [UIImagePNGRepresentation(image)writeToFile:[dir stringByAppendingPathComponent:@"airship-diagnostics.png"]atomically:YES];
     NSDictionary *result=@{@"passed":@YES,@"touch_passthrough":@YES,@"widths":@[@320,@390,@844],
-        @"airship_only":@YES,@"native_pointer_access_from_UIKit":@NO,@"game_packets_written":@0};
+        @"airship_room_or_active_stage_only":@YES,@"local_log_written":@YES,
+        @"native_pointer_access_from_UIKit":@NO,@"game_packets_written":@0};
     [[NSJSONSerialization dataWithJSONObject:result options:NSJSONWritingPrettyPrinted error:nil]
         writeToFile:[dir stringByAppendingPathComponent:@"airship-diagnostics-check.json"]atomically:YES];
 }
