@@ -9,6 +9,7 @@ python3 test_movement.py
 python3 test_camera_pacing.py
 python3 test_blind_state.py
 python3 test_stats.py
+python3 test_stats265.py
 sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
 xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=12.0 \
   -dynamiclib -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wall -Wextra \

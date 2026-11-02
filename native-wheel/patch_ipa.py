@@ -130,6 +130,7 @@ def build_native(old,original,maps):
         ldur x3, [x29, #-48]
         ldur x4, [x29, #-64]
         ldur x5, [x29, #-72]
+        ldur x6, [x29, #-96]
         blr x10
       stats_return:
         ldp x29, x30, [sp], #32
