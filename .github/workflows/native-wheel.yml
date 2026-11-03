@@ -1,0 +1,48 @@
+name: Build native lucky wheel
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths: ['native-wheel/**', '.github/workflows/native-wheel.yml']
+permissions:
+  contents: read
+concurrency:
+  group: native-wheel-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  wheel:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash native-wheel/build.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-lucky-wheel
+          path: |
+            native-wheel/build/AGWheel.dylib
+            native-wheel/build/exports.txt
+            native-wheel/build/load-commands.txt
+            native-wheel/build/SHA256.txt
+            native-wheel/build/build-info.json
+            native-wheel/build/code-signing.txt
+            native-wheel/build/wheel-layout-*.png
+            native-wheel/build/wheel-preview.png
+            native-wheel/build/wheel-input-preview.png
+            native-wheel/build/wheel-waiting-preview.png
+            native-wheel/build/captcha-*.png
+            native-wheel/build/captcha-ui-check.json
+            native-wheel/build/ui-check.json
+            native-wheel/build/camera-pacing-check.json
+            native-wheel/build/blind-state-check.json
+            native-wheel/build/wheel-single-preview.png
+            native-wheel/build/ufo-diagnostics.png
+            native-wheel/build/ufo-diagnostics-check.json
+            native-wheel/build/airship-diagnostics.png
+            native-wheel/build/airship-diagnostics-check.json
+          if-no-files-found: error
+          retention-days: 14
+
+
+

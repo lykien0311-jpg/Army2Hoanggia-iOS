@@ -1,0 +1,138 @@
+{
+  "github_actions_run": 41549580456,
+  "github_artifact_id": 13191010763,
+  "github_artifact_sha256": "eaef192dd4930a2d8777c31ab99af22851dce3f1a873436da30fc36fe100fd28",
+  "source_commit": "8fb58ed1e706d1c83d58e5fc0448ecd33501eab6",
+  "main_sha256": "bee4725fdbb1acbe47ed871c68dea8ca3a737a88c45a63e5879343e529f177b1",
+  "native_hook_code_bytes": 30352,
+  "source_sha256": {
+    "Stats.c": "99e97e48790587d69ee248fe65296cd9bdcc7fc7a1c78966ed8043757a37b4d2",
+    "Stats.h": "5effced69465909171a79281edf96b87a1593b66607c01febf5d080f55b24cef",
+    "StatsNativeMap.h": "739b36524173fc70fc18afa13efa908f15eb48d08468434d9848b82d16e4580f",
+    "stats-map.json": "a839428da598e8097ae9ebf95cf376420a4532f91f339d3ad298ba861f73da9f",
+    "Notes77.m": "9f755dfed03f0eefd30de972f759ffb1a787bffa4f663c643380aed682ba3c41",
+    "patch_ipa.py": "30d0eeb74ee1c84d15cad7b9e420f96cd794110a55e0d21cdb9a551559a207b6"
+  },
+  "stats-check": {
+    "passed": true,
+    "formula_cases": 1000,
+    "malformed_packets": 462,
+    "unmodified_JAR_oracle_cases": 1000,
+    "five_attributes": true,
+    "disabled_rules_keep_legacy": true,
+    "no_partial_packet_updates": true,
+    "no_combat_writes": true
+  },
+  "stats265-check": {
+    "passed": true,
+    "gem_formula_cases": 1000,
+    "Sua12_JAR_oracle_cases": 1000,
+    "malformed_packets": 220,
+    "exact_selection_guards": 21,
+    "physical_device_tested": false
+  },
+  "stats-device-check": {
+    "passed": true,
+    "variants": 6,
+    "characters": [
+      0,
+      4,
+      9
+    ],
+    "native_controller_and_calculator_calls": 186,
+    "original_equipment_and_costume_aggregation": true,
+    "five_attributes": true,
+    "above_uint16": true,
+    "disabled_and_missing_rules_keep_legacy": true,
+    "reconnect_isolation": true,
+    "malformed_update_atomic": true,
+    "combat_and_inputs_unchanged": true,
+    "callee_saved_registers_preserved": true,
+    "stream_positions_unchanged": true,
+    "physical_device_tested": false,
+    "live_requests": 0
+  },
+  "stats265-device-check": {
+    "passed": true,
+    "server_fixtures": 400,
+    "variants": 6,
+    "matching_and_preview_checks": 3000,
+    "all_five_stats": true,
+    "actual_Sua12_server_packets": true,
+    "actual_Apple_ARM64_library": true,
+    "original_native_calculator": true,
+    "streams_and_callee_saved_registers_preserved": true,
+    "live_requests": 0,
+    "physical_device_tested": false
+  },
+  "stats265-costume-check": {
+    "passed": true,
+    "variants": 6,
+    "checks": 24,
+    "six_equipped_handles": true,
+    "costume_pointer_from_original_calculator": true,
+    "gem_preview_and_snapshot_guards": true,
+    "physical_device_tested": false
+  },
+  "stats266-device-check": {
+    "passed": true,
+    "variants": 6,
+    "late_reply_and_early_constructor_checks": 54,
+    "screenshot_values": [
+      168048,
+      4585,
+      22680,
+      22898,
+      22631
+    ],
+    "original_message_constructor": true,
+    "original_paint_entry": true,
+    "no_manual_recalculate": true,
+    "screenshot_account_gear_reproduced": false,
+    "physical_device_tested": false,
+    "live_requests": 0
+  },
+  "regression_before_fix": {
+    "failed_as_expected": true,
+    "output": [
+      51679,
+      3337,
+      22680,
+      22898,
+      22631
+    ],
+    "expected": [
+      168048,
+      4585,
+      22680,
+      22898,
+      22631
+    ],
+    "account_gear_reproduced": false
+  },
+  "passed": true,
+  "input_sha256": "df0262cae94806bb36f55fc35b395b0b346e9890edee63192fc93177d60e9932",
+  "output": "Army2Hoanggia-2.4.1-Build266-FixStats.ipa",
+  "sha256": "3f4170d878ac34ef2e3d8e338d18de8d76ab1e5e6285f41ff707406642b9e8be",
+  "bytes": 16574613,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Army2Hoanggia",
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 522,
+  "github_build": {
+    "source_commit": "e9268caa1f3ff20af07940e769c3ac3d727af1d7",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "dbf32beef9ac9944ae01f569d57c2cc36fdf456eac2799b11e6b0d477478a0f4",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true
+}

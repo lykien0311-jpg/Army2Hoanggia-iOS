@@ -1,0 +1,315 @@
+{
+  "build": 260,
+  "purpose": "Requested diagnostic IPA for signed-device video and local log",
+  "reference_video": "37529.mp4",
+  "underlying_stall_acceptance": "Unresolved: obtain physical-device server/native/camera/wait observations; no new repair is claimed.",
+  "source_commit": "99575994c61bff2a8f916e849dbdb982db4fe48f",
+  "apple_merge_commit": "f3d79f22425ecb82cabddfb7d36f218460275085",
+  "github_run_id": 41410437040,
+  "artifact_id": 13125123231,
+  "artifact_zip_sha256": "6403aa2ef322ae71f004306eecfbd316c5b6eb50f3436b8fe7af769062056aeb",
+  "ipa_name": "Army2Hoanggia-2.4.1-Build260-DoLoiKhiCau.ipa",
+  "ipa_bytes": 16575287,
+  "ipa_sha256": "b3ca3da16da28af59826683d5f24c7a0a5943532eae077d652b32ae4963be21a",
+  "main_sha256": "0d8deab0fda447c08658ab77351cea4e9f088a2de3b7425c4159c924bbc4a679",
+  "dylib_sha256": "0fbc7b25e6a80aa106f88fbfb8d09a5aa3bcb30a85f03d1ebc2b20c4b9e984b5",
+  "accepted_auto_sources": {
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f",
+    "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f"
+  },
+  "diagnostic_fields": [
+    "server24 owner/turn versus native owner and camera actor/mode",
+    "projectile118/completion115/canvas13c/player pending1a7/notified1a8",
+    "active wait kind/actor/age",
+    "roster/native index, character,64-bit HP,state,gravity,flight,walking,Y",
+    "marked corpse93 actor,destination,remove",
+    "corpse-hook handle/reject count",
+    "recent incoming command/first-byte history",
+    "native sample,pulse,receive and corpse update counters/ages"
+  ],
+  "screen_scope": "standalone room10 (including recognition failures) or active airship stages in rooms14/15",
+  "log_file": "Documents/KhiCau-B260.txt",
+  "log_rate_hz": 1,
+  "log_rotation_bytes": 2097152,
+  "native_sample_hz": 5,
+  "validation": {
+    "package-check.json": {
+      "passed": true,
+      "input_sha256": "7bf7303206d8b4599bf22a1856240933c8a0edbda5a76b5da03bb157b91e2145",
+      "output": "Army2Hoanggia-2.4.1-Build260-DoLoiKhiCau.ipa",
+      "sha256": "b3ca3da16da28af59826683d5f24c7a0a5943532eae077d652b32ae4963be21a",
+      "bytes": 16575287,
+      "changed_entries": [
+        "Payload/Army2Hoanggia.app/Info.plist",
+        "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+      ],
+      "other_entries_unchanged": 523,
+      "github_build": {
+        "source_commit": "f3d79f22425ecb82cabddfb7d36f218460275085",
+        "release_version": "2.4.1",
+        "login_marker": "2.4.1-HG78-IPA",
+        "xcode": "Xcode 16.4\nBuild version 16F6",
+        "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+        "sdk": "18.5",
+        "dylib_sha256": "0fbc7b25e6a80aa106f88fbfb8d09a5aa3bcb30a85f03d1ebc2b20c4b9e984b5",
+        "apple_codesign_strict_verified": true,
+        "apple_resign_strict_verified": true,
+        "physical_device_tested": false
+      },
+      "physical_device_tested": false,
+      "requires_user_certificate_resigning": true
+    },
+    "airship-diagnostics-check.json": {
+      "airship_room_or_active_stage_only": true,
+      "game_packets_written": 0,
+      "local_log_written": true,
+      "native_pointer_access_from_UIKit": false,
+      "passed": true,
+      "touch_passthrough": true,
+      "widths": [
+        320,
+        390,
+        844
+      ]
+    },
+    "ship-trace-check.json": {
+      "passed": true,
+      "variants": 6,
+      "apple_arm64_observer_cases": 48,
+      "combat_bytes_changed": 0,
+      "original_reader_unchanged": true,
+      "server_native_camera_disagreement_captured": true,
+      "corpse_roster_index_mismatch_captured": true,
+      "history_events": 16,
+      "native_sampling_max_hz": 5,
+      "diagnostics_game_packets": 0,
+      "physical_device_tested": false
+    },
+    "corpse-turn-check.json": {
+      "passed": true,
+      "variants": 6,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "native_endshoot_and_server_turn_camera_sequences": 90,
+      "native_turn_reset_reproduces_dead_to_idle": true,
+      "native_completion_packet": 23,
+      "native_camera_owner_after_server_turn": 2,
+      "duplicate_completion_packets": 0,
+      "living_moving_actor_still_blocks_completion": true,
+      "landed_corpses_rearm_gravity": false,
+      "synthetic_turns": 0,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "corpse-device-check.json": {
+      "passed": true,
+      "variants": 6,
+      "old_native_detached_part_flight_stalls": 24,
+      "marked_packet_and_full_fall_sequences": 90,
+      "stale_live_normal_UFO_and_reset_cases": 90,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "roster_capacities": [
+        9,
+        100,
+        127
+      ],
+      "wire_command": 93,
+      "wire_length": 10,
+      "wire_magic": "43505239",
+      "native_reader_unchanged": true,
+      "no_wait_during_corpse_motion": true,
+      "subsequent_controller_packets_reachable": true,
+      "animation_matches_JAR_acceleration_and_destination": true,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "airship-wait-check.json": {
+      "passed": true,
+      "apple_native_wait_cases": 390,
+      "variants": 6,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "roster_capacities": [
+        9,
+        100,
+        127
+      ],
+      "native_finalizer_lost_notify_replays": 18,
+      "native_part_effect_counter_lost_notify_replays": 18,
+      "native_part_particles": 4,
+      "native_effect_completion_frames": 20,
+      "busy_waits_survive_79_spurious_wakes": true,
+      "timeout_does_not_clear_flags": true,
+      "scene_and_connection_changes_release_wait": true,
+      "other_stages_keep_previous_bridge": true,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "camera-device-check.json": {
+      "passed": true,
+      "apple_arm64_timing_cases": 48,
+      "variants": 6,
+      "manual_camera_and_walk_interval_ms": 30,
+      "independent_axes": true,
+      "frame_rates": [
+        20,
+        60,
+        120,
+        1000
+      ],
+      "live_game_requests": 0
+    },
+    "blind-device-check.json": {
+      "passed": true,
+      "apple_native_cases": 96,
+      "variants": 6,
+      "local_slots": [
+        0,
+        7
+      ],
+      "protocol": 106,
+      "wire_order": [
+        "state",
+        "target"
+      ],
+      "original_reader_unchanged": true,
+      "white_rectangle": [
+        0,
+        0,
+        320,
+        480
+      ],
+      "opaque_white": true,
+      "actual_native_graphics_state_methods": true,
+      "original_HUD_entry_executed": true,
+      "graphics_restored_on_Java_exception": true,
+      "new_match_exit_and_server_clear_reset": true,
+      "live_requests": 0
+    },
+    "speed-maximum-check.json": {
+      "passed": true,
+      "native_level_cases": 120,
+      "variants": 6,
+      "levels_1_to_9_unchanged": true,
+      "level_10_skips_scheduler_sleep": true,
+      "extra_game_ticks": 0,
+      "packet_duplication": false,
+      "physical_device_performance_measured": false
+    },
+    "wheel-home-return-check.json": {
+      "passed": true,
+      "original_native_home_transitions": 12,
+      "build254_empty_home_reproduced": true,
+      "build255_menu_paint_restored": true,
+      "original_layout_and_cleanup_executed": true,
+      "server_ack_required": false,
+      "cases": [
+        {
+          "build": 254,
+          "variant": 0,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 1,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 2,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 3,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 4,
+          "menu_visible": false
+        },
+        {
+          "build": 254,
+          "variant": 5,
+          "menu_visible": false
+        },
+        {
+          "build": 255,
+          "variant": 0,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 1,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 2,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 3,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 4,
+          "menu_visible": true
+        },
+        {
+          "build": 255,
+          "variant": 5,
+          "menu_visible": true
+        }
+      ]
+    }
+  },
+  "other_regressions": {
+    "native_hook_ABI": 134,
+    "post_update_predicate_keypad_ABI": 86,
+    "native_turn_handoff_ABI": 24,
+    "native_ufo_encounters": 60,
+    "long_ufo_effect_and_fallback_waits": 12,
+    "installed_UFO_wait_sites": 150,
+    "wheel_home_transitions": 12
+  },
+  "limits": [
+    "No physical iPhone/live-server acceptance test.",
+    "ARM64 observers run with controlled OS/JVM boundaries and change no combat bytes or outgoing packets in the fixture.",
+    "UIKit preview verifies readable layout at320/390/844 widths, touch passthrough and a real local log write.",
+    "UIKit/file worker read scalar snapshots only; diagnostic output must be recorded on the user device to establish the actual stall."
+  ],
+  "library": {
+    "library_file_id": "libfile_23d4a2aa387c819199e2f4d6912c3f54",
+    "version": 11
+  }
+}

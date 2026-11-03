@@ -1,0 +1,35 @@
+{
+  "command": -110,
+  "marker_decimal": 1379154228,
+  "marker_hex": "52343934",
+  "packet_bytes": 455,
+  "characters": 10,
+  "attributes": 5,
+  "entries": [
+    {
+      "archive": "reference-client.jar",
+      "entry": "game/BalanceClient494.class",
+      "sha256": "9a9d28b96282d63afcb9799e74b761efac48b3ee633cf18d08e83add19cef5b5"
+    },
+    {
+      "archive": "server.jar",
+      "entry": "army2/server/Balance494.class",
+      "sha256": "ff4fc4d96f8c7dbc3ec7ccf7888ce8d21711d96c87cedc866fea7f3b025b2cfe"
+    }
+  ],
+  "wire": "int marker;byte character_count;repeat10(boolean enabled;int base[5];int points[5];int attackGainPercent)",
+  "source_methods": [
+    "BalanceClient494.receive",
+    "BalanceClient494.apply",
+    "Balance494.send",
+    "Balance494.ability"
+  ],
+  "limitation": "User screenshot does not expose base/allocated/equipment inputs; no account was contacted. Screenshot HP is not hardcoded.",
+  "release_2_4_1_class_identical_to_reference": true,
+  "summary_array_uses": [
+    "C431 constructor",
+    "C431 equipment calculation",
+    "C431 equipment painting"
+  ],
+  "summary_array_read_by_combat": false
+}

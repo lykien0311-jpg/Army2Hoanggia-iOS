@@ -1,0 +1,187 @@
+{
+  "build": 264,
+  "source_commit": "d7b2af540c8a649b07e0d48749fa82bd3d59f2a2",
+  "apple_merge_commit": "3a19f13177d07579c9dcf04507ea1c2c4ef53af1",
+  "github_run_id": 41451158470,
+  "artifact_id": 13144233699,
+  "artifact_zip_sha256": "bed30b62fc928c5bf575a9a1aac230cd66557ed2b0d5006740fb8f8e1b534f34",
+  "ipa_name": "Army2Hoanggia-2.4.1-Build264-FixStats.ipa",
+  "ipa_bytes": 16571789,
+  "ipa_sha256": "feb2fe694bd2240c4804bce46f443403693223fcade11e35c661aa6f3ad8f9cf",
+  "main_sha256": "4d864c48146ef45c2d07f700cd79359fac2fbb2711e94a3c7bb240c85a590e40",
+  "dylib_sha256": "b6afdb06a8a7cb2d26b1b7df04de9561b4372665fa646614c720de844dd91462",
+  "reference_images": [
+    "37546.jpg",
+    "37547.jpg"
+  ],
+  "outside_HP": 51679,
+  "battle_max_HP": 168048,
+  "battle_is_authoritative": true,
+  "root_cause": "Native equipment summary omits command-110 BalanceClient494 server rules and still uses legacy formulas.",
+  "change": "Receive complete connection-scoped rules; preserve native gear and costume aggregation; update only the five summary totals after native calculation.",
+  "source_sha256": {
+    "Corpse.c": "acc16cc559c22c8e626b8ca53dd9a293d0de08fe522415ca14d65d639be4edd0",
+    "BattleWait.c": "c54edf13615fda9b0cc20f6e6198f9c9a55339a359d25a7dfa566fa8e3301141",
+    "Movement.c": "ec0a2826cea10f334b30d22afc35bf395935c546788bd735823ab8e190ca7586",
+    "Turn33.c": "2b778098ae8ecb01e2ecf21565e82af8937bf898eaf232db097160f25a041c9b",
+    "UfoAuto.c": "296cf189df9a26bb9e025a693763ebe228be207ef34ea4d303ea8dd3a4203ded",
+    "UfoAuto.h": "dbf6f254b9849d369a4ed23770c08c77c47eac1e9b5314e5c25d0648fd6f791f",
+    "Turn33.h": "724a38d47ebe102dbd92dd7bcccded25a91d80ba1feaf638a539f69d165e835f",
+    "Blind.c": "624ba5fb5eac8b8d87af330afa1d7ee65d3fe7faead5137e4cd55738f99d218b",
+    "ShipTraceDisabled.c": "4d7804eb8191b43827c2730bf3fb8ff7873244a16931bd2361cab553100d3a94",
+    "Stats.c": "a2c730caa3ae7e32d5183dd581b4ab8fc11cfdbd0eb0e9592ae71c2b01874951",
+    "Stats.h": "44e4822609637b41ed21ffc84ad16740a8deb09119d7e2e61ada9ff3456ca4a9",
+    "Notes77.m": "ae60b1b58ac1dc29e8865cf69755ec687d375d5c11d55fefc0ffe725d90310c7",
+    "patch_ipa.py": "ae3a40339a4bd118fcdc4def9cbb58b14cc2b3aba8154027bbea72f87344cf7a"
+  },
+  "validation": {
+    "stats-check.json": {
+      "passed": true,
+      "formula_cases": 1000,
+      "malformed_packets": 462,
+      "unmodified_JAR_oracle_cases": 1000,
+      "five_attributes": true,
+      "disabled_rules_keep_legacy": true,
+      "no_partial_packet_updates": true,
+      "no_combat_writes": true
+    },
+    "stats-device-check.json": {
+      "passed": true,
+      "variants": 6,
+      "characters": [
+        0,
+        4,
+        9
+      ],
+      "native_controller_and_calculator_calls": 186,
+      "original_equipment_and_costume_aggregation": true,
+      "five_attributes": true,
+      "above_uint16": true,
+      "disabled_and_missing_rules_keep_legacy": true,
+      "reconnect_isolation": true,
+      "malformed_update_atomic": true,
+      "combat_and_inputs_unchanged": true,
+      "callee_saved_registers_preserved": true,
+      "stream_positions_unchanged": true,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "camera-cache-check.json": {
+      "passed": true,
+      "variants": 6,
+      "warmup_orders": 3,
+      "shared_cache_native_cases": 546,
+      "four_manual_directions": true,
+      "manual_pan_interval_ms": 30,
+      "automatic_mode_unchanged": true,
+      "corpse_HUD_and_camera_have_independent_callbacks": true,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "blind-device-check.json": {
+      "passed": true,
+      "apple_native_cases": 96,
+      "variants": 6,
+      "local_slots": [
+        0,
+        7
+      ],
+      "protocol": 106,
+      "wire_order": [
+        "state",
+        "target"
+      ],
+      "original_reader_unchanged": true,
+      "white_rectangle": [
+        0,
+        0,
+        320,
+        480
+      ],
+      "opaque_white": true,
+      "actual_native_graphics_state_methods": true,
+      "original_HUD_entry_executed": true,
+      "graphics_restored_on_Java_exception": true,
+      "new_match_exit_and_server_clear_reset": true,
+      "live_requests": 0
+    },
+    "corpse-turn-check.json": {
+      "passed": true,
+      "variants": 6,
+      "rooms": [
+        10,
+        14,
+        15
+      ],
+      "characters": [
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "native_endshoot_and_server_turn_camera_sequences": 90,
+      "native_turn_reset_reproduces_dead_to_idle": true,
+      "native_completion_packet": 23,
+      "native_camera_owner_after_server_turn": 2,
+      "duplicate_completion_packets": 0,
+      "living_moving_actor_still_blocks_completion": true,
+      "native_actor_field16b": 0,
+      "original_virtual_dispatch_and_vtable": true,
+      "landed_corpses_rearm_gravity": false,
+      "synthetic_turns": 0,
+      "physical_device_tested": false,
+      "live_requests": 0
+    },
+    "package-check.json": {
+      "passed": true,
+      "input_sha256": "3d81b5ff81c9f9343e233bc823bf4f27e883b4f79f8de08cdb71495e88a50413",
+      "output": "Army2Hoanggia-2.4.1-Build264-FixStats.ipa",
+      "sha256": "feb2fe694bd2240c4804bce46f443403693223fcade11e35c661aa6f3ad8f9cf",
+      "bytes": 16571789,
+      "changed_entries": [
+        "Payload/Army2Hoanggia.app/Army2Hoanggia",
+        "Payload/Army2Hoanggia.app/Info.plist",
+        "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+      ],
+      "other_entries_unchanged": 522,
+      "github_build": {
+        "source_commit": "3a19f13177d07579c9dcf04507ea1c2c4ef53af1",
+        "release_version": "2.4.1",
+        "login_marker": "2.4.1-HG78-IPA",
+        "xcode": "Xcode 16.4\nBuild version 16F6",
+        "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+        "sdk": "18.5",
+        "dylib_sha256": "b6afdb06a8a7cb2d26b1b7df04de9561b4372665fa646614c720de844dd91462",
+        "apple_codesign_strict_verified": true,
+        "apple_resign_strict_verified": true,
+        "physical_device_tested": false
+      },
+      "physical_device_tested": false,
+      "requires_user_certificate_resigning": true
+    }
+  },
+  "additional_passes": {
+    "native_hook_ABI_cases": 134,
+    "UFO_encounters": 60,
+    "UFO_long_wait_and_nonUFO_cases": 12
+  },
+  "native_callback_slot": 44,
+  "native_cache_slots_unique": true,
+  "native_RX_code_bytes": 29952,
+  "native_recovery_round_trip": true,
+  "diagnostic_windows_and_log_sampling_disabled": true,
+  "library": {
+    "library_file_id": "libfile_23d4a2aa387c819199e2f4d6912c3f54",
+    "file_id": "file_000000002bb4820798025d2444eecbbf",
+    "version": 15
+  },
+  "physical_device_tested": false,
+  "live_requests": 0,
+  "requires_user_certificate_resigning": true,
+  "limitations": [
+    "Physical iPhone/signing and the actual account are not exercised.",
+    "Screenshot allocation/gear/server-rule inputs are unavailable; screenshot HP is not hardcoded or claimed to be replayed.",
+    "ARM64 integration controls JVM/OS primitives and runs actual native calculator/controller plus Apple-compiled library."
+  ]
+}

@@ -1,0 +1,80 @@
+[
+  {
+    "variant": 0,
+    "class": "game/j5_",
+    "class_info_offset": "0x20996f0",
+    "inventory_handle_field": {
+      "offset": 176,
+      "flags": "0x5001"
+    },
+    "template_id_field": {
+      "offset": 128,
+      "flags": "0x6001"
+    }
+  },
+  {
+    "variant": 1,
+    "class": "game0/j5_",
+    "class_info_offset": "0x20c7f60",
+    "inventory_handle_field": {
+      "offset": 176,
+      "flags": "0x5001"
+    },
+    "template_id_field": {
+      "offset": 128,
+      "flags": "0x6001"
+    }
+  },
+  {
+    "variant": 2,
+    "class": "game1/j5_",
+    "class_info_offset": "0x20f5c50",
+    "inventory_handle_field": {
+      "offset": 176,
+      "flags": "0x5001"
+    },
+    "template_id_field": {
+      "offset": 128,
+      "flags": "0x6001"
+    }
+  },
+  {
+    "variant": 3,
+    "class": "game2/j5_",
+    "class_info_offset": "0x2123940",
+    "inventory_handle_field": {
+      "offset": 176,
+      "flags": "0x5001"
+    },
+    "template_id_field": {
+      "offset": 128,
+      "flags": "0x6001"
+    }
+  },
+  {
+    "variant": 4,
+    "class": "game3/j5_",
+    "class_info_offset": "0x2151630",
+    "inventory_handle_field": {
+      "offset": 176,
+      "flags": "0x5001"
+    },
+    "template_id_field": {
+      "offset": 128,
+      "flags": "0x6001"
+    }
+  },
+  {
+    "variant": 5,
+    "class": "game4/j5_",
+    "class_info_offset": "0x217f320",
+    "inventory_handle_field": {
+      "offset": 176,
+      "flags": "0x5001"
+    },
+    "template_id_field": {
+      "offset": 128,
+      "flags": "0x6001"
+    }
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "variant": 0,
+    "update": 5910828,
+    "first": "fc6fbba9",
+    "post_base_update": 5911092
+  },
+  {
+    "variant": 1,
+    "update": 6863904,
+    "first": "fc6fbba9",
+    "post_base_update": 6864168
+  },
+  {
+    "variant": 2,
+    "update": 7801060,
+    "first": "fc6fbba9",
+    "post_base_update": 7801324
+  },
+  {
+    "variant": 3,
+    "update": 8738216,
+    "first": "fc6fbba9",
+    "post_base_update": 8738480
+  },
+  {
+    "variant": 4,
+    "update": 9675372,
+    "first": "fc6fbba9",
+    "post_base_update": 9675636
+  },
+  {
+    "variant": 5,
+    "update": 10612528,
+    "first": "fc6fbba9",
+    "post_base_update": 10612792
+  }
+]

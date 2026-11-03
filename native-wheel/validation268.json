@@ -1,0 +1,104 @@
+{
+  "passed": true,
+  "revision": "Sua13",
+  "date_vietnam": "2026-11-03",
+  "manual_camera_ms": 15,
+  "walking_ms": 30,
+  "camera_activation": "left softkey/manual mode 0",
+  "axes": [
+    "horizontal",
+    "vertical"
+  ],
+  "jar_variants": 3,
+  "apk_namespaces": 6,
+  "ipa_variants": 6,
+  "automatic_camera_modes_unchanged": true,
+  "previous_gem11_fix_preserved": true,
+  "server_web_unchanged": true,
+  "physical_device_tested": false,
+  "github_source_commit": "9981555e8acdf3cad5693a577e211999fdaa2870",
+  "github_build_commit": "eb5cc7f7c7cf6327cae2215a36a2716bce7fb896",
+  "github_actions_run": 41561563445,
+  "github_artifact_id": 13197155486,
+  "github_artifact_sha256": "f0aef7578c5e984a035ba0efb3fb1f9c992e106cbfb04fffed79a515ad88caf4",
+  "runtime_sha256": {
+    "client/Army2D-Kien.jar": "b5a805f1410a85d5011cecae6ba2e2d4d1a6341108b0d6cc8e2a736033990302",
+    "client/Army2D-template.jar": "e5ff037ad29a81a799c7bcbe70813f9f429dbb9b8f5cebf3b35fa25c40dbaf86",
+    "client/Army2D-Kien-R8.jar": "d6636008acca390ba204e4f3d08aa30705484f3c8456b70bab76e883b6daacd3",
+    "client/Army2HoangGia_1.apk": "fc901d07e7e21900cb4bce6c8be3a4733dcbae4d89e1dac34555e98b77949f54"
+  },
+  "ipa": {
+    "passed": true,
+    "input_sha256": "719553051a82492407a8cca7f6006d40a3fe53db21c645ec926ea902906dade8",
+    "output": "Army2Hoanggia-2.4.1-Build268-Camera15ms.ipa",
+    "sha256": "4763ab7d3697df5758c1e3d7ced889a17e52fd13f95d62839d4fb29915f20b83",
+    "bytes": 16574625,
+    "changed_entries": [
+      "Payload/Army2Hoanggia.app/Info.plist",
+      "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+    ],
+    "other_entries_unchanged": 523,
+    "github_build": {
+      "source_commit": "eb5cc7f7c7cf6327cae2215a36a2716bce7fb896",
+      "release_version": "2.4.1",
+      "login_marker": "2.4.1-HG78-IPA",
+      "xcode": "Xcode 16.4\nBuild version 16F6",
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+      "sdk": "18.5",
+      "dylib_sha256": "fc09cde71180a89e6974d39a9295f83e13a55ffd70031d8ce389e041a7081f5d",
+      "apple_codesign_strict_verified": true,
+      "apple_resign_strict_verified": true,
+      "physical_device_tested": false
+    },
+    "physical_device_tested": false,
+    "requires_user_certificate_resigning": true
+  },
+  "camera-pacing-check": {
+    "passed": true,
+    "frame_rate_direction_cases": 18,
+    "pan_interval_ms": 15,
+    "walking_interval_ms": 30,
+    "independent_axes": true,
+    "walking_independent": true,
+    "no_sleep_or_queued_steps": true
+  },
+  "camera-device-check": {
+    "passed": true,
+    "apple_arm64_timing_cases": 48,
+    "variants": 6,
+    "manual_camera_interval_ms": 15,
+    "walking_interval_ms": 30,
+    "independent_axes": true,
+    "boundary_assertions": 96,
+    "frame_rates": [
+      20,
+      60,
+      120,
+      1000
+    ],
+    "live_game_requests": 0
+  },
+  "camera-hook-check": {
+    "passed": true,
+    "native_pan_cases": 120,
+    "variants": 6,
+    "axes": 2,
+    "manual_pan_interval_ms": 15,
+    "automatic_modes_unchanged": true,
+    "separate_walk_clock": true,
+    "optional_symbol_fallback": true,
+    "native_setter_and_abi_executed": true
+  },
+  "camera-cache-check": {
+    "passed": true,
+    "variants": 6,
+    "warmup_orders": 3,
+    "shared_cache_native_cases": 546,
+    "four_manual_directions": true,
+    "manual_pan_interval_ms": 15,
+    "automatic_mode_unchanged": true,
+    "corpse_HUD_and_camera_have_independent_callbacks": true,
+    "physical_device_tested": false,
+    "live_requests": 0
+  }
+}

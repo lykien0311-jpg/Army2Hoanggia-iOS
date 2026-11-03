@@ -1,0 +1,62 @@
+[
+  {
+    "variant": 0,
+    "class": "game/U",
+    "row_paint": 5714900,
+    "row_size": 1572,
+    "row_id_load": 5715512,
+    "title_formatter": 5714604,
+    "title_id_arg": 5714756,
+    "title_append": 11260524
+  },
+  {
+    "variant": 1,
+    "class": "game0/TerrainMidlet",
+    "row_paint": 6673904,
+    "row_size": 1572,
+    "row_id_load": 6674516,
+    "title_formatter": 6673608,
+    "title_id_arg": 6673760,
+    "title_append": 11260524
+  },
+  {
+    "variant": 2,
+    "class": "game1/TerrainMidlet",
+    "row_paint": 7611060,
+    "row_size": 1572,
+    "row_id_load": 7611672,
+    "title_formatter": 7610764,
+    "title_id_arg": 7610916,
+    "title_append": 11260524
+  },
+  {
+    "variant": 3,
+    "class": "game2/TerrainMidlet",
+    "row_paint": 8548216,
+    "row_size": 1572,
+    "row_id_load": 8548828,
+    "title_formatter": 8547920,
+    "title_id_arg": 8548072,
+    "title_append": 11260524
+  },
+  {
+    "variant": 4,
+    "class": "game3/TerrainMidlet",
+    "row_paint": 9485372,
+    "row_size": 1572,
+    "row_id_load": 9485984,
+    "title_formatter": 9485076,
+    "title_id_arg": 9485228,
+    "title_append": 11260524
+  },
+  {
+    "variant": 5,
+    "class": "game4/TerrainMidlet",
+    "row_paint": 10422528,
+    "row_size": 1572,
+    "row_id_load": 10423140,
+    "title_formatter": 10422232,
+    "title_id_arg": 10422384,
+    "title_append": 11260524
+  }
+]
