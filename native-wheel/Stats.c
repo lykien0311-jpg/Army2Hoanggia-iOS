@@ -162,10 +162,11 @@ int AGStatsReceive(void *env,void *message,int v){
     return 1;
 }
 static int64_t *array5(uint8_t *p){return p&&*(int *)(p+0x10)>=AG_STATS_COUNT?(int64_t *)(p+0x18):0;}
-/* Item+0x80 is the native inventory handle. The caller passes the exact costume
- * selected by the original calculator, avoiding any extra Java method calls. */
+/* j5_.b at +0x80 is the template ID (long), used for costume selection.
+ * j5_.a at +0xb0 is the inventory handle (int), used by GEM1/GEM2.
+ * Both offsets/types are verified in all six RoboVM class descriptors. */
 static void collect(uint8_t *item,StatsCache *cache,int32_t *handles,int *count,int64_t *gems){
-    if(!item)return;int64_t handle=*(int64_t *)(item+0x80);
+    if(!item)return;int32_t handle=*(int32_t *)(item+0xb0);
     if(handle<65536||handle>131071)return;
     if(*count>=6){*count=7;return;}handles[(*count)++]=(int32_t)handle;
     uint32_t index=(uint32_t)handle&65535;

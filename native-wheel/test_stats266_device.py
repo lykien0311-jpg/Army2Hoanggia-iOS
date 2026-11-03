@@ -35,7 +35,7 @@ for v in range(6):
         slots=t.get(t.get(k.player+0x78,'<Q')+0x10,'<Q');handles=[]
         for i in range(5):
             gear=t.get(slots+0x18+i*8,'<Q')
-            if gear:t.put(gear+0x80,'<q',65536+i);handles.append(65536+i)
+            if gear:t.put(gear+0x80,'<q',54);t.put(gear+0xb0,'<i',65536+i);handles.append(65536+i)
         for i,n in enumerate(observed):t.put(out+0x18+i*8,'<q',n)
         packet=snapwire(0,p,handles,f,pct,correct)
         (construct if early else receive)(v,packet)

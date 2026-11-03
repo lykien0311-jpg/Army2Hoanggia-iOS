@@ -49,12 +49,12 @@ def set_inputs(v,c,useCostume):
     for slot in range(5):
         if slot==2:continue
         equipment=t.alloc(0xc0);f=[700+slot*50+j for j in range(5)];p=[10+slot*3+j for j in range(5)]
-        fa=arr(f);pa=arr(p);t.put(equipment+0x48,'<Q',fa);t.put(equipment+0x50,'<Q',pa);t.put(slots+0x18+8*slot,'<Q',equipment)
+        fa=arr(f);pa=arr(p);t.put(equipment+0x48,'<Q',fa);t.put(equipment+0x50,'<Q',pa);t.put(equipment+0x80,'<q',54);t.put(equipment+0xb0,'<i',65536+slot);t.put(slots+0x18+8*slot,'<Q',equipment)
         flat=[a+b for a,b in zip(flat,f)];pct=[a+b for a,b in zip(pct,p)]
         immutable.extend([fa,pa,equipment])
     flags=t.alloc(0x20);t.put(flags+0x10,'<i',10);t.put(flags+0x14+c,'<B',int(useCostume))
     costume=t.alloc(0xc0);cf=[101,103,107,109,113];cp=[3,5,7,11,13]
-    t.put(costume+0x80,'<q',costumeId);t.put(costume+0x48,'<Q',arr(cf));t.put(costume+0x50,'<Q',arr(cp))
+    t.put(costume+0x80,'<q',costumeId);t.put(costume+0xb0,'<i',65541);t.put(costume+0x48,'<Q',arr(cf));t.put(costume+0x50,'<Q',arr(cp))
     costumes=[costume]
     vector=t.alloc(0x40);t.put(vector+0x18,'<Q',arr(costumes));t.put(vector+0x24,'<i',len(costumes));t.put(screen+0xb0,'<Q',vector)
     if useCostume:flat=[a+b for a,b in zip(flat,cf)];pct=[a+b for a,b in zip(pct,cp)]

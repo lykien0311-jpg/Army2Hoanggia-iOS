@@ -20,9 +20,9 @@ def inventory(blob):
         nonlocal pos
         n=struct.calcsize(fmt);v=struct.unpack_from(fmt,p,pos);pos+=n;return v
     for _ in range(p[0]):
-        h=read('>i')[0];read('>bbh');n=read('>H')[0];pos+=n;size=read('>B')[0];flat=[];pct=[]
+        h=read('>i')[0];hero,kind,template=read('>bbh');n=read('>H')[0];pos+=n;size=read('>B')[0];flat=[];pct=[]
         for j in range(size//2):a,b=read('>qq');flat.append(a);pct.append(b)
-        read('>5b');items[h]=(flat,pct)
+        read('>5b');items[h]=(flat,pct,template)
     chosen=[read('>i')[0]for _ in range(5)];assert pos==len(p)
     return items,chosen
 for v in range(6):
@@ -33,7 +33,7 @@ for v in range(6):
         t.put(player+0x28,'<Q',k.arr(row['points']));t.put(k.character+0x18,'<h',row['nativeBase'])
         bag,chosen=inventory(base64.b64decode(row['101']));outfit=t.get(player+0x78,'<Q');slots=t.get(outfit+0x10,'<Q');flat=[0]*5;pct=[0]*5
         for i,h in enumerate(chosen):
-            item=t.alloc(0xc0);f,p=bag[h];t.put(item+0x80,'<q',h);t.put(item+0x48,'<Q',k.arr(f));t.put(item+0x50,'<Q',k.arr(p));t.put(slots+0x18+i*8,'<Q',item)
+            item=t.alloc(0xc8);f,p,template=bag[h];t.put(item+0x80,'<q',template);t.put(item+0xb0,'<i',h);t.put(item+0x48,'<Q',k.arr(f));t.put(item+0x50,'<Q',k.arr(p));t.put(slots+0x18+i*8,'<Q',item)
             flat=[a+b for a,b in zip(flat,f)];pct=[a+b for a,b in zip(pct,p)]
         receive(v,-110,base64.b64decode(row['-110']));receive(v,-124,base64.b64decode(row['-124']))
         assert k.calculate(v,screen,out)==row['expected'],(v,hero,row['modern'],row['family'],row['count'])
@@ -44,7 +44,7 @@ for v in range(6):
             values=[100001+hero,200002+v,300003,400004,500005]
             receive(v,-124,snapwire(hero,row['points'],chosen,flat,pct,values));assert k.calculate(v,screen,out)==values
             receive(v,-124,b'bad');assert k.calculate(v,screen,out)==values
-            gear=t.get(slots+0x18,'<Q');t.put(gear+0x80,'<q',65555);assert k.calculate(v,screen,out)!=values;t.put(gear+0x80,'<q',chosen[0])
+            gear=t.get(slots+0x18,'<Q');t.put(gear+0xb0,'<i',65555);assert k.calculate(v,screen,out)!=values;t.put(gear+0xb0,'<i',chosen[0])
             fa=t.get(gear+0x48,'<Q');old=t.get(fa+0x18+8,'<q');t.put(fa+0x18+8,'<q',old+30);assert k.calculate(v,screen,out)!=values;t.put(fa+0x18+8,'<q',old)
             receive(v,-110,base64.b64decode(row['-110']));assert k.calculate(v,screen,out)!=values
             checks+=5
