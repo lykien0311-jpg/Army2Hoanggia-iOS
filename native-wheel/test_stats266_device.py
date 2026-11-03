@@ -5,7 +5,7 @@ The screenshot numbers are an output fixture, not fabricated account gear data.
 """
 import json,struct
 import test_stats_device as k
-from test_stats265 import snapwire
+from test_stats265 import snapwire,gemwire
 t=k.t;w=k.w;U=k.U;B=k.B;R=k.R
 maps=json.loads((R/'stats-map.json').read_text())
 observed=[51679,3337,22680,22898,22631]
@@ -17,14 +17,17 @@ def paint(v,screen):
 def receive(v,payload):
     msg=t.message(payload);t.put(msg+0x30,'<B',132);a=w.report['hooks'][v]['controller']
     assert k.execute(B+a,t.ENV,t.alloc(0x20),msg,extra=[B+a+4])==t.STOP
-def construct(v,payload):
+def construct(v,payload,command=-124):
     array=t.alloc(0x14+len(payload));t.put(array+0x10,'<i',len(payload));U.mem_write(array+0x14,payload)
     msg=t.alloc(0x40);a=json.loads((R/'native-map.json').read_text())[v]['ctor']+0x8c
-    k.execute(B+a,t.ENV,msg,-124,array)
+    k.execute(B+a,t.ENV,msg,command,array)
     stream=t.get(msg+0x20,'<Q');assert t.get(stream+0x18,'<i')==len(payload)and t.get(stream+0x20,'<i')==0
 w.primitives[B+0xa616c8]=lambda:t.alloc(0x30)
 w.primitives[B+0xa63cfc]=lambda:t.alloc(0x30)
 w.primitives[B+0xaaa258]=lambda:None
+def byte_array():
+    length=w.r(1);p=t.alloc(0x14+length);t.put(p+0x10,'<i',length);return p
+w.primitives[B+0x12e7c08]=byte_array
 for v in range(6):
     for early in [False,True]:
         k.v=v;k.c=0;t.put(t.SERVICE+0x10,'<Q',t.SESSION+0x5000+v*0x100+int(early)*16)
@@ -47,6 +50,17 @@ for v in range(6):
         for i,n in enumerate(sentinel):t.put(out+0x18+i*8,'<q',n)
         paint(v,screen);assert list(struct.unpack('<5q',U.mem_read(out+0x18,40)))==sentinel
         checks+=3
+    # GEM1-only servers also refresh an open screen; exercise the actual
+    # costume selection in both the original calculator and C paint refresh.
+    for hero in [0,4,9]:
+        k.v=v;k.c=hero;t.put(t.SERVICE+0x10,'<Q',t.SESSION+0x8000+v*0x100+hero)
+        screen,out,p,f,pct,_=k.set_inputs(v,hero,hero==4)
+        k.calculate(v,screen,out)
+        rules=k.fixture(v+hero+1);construct(v,gemwire(rules,[[0]*5 for _ in range(6)]),-110)
+        paint(v,screen)
+        actual=list(struct.unpack('<5q',U.mem_read(out+0x18,40)))
+        assert actual==k.expected(rules,hero,p,f,pct),(v,hero,actual,k.expected(rules,hero,p,f,pct))
+        checks+=1
 report=dict(passed=True,variants=6,late_reply_and_early_constructor_checks=checks,screenshot_values=correct,
             original_message_constructor=True,original_paint_entry=True,no_manual_recalculate=True,
             screenshot_account_gear_reproduced=False,physical_device_tested=False,live_requests=0)

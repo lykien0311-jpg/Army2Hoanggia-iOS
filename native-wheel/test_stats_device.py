@@ -56,7 +56,7 @@ def set_inputs(v,c,useCostume):
     costume=t.alloc(0xc0);cf=[101,103,107,109,113];cp=[3,5,7,11,13]
     t.put(costume+0x80,'<q',costumeId);t.put(costume+0x48,'<Q',arr(cf));t.put(costume+0x50,'<Q',arr(cp))
     costumes=[costume]
-    t.put(screen+0xb0,'<Q',t.alloc(0x40))
+    vector=t.alloc(0x40);t.put(vector+0x18,'<Q',arr(costumes));t.put(vector+0x24,'<i',len(costumes));t.put(screen+0xb0,'<Q',vector)
     if useCostume:flat=[a+b for a,b in zip(flat,cf)];pct=[a+b for a,b in zip(pct,cp)]
     character=t.alloc(0x30);t.put(character+0x18,'<h',200+c)
     # Only final summary array may change. Combat state remains byte-identical.
