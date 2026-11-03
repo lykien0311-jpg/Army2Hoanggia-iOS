@@ -1,0 +1,213 @@
+{
+  "passed": true,
+  "input_sha256": "3f4170d878ac34ef2e3d8e338d18de8d76ab1e5e6285f41ff707406642b9e8be",
+  "output": "Army2Hoanggia-2.4.1-Build267-Gem11.ipa",
+  "sha256": "719553051a82492407a8cca7f6006d40a3fe53db21c645ec926ea902906dade8",
+  "bytes": 16574610,
+  "changed_entries": [
+    "Payload/Army2Hoanggia.app/Info.plist",
+    "Payload/Army2Hoanggia.app/Frameworks/AGWheel.dylib"
+  ],
+  "other_entries_unchanged": 523,
+  "github_build": {
+    "source_commit": "00ad5e780547243e3bdc4e48766744ebb8fcf1ac",
+    "release_version": "2.4.1",
+    "login_marker": "2.4.1-HG78-IPA",
+    "xcode": "Xcode 16.4\nBuild version 16F6",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+    "sdk": "18.5",
+    "dylib_sha256": "4f830b6f9cd779b497c5d37310cf9951833f9000ef50fb6e8fd5385840109f46",
+    "apple_codesign_strict_verified": true,
+    "apple_resign_strict_verified": true,
+    "physical_device_tested": false
+  },
+  "physical_device_tested": false,
+  "requires_user_certificate_resigning": true,
+  "github_actions_run": 41553500655,
+  "github_artifact_id": 13192988182,
+  "github_artifact_sha256": "997beca5845dba6afc8cb171d3e2142f239246e36bd96b58782d98c96ada03fd",
+  "compiled_source_commit": "25cc9e5d4a5bfddf5705ed97391acbd3895f1e7d",
+  "native_main_unchanged_from_Build266": true,
+  "user_reported_attack_gem_count": 21,
+  "gem_final_percent": 42,
+  "regression_before_fix": {
+    "failed_as_expected": true,
+    "Build266_attack": 3663,
+    "server_and_JAR_attack": 4585,
+    "synthetic_account_fixture": true
+  },
+  "source_sha256": {
+    "Stats.c": "170b85ae0a755faf1bbc891a6fbc70775eb077acb84cefa4089be398b68c1f65",
+    "Stats.h": "5effced69465909171a79281edf96b87a1593b66607c01febf5d080f55b24cef",
+    "StatsNativeMap.h": "739b36524173fc70fc18afa13efa908f15eb48d08468434d9848b82d16e4580f",
+    "patch_ipa.py": "30d0eeb74ee1c84d15cad7b9e420f96cd794110a55e0d21cdb9a551559a207b6",
+    "package_from_baseline.py": "b918db5489da1272d07da44579068155c1cec5f13ced58ab5bdbf68a42d7a889"
+  },
+  "stats267-device-check": {
+    "passed": true,
+    "variants": 6,
+    "server_JAR_fixtures": 501,
+    "checks": 6012,
+    "attack_gem_count": 21,
+    "final_attack_percent": 42,
+    "independent_server_and_Sua12_JAR_attack": 4585,
+    "native_inventory_handle_offset": "0xb0",
+    "native_template_id_offset": "0x80",
+    "actual_Apple_ARM64": true,
+    "physical_device_tested": false,
+    "synthetic_account_fixture": true,
+    "live_requests": 0
+  },
+  "item-identity267-check": {
+    "passed": true,
+    "variants": 6,
+    "descriptors_and_selection_loads": 12,
+    "proof": [
+      {
+        "variant": 0,
+        "class": "game/j5_",
+        "class_info_offset": "0x20996f0",
+        "inventory_handle_field": {
+          "offset": 176,
+          "flags": "0x5001"
+        },
+        "template_id_field": {
+          "offset": 128,
+          "flags": "0x6001"
+        },
+        "original_selection_handle_load": "0x5a94c0"
+      },
+      {
+        "variant": 1,
+        "class": "game0/j5_",
+        "class_info_offset": "0x20c7f60",
+        "inventory_handle_field": {
+          "offset": 176,
+          "flags": "0x5001"
+        },
+        "template_id_field": {
+          "offset": 128,
+          "flags": "0x6001"
+        },
+        "original_selection_handle_load": "0x691f64"
+      },
+      {
+        "variant": 2,
+        "class": "game1/j5_",
+        "class_info_offset": "0x20f5c50",
+        "inventory_handle_field": {
+          "offset": 176,
+          "flags": "0x5001"
+        },
+        "template_id_field": {
+          "offset": 128,
+          "flags": "0x6001"
+        },
+        "original_selection_handle_load": "0x776c28"
+      },
+      {
+        "variant": 3,
+        "class": "game2/j5_",
+        "class_info_offset": "0x2123940",
+        "inventory_handle_field": {
+          "offset": 176,
+          "flags": "0x5001"
+        },
+        "template_id_field": {
+          "offset": 128,
+          "flags": "0x6001"
+        },
+        "original_selection_handle_load": "0x85b8ec"
+      },
+      {
+        "variant": 4,
+        "class": "game3/j5_",
+        "class_info_offset": "0x2151630",
+        "inventory_handle_field": {
+          "offset": 176,
+          "flags": "0x5001"
+        },
+        "template_id_field": {
+          "offset": 128,
+          "flags": "0x6001"
+        },
+        "original_selection_handle_load": "0x9405b0"
+      },
+      {
+        "variant": 5,
+        "class": "game4/j5_",
+        "class_info_offset": "0x217f320",
+        "inventory_handle_field": {
+          "offset": 176,
+          "flags": "0x5001"
+        },
+        "template_id_field": {
+          "offset": 128,
+          "flags": "0x6001"
+        },
+        "original_selection_handle_load": "0xa25274"
+      }
+    ]
+  },
+  "stats265-device-check": {
+    "passed": true,
+    "server_fixtures": 400,
+    "variants": 6,
+    "matching_and_preview_checks": 3000,
+    "all_five_stats": true,
+    "actual_Sua12_server_packets": true,
+    "actual_Apple_ARM64_library": true,
+    "original_native_calculator": true,
+    "streams_and_callee_saved_registers_preserved": true,
+    "live_requests": 0,
+    "physical_device_tested": false
+  },
+  "stats265-costume-check": {
+    "passed": true,
+    "variants": 6,
+    "checks": 24,
+    "six_equipped_handles": true,
+    "costume_pointer_from_original_calculator": true,
+    "gem_preview_and_snapshot_guards": true,
+    "physical_device_tested": false
+  },
+  "stats266-device-check": {
+    "passed": true,
+    "variants": 6,
+    "late_reply_and_early_constructor_checks": 54,
+    "screenshot_values": [
+      168048,
+      4585,
+      22680,
+      22898,
+      22631
+    ],
+    "original_message_constructor": true,
+    "original_paint_entry": true,
+    "no_manual_recalculate": true,
+    "screenshot_account_gear_reproduced": false,
+    "physical_device_tested": false,
+    "live_requests": 0
+  },
+  "stats-device-check": {
+    "passed": true,
+    "variants": 6,
+    "characters": [
+      0,
+      4,
+      9
+    ],
+    "native_controller_and_calculator_calls": 186,
+    "original_equipment_and_costume_aggregation": true,
+    "five_attributes": true,
+    "above_uint16": true,
+    "disabled_and_missing_rules_keep_legacy": true,
+    "reconnect_isolation": true,
+    "malformed_update_atomic": true,
+    "combat_and_inputs_unchanged": true,
+    "callee_saved_registers_preserved": true,
+    "stream_positions_unchanged": true,
+    "physical_device_tested": false,
+    "live_requests": 0
+  }
+}

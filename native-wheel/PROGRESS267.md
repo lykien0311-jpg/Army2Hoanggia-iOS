@@ -23,5 +23,18 @@ and socket distribution; the user's complete account data was not supplied.
 
 The expanded suite covers 0/1/3/15/21 gems, five gem families, all ten characters
 and modern/legacy modes using real server config, inventory and snapshot bytes.
-Final Apple build and ARM64 verification results follow in validation267.json.
-No physical iPhone or live production account testing is claimed.
+The corrected Apple ARM64 library passes 6,012 checks from 501 independent
+server/JAR fixtures across six variants. The separate 3,000 prior server-fixture
+checks, 24 six-slot/costume checks, 54 late-reply checks and 186 native summary
+checks also pass with template and inventory identities stored separately.
+
+Apple Actions run `41553500655`, artifact `13192988182`, Xcode 16.4 / SDK 18.5
+succeeded, including codesign strict and independent re-sign verification.
+Library SHA256: `4f830b6f9cd779b497c5d37310cf9951833f9000ef50fb6e8fd5385840109f46`.
+Compiled source commit `25cc9e5d4a5bfddf5705ed97391acbd3895f1e7d`, Apple merge
+`00ad5e780547243e3bdc4e48766744ebb8fcf1ac`.
+
+Build267 keeps the native executable byte-identical to Build266; only the
+verified Apple library and Info.plist bundle build change. Full provenance,
+hashes and results are in validation267.json. No physical iPhone or live
+production account testing is claimed. The user must re-sign the IPA.

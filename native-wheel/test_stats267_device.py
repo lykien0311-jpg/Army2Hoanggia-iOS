@@ -7,6 +7,12 @@ The numerical regression uses synthetic points/base, not unseen account data.
 import base64,json,struct
 import test_stats_device as k
 t=k.t;w=k.w;U=k.U;B=k.B;R=k.R
+# The emulator retains allocations instead of running a Java GC. Keep all
+# 3,006 fixture lifetimes in a larger test-only arena; production is unchanged.
+U.mem_map(t.HEAP+0x2000000,0x2000000)
+def fixture_alloc(n):
+    p=t.cursor;t.cursor+=(n+15)&-16;assert t.cursor<t.HEAP+0x4000000;U.mem_write(p,bytes(n));return p
+t.alloc=fixture_alloc
 regression=json.loads((R/'build/stats267-fixture.json').read_text())
 rows=[regression]+json.loads((R/'build/stats267-all-fixtures.json').read_text())
 maps=json.loads((R/'stats-map.json').read_text())
