@@ -20,12 +20,13 @@ for variant in range(6):
                 now_ns=start+frame*1000000000//fps
                 for axis in (0,1):counts[axis]+=t.call('_AGCameraAllow',variant,camera,axis,delta&0xffffffff)
                 walking+=t.call('_AGMoveAllow',variant,player,0)
-            expected=min(fps,((fps-1)*1000000000//fps)//30000000+1)
-            assert counts==[expected,expected] and walking==expected,(variant,fps,delta,counts,walking)
+            expected=min(fps,((fps-1)*1000000000//fps)//15000000+1)
+            expected_walk=min(fps,((fps-1)*1000000000//fps)//30000000+1)
+            assert counts==[expected,expected] and walking==expected_walk,(variant,fps,delta,counts,walking)
             cases+=1
 for variant in (-1,6):assert t.call('_AGCameraAllow',variant&0xffffffff,t.alloc(0x100),0,20)==0
 report=dict(passed=True,apple_arm64_timing_cases=cases,variants=6,
-    manual_camera_and_walk_interval_ms=30,independent_axes=True,
+    manual_camera_interval_ms=15,walking_interval_ms=30,independent_axes=True,
     frame_rates=[20,60,120,1000],live_game_requests=0)
 (t.ROOT/'build/camera-device-check.json').write_text(json.dumps(report,indent=2)+'\n')
 print('PASS',report)
