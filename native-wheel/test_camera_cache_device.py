@@ -71,13 +71,13 @@ for v in range(6):
             field=cg+(0xb4 if axis==0 else 0xb8)
             for wait,expected in ((.04,delta),(.01,0),(.03,delta)):
                 t.now+=wait;t.put(field,'<i',0);seen=pan(v,axis,delta)
-                check(t.get(field,'<i')==expected,'manual direction and30ms gate',v,order)
+                check(t.get(field,'<i')==expected,'manual direction and15ms gate',v,order)
                 check(seen==['AGCameraAllow'],'pan calls camera function only',v,order)
         t.put(cg+0xbc,'<B',1);t.put(cg+0xb4,'<i',0)
         check(pan(v,0,20)==[] and t.get(cg+0xb4,'<i')==20,'automatic mode bypasses pacing',v,order)
         check(receive(s,v),'controller remains intact after camera',v,order)
 assert not failures,failures[:12]
 result=dict(passed=True,variants=6,warmup_orders=3,shared_cache_native_cases=checks,
-    four_manual_directions=True,manual_pan_interval_ms=30,automatic_mode_unchanged=True,
+    four_manual_directions=True,manual_pan_interval_ms=15,automatic_mode_unchanged=True,
     corpse_HUD_and_camera_have_independent_callbacks=True,physical_device_tested=False,live_requests=0)
 (R/'build/camera-cache-check.json').write_text(json.dumps(result,indent=2)+'\n');print('PASS',result)
