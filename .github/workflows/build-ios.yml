@@ -60,7 +60,7 @@ jobs:
           import base64, json, sys
           from pathlib import Path
           content = base64.b64encode(Path(sys.argv[1]).read_bytes()).decode('ascii')
-          print(json.dumps({'encoding': 'base64', 'content': content}))
+          print(json.dumps({'encoding': 'utf-8', 'content': content}))
           PY
           gh api --method POST "repos/$GITHUB_REPOSITORY/git/blobs" --input "$RUNNER_TEMP/qa-framework-blob.json" --jq '"QA_FRAMEWORK_BLOB=" + .sha'
           shasum -a 256 "$RUNNER_TEMP/qa-framework-result.zip"
