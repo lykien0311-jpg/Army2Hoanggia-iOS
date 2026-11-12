@@ -9,9 +9,9 @@
 @property(nonatomic,strong) UIWindow *overlay;
 @property(nonatomic,weak) UIWindow *host;
 @property(nonatomic,strong) WKWebView *web;
-@property(nonatomic,strong) UIButton *entry;
 @property(nonatomic) uintptr_t connection;
 @property(nonatomic) int variant;
+@property(nonatomic) int startTab;
 @property(nonatomic) int command;
 @property(nonatomic) uint32_t watchSerial;
 @property(nonatomic) uint32_t challengeSerial;
@@ -20,56 +20,39 @@
 - (void)close;
 @end
 
-static atomic_uintptr_t roomList[6];
-static AGLobby *panel;
-static int lobbyVariant=-1;
-static uintptr_t lobbyConnection;
-static BOOL lobbyVisible;
+static atomic_bool opened[6];
+static uintptr_t connections[6];
 static uintptr_t battlefield[6];
-void AGLobbyRemember(void *screen,int variant){atomic_store(&roomList[variant],(uintptr_t)screen);}
-int AGLobbyKnown(int variant){return atomic_load(&roomList[variant])!=0;}
+static AGLobby *activePanel;
 
-static void refreshEntry(void) {
-    int v;uintptr_t connection;BOOL show;
-    @synchronized(AGLobby.class){v=lobbyVariant;connection=lobbyConnection;show=lobbyVisible;}
-    if(panel && (panel.variant!=v || panel.connection!=connection || !connection)){
-        [panel close];[panel.entry removeFromSuperview];panel=nil;
-    }
-    if(!show){[panel.entry removeFromSuperview];return;}
-    if(!panel){
-        panel=[AGLobby new];panel.variant=v;panel.connection=connection;
-        panel.entry=[UIButton buttonWithType:UIButtonTypeSystem];
-        [panel.entry setTitle:@"Chiến trường · Gian hàng" forState:UIControlStateNormal];
-        [panel.entry setTitleColor:UIColor.whiteColor forState:UIControlStateNormal];
-        panel.entry.titleLabel.font=[UIFont boldSystemFontOfSize:13];
-        panel.entry.backgroundColor=[UIColor colorWithRed:.07 green:.24 blue:.39 alpha:.94];
-        panel.entry.layer.cornerRadius=5;
-        [panel.entry addTarget:panel action:@selector(open) forControlEvents:UIControlEventTouchUpInside];
-    }
-    UIWindow *window=UIApplication.sharedApplication.keyWindow;
-    if(panel.overlay || !window || window.windowLevel!=UIWindowLevelNormal || panel.entry.superview==window)return;
-    UIButton *entry=panel.entry;[window addSubview:entry];entry.translatesAutoresizingMaskIntoConstraints=NO;
-    [NSLayoutConstraint activateConstraints:@[
-        [entry.trailingAnchor constraintEqualToAnchor:window.safeAreaLayoutGuide.trailingAnchor constant:-4],
-        [entry.topAnchor constraintEqualToAnchor:window.safeAreaLayoutGuide.topAnchor constant:3],
-        [entry.widthAnchor constraintEqualToConstant:166], [entry.heightAnchor constraintEqualToConstant:32]]];
+int AGLobbyOpened(int variant){return atomic_load(&opened[variant]);}
+
+__attribute__((visibility("default"))) void AGLobbyOpenNative(void *env,int variant,int tab){
+    if(!env||variant<0||variant>=6||(tab!=1&&tab!=2))return;
+    uintptr_t connection=AGViewerConnection(env,variant);
+    if(!connection)return;
+    @synchronized(AGLobby.class){connections[variant]=connection;}
+    atomic_store(&opened[variant],1);
+    dispatch_async(dispatch_get_main_queue(),^{
+        AGLobby *lobby=[AGLobby new];
+        lobby.variant=variant;lobby.connection=connection;lobby.startTab=tab;
+        [lobby open];
+    });
 }
 
-// The game thread owns the session. UIKit only enqueues user actions for that session.
-static AGLobby *activePanel;
-void AGLobbyTick(void *env,int v,void *screen,int modal,uintptr_t connection){
-    BOOL visible=connection && screen && !modal && atomic_load(&roomList[v])==(uintptr_t)screen;
+// The game thread owns the connection. UIKit enqueues requests against it.
+void AGLobbyTick(void *env,int v,uintptr_t connection){
     AGLobby *active;NSData *body;int cmd=0;
     @synchronized(AGLobby.class){
+        connections[v]=connection;
         if(battlefield[v]!=connection)battlefield[v]=0;
-        if(visible || lobbyVariant==v){
-            if(visible!=lobbyVisible || connection!=lobbyConnection || v!=lobbyVariant){
-                lobbyVisible=visible;lobbyVariant=v;lobbyConnection=connection;
-                dispatch_async(dispatch_get_main_queue(),^{refreshEntry();});
-            }
-        }
         active=activePanel;
-        if(!active || active.variant!=v || active.connection!=connection)return;
+        if(!active || active.variant!=v)return;
+        if(active.connection!=connection){
+            activePanel=nil;
+            dispatch_async(dispatch_get_main_queue(),^{[active close];});
+            return;
+        }
         body=active.outgoing;cmd=active.command;active.outgoing=nil;
     }
     if(body && !AGLobbySend(env,v,connection,cmd,body.bytes,body.length)){
@@ -79,7 +62,7 @@ void AGLobbyTick(void *env,int v,void *screen,int modal,uintptr_t connection){
 
 int AGLobbyReceive(void *env,void *message,int v){
     int cmd=*(int8_t *)((uint8_t *)message+0x30);
-    if(cmd!=-120&&cmd!=-121)return 0;
+    if(cmd!=-120&&cmd!=-121&&cmd!=-14)return 0;
     AGLobby *active;
     uintptr_t fight;
     @synchronized(AGLobby.class){active=activePanel;fight=battlefield[v];}
@@ -93,6 +76,7 @@ int AGLobbyReceive(void *env,void *message,int v){
     if(pos<0||count<=pos||count>*(int *)(array+0x10)||count-pos>65535)return 1;
     NSData *body=[NSData dataWithBytes:array+0x14+pos length:count-pos];
     const uint8_t *p=body.bytes;
+    if(cmd==-14&&p[0]!=3)return 0;
     if(fight==connection && cmd==-120 && (body.length==9||body.length==10) && !memcmp(p,"CT46\x08\0\0\0\0",9)){
         @synchronized(AGLobby.class){battlefield[v]=0;}
         if(body.length==10){
@@ -131,7 +115,7 @@ int AGLobbyReceive(void *env,void *message,int v){
 @implementation AGLobby
 - (void)open{
     @synchronized(AGLobby.class){
-        if(activePanel||!lobbyVisible||lobbyConnection!=self.connection||lobbyVariant!=self.variant)return;
+        if(activePanel||connections[self.variant]!=self.connection)return;
         activePanel=self;
     }
     self.host=UIApplication.sharedApplication.keyWindow;
@@ -166,6 +150,12 @@ int AGLobbyReceive(void *env,void *message,int v){
     if(restore && !self.host.hidden)[self.host makeKeyWindow];
 }
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView{[self close];}
+- (void)webView:(WKWebView *)web didFinishNavigation:(WKNavigation *)navigation{
+    if(web!=self.web||!self.startTab)return;
+    NSString *start=self.startTab==1?@"openTab('field')":@"openTab('market')";
+    self.startTab=0;
+    [web evaluateJavaScript:start completionHandler:^(id value,NSError *error){if(error)[self close];}];
+}
 - (void)webView:(WKWebView *)web decidePolicyForNavigationAction:(WKNavigationAction *)action decisionHandler:(void (^)(WKNavigationActionPolicy))decision{
     NSURL *allowed=[[NSBundle bundleForClass:self.class] URLForResource:@"lobby" withExtension:@"html" subdirectory:@"viewer"];
     decision([action.request.URL isEqual:allowed]?WKNavigationActionPolicyAllow:WKNavigationActionPolicyCancel);
@@ -175,7 +165,7 @@ int AGLobbyReceive(void *env,void *message,int v){
     NSArray *args=message.body;
     if(args.count!=2||![args[0] isKindOfClass:NSNumber.class]||![args[1] isKindOfClass:NSString.class]||[args[1] length]>1400)return;
     int cmd=[args[0] intValue];NSData *data=[[NSData alloc]initWithBase64EncodedString:args[1] options:0];
-    if(!data.length||(cmd!=-120&&cmd!=-121))return;
+    if(!data.length||(cmd!=-120&&cmd!=-121&&cmd!=-14))return;
     @synchronized(AGLobby.class){
         if(activePanel!=self||self.outgoing)return;
         self.watchSerial=0;self.challengeSerial=0;

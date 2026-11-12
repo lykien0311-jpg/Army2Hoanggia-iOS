@@ -1,5 +1,4 @@
 #include "RoomNames.h"
-#include "Lobby.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,7 +40,6 @@ __attribute__((visibility("default"))) int AGRoomReceive(void *env,void *message
 }
 __attribute__((visibility("default"))) void AGRoomRebuild(void *env,void *screen,int variant){
     if(!env||!screen||variant<0||variant>=6)return;
-    AGLobbyRemember(screen,variant);
     pthread_mutex_lock(&mutex);
     if(loaded[variant]){RoomJob job={screen,variant};AGWheelGuard(env,apply,&job,(void *)((uintptr_t)_dyld_get_image_header(0)+0x1300d54));}
     pthread_mutex_unlock(&mutex);

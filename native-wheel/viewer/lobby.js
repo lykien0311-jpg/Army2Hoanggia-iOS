@@ -4,6 +4,7 @@ const market = new ArmyMarket();
 const main = document.getElementById('body');
 const notice = document.getElementById('notice');
 let tab = '', waiting = false, timeout;
+let eventRequest = 0;
 
 function el(tag, text, parent=main) {
     const node = document.createElement(tag);
@@ -44,13 +45,41 @@ function send(cmd,make) {
 const board=()=>send(-120,()=>field.request(1));
 const browse=(page=0,character=-1,own=false)=>send(-121,()=>market.browse(page,character,own));
 const stock=()=>send(-121,()=>market.inventory());
+function eventRank(page=0){
+    send(-14,()=>[3,page]);
+    eventRequest=page;
+}
 function openTab(name){
     if(waiting)return;
     tab=name;
-    if(name==='market')browse();else board();
+    if(name==='market')browse();else if(name==='event')eventRank();else board();
 }
 document.getElementById('market').onclick=()=>openTab('market');
 document.getElementById('field').onclick=()=>openTab('field');
+document.getElementById('event').onclick=()=>openTab('event');
+
+function auraIcon(parent,aura){
+    const tier=aura>>>5,level=aura&31;
+    if(tier<1||tier>7||level>16)return;
+    const icon=el('span',undefined,parent);
+    icon.className='aura';icon.dataset.tier=tier;
+    icon.style.setProperty('--aura',level<=4?'#0048ff':level<=8?'#00a300':level<=11?'#f57b00':level<=13?'#37abda':'#f01438');
+    icon.setAttribute('aria-label','Hào quang '+['','Vàng','Bạch kim I','Bạch kim II','Bạch kim III','Kim cương I','Kim cương II','Kim cương III'][tier]);
+    icon.setAttribute('role','img');
+}
+
+function showEvent(reply){
+    if(reply.page!==eventRequest){notice.textContent='Đã đến trang cuối.';return;}
+    title(reply.heading);
+    if(!reply.rows.length&&reply.heading.startsWith('BXH'))el('p','Chưa có người chơi ghi điểm.');
+    for(const person of reply.rows){
+        const div=row();el('strong','#'+person.rank+' '+person.name,div);
+        el('p','Cấp '+person.level+' · '+BigInt(person.score).toLocaleString('vi-VN')+' điểm',div);
+    }
+    const nav=controls();
+    if(reply.page>0)action(nav,'Trang trước',()=>eventRank(reply.page-1));
+    if(reply.page<9&&reply.rows.length===10)action(nav,'Trang sau',()=>eventRank(reply.page+1));
+}
 
 function marketNav(){
     const div=controls();
@@ -113,15 +142,16 @@ function fieldNav(){
 function showField(reply){
     if(reply.type==='board'){
         title('Chiến trường');fieldNav();
-        if(field.self)el('p',field.self.name+' · Hạng '+field.self.rank+' · Cấp '+field.self.level);
+        if(field.self){const self=el('p');auraIcon(self,field.self.aura);el('span',field.self.name+' · Hạng '+field.self.rank+' · Cấp '+field.self.level,self);}
         for(const target of reply.board){
-            const div=row();el('strong','#'+target.rank+' '+target.name,div);el('p','Cấp '+target.level,div);
+            const div=row();auraIcon(div,target.aura);el('strong','#'+target.rank+' '+target.name,div);el('p','Cấp '+target.level,div);
             action(div,'Chi tiết',()=>send(-120,()=>field.request(2,target)));
             if(target.id!==reply.id)
                 action(div,'Thách đấu',()=>send(-120,()=>field.request(3,target)));
         }
     }else if(reply.type==='profile'){
         title(reply.name);fieldNav();el('p',reply.character+' · Cấp '+reply.level+' · Hạng '+reply.rank);
+        if(reply.display?.aura)auraIcon(main,reply.display.aura);
         el('p','Chỉ số '+reply.abilities.join(' / '));
         const pieces=reply.items.concat(reply.display && reply.display.outfit || []);
         pieces.forEach((piece,i)=>{
@@ -151,6 +181,9 @@ window.receiveFrame=(cmd,encoded)=>{
             if(result==='reply'){notice.textContent=market.lastReply.notice;return;}
             if(notice.textContent==='Đang chờ…')notice.textContent='';
             if(result==='browse')listMarket();else if(result==='inventory')listStock();
+        }else if(cmd===-14 && tab==='event'){
+            const reply=readEventRank(bytes);
+            unlock();notice.textContent='';showEvent(reply);
         }else if(cmd===-120 && tab==='field'){
             const reply=field.receive(bytes);
             if(reply.type==='stale')return;

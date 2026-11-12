@@ -9,7 +9,6 @@
 static NSMutableArray *sent;
 static NSMutableArray *frames;
 static UIWindow *host;
-static uint8_t lobbyScreen;
 static int lobbyCommand;
 static NSData *lobbyPayload;
 static uintptr_t canvas[0x110 / sizeof(uintptr_t)];
@@ -50,41 +49,52 @@ static void testLobby(int step,int tries){
     UIWindow *window=UIApplication.sharedApplication.keyWindow;
     WKWebView *web=(WKWebView *)find(window,WKWebView.class,nil);
     if(step==0){
-        AGLobbyRemember(&lobbyScreen,0);AGLobbyTick((void *)1,0,&lobbyScreen,0,44);step++;
+        AGLobbyOpenNative((void *)1,0,2);step++;
     }else if(step==1){
-        UIButton *open=(UIButton *)find(host,UIButton.class,@"Chiến trường · Gian hàng");
-        if(open){[open sendActionsForControlEvents:UIControlEventTouchUpInside];step++;}
-    }else if(step==2 && web){
-        [web evaluateJavaScript:@"typeof receiveFrame==='function' && (document.getElementById('market').click(),true)"
-            completionHandler:^(id v,NSError *err){dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?3:2,tries-1);});}];return;
-    }else if(step==3){
-        AGLobbyTick((void *)1,0,&lobbyScreen,0,44);
+        AGLobbyTick((void *)1,0,44);
         const uint8_t expected[]={0,0,0,0,0,255,0};
         if(lobbyCommand==-121 && [lobbyPayload isEqual:[NSData dataWithBytes:expected length:sizeof expected]]){
             const uint8_t empty[]={0,0,0,0,0,255,0,0,0,0};
             deliver(-121,[NSData dataWithBytes:empty length:sizeof empty]);step++;
         }
-    }else if(step==4 && web){
-        [web evaluateJavaScript:@"document.body.innerText.includes('Chưa có món đang bán.') && (document.getElementById('field').click(),true)"
-            completionHandler:^(id v,NSError *err){dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?5:4,tries-1);});}];return;
-    }else if(step==5){
-        AGLobbyTick((void *)1,0,&lobbyScreen,0,44);
+    }else if(step==2 && web){
+        [web evaluateJavaScript:@"document.body.innerText.includes('Chưa có món đang bán.')" completionHandler:^(id v,NSError *err){
+            BOOL done=[v isEqual:@YES];
+            if(done)[(UIButton *)find(window,UIButton.class,@"Về sảnh") sendActionsForControlEvents:UIControlEventTouchUpInside];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby(done?3:2,tries-1);});
+        }];return;
+    }else if(step==3 && window==host){
+        AGLobbyOpenNative((void *)1,0,1);step++;
+    }else if(step==4){
+        AGLobbyTick((void *)1,0,44);
         const uint8_t expected[]={0x43,0x54,0x34,0x36,1,0,0,0,1,49};
         if(lobbyCommand==-120 && [lobbyPayload isEqual:[NSData dataWithBytes:expected length:sizeof expected]]){
             const uint8_t reply[]={0x43,0x54,0x34,0x36,1,0,0,0,1,0,0,0,2,0,0,0,7,0};
             deliver(-120,[NSData dataWithBytes:reply length:sizeof reply]);step++;
         }
-    }else if(step==6 && web){
-        [web evaluateJavaScript:@"document.body.innerText.includes('Trận đang đấu')" completionHandler:^(id v,NSError *err){
+    }else if(step==5 && web){
+        [web evaluateJavaScript:@"document.body.innerText.includes('Trận đang đấu') && (document.getElementById('event').click(),true)"
+            completionHandler:^(id v,NSError *err){dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?6:5,tries-1);});}];return;
+    }else if(step==6){
+        AGLobbyTick((void *)1,0,44);
+        const uint8_t expected[]={3,0};
+        if(lobbyCommand==-14 && [lobbyPayload isEqual:[NSData dataWithBytes:expected length:sizeof expected]]){
+            const uint8_t head[]={3,0,0,3,'B','X','H'};
+            const uint8_t row[]={0,0,0,7,0,3,'Q','A','1',6,0,0,0,0,0,0,0,0,3,231,0,1,0,0,0,0,0,0,0,0,0,0,0,2,'4','2'};
+            NSMutableData *reply=[NSMutableData dataWithBytes:head length:sizeof head];
+            [reply appendBytes:row length:sizeof row];deliver(-14,reply);step++;
+        }
+    }else if(step==7 && web){
+        [web evaluateJavaScript:@"document.body.innerText.includes('#1 QA1') && document.body.innerText.includes('42 điểm')" completionHandler:^(id v,NSError *err){
             if([v isEqual:@YES]){
                 UIButton *back=(UIButton *)find(window,UIButton.class,@"Về sảnh");
                 [back sendActionsForControlEvents:UIControlEventTouchUpInside];
-                AGLobbyTick((void *)1,0,NULL,0,44);
+                AGLobbyTick((void *)1,0,44);
             }
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?7:6,tries-1);});
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?8:7,tries-1);});
         }];return;
-    }else if(step==7 && window==host && !find(host,UIButton.class,@"Chiến trường · Gian hàng")){
-        save(@"PASS native wait dismissed, replacement modal preserved, prompt, decline, snapshot, live roster, leave, timeout return; marketplace and battlefield");return;
+    }else if(step==8 && window==host && !find(host,UIButton.class,@"Chiến trường · Gian hàng")){
+        save(@"PASS spectator lifecycle, native marketplace and battlefield menu callbacks, event leaderboard, return to host");return;
     }
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby(step,tries-1);});
 }

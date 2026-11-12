@@ -7,11 +7,13 @@ from pathlib import Path, PurePosixPath
 import plistlib
 import tempfile
 from zipfile import ZipFile
+from patch_menu_269 import patch_menu
 
 BASE_SHA = "cde926d904e076e428b6d3c911ed673f0b80fc10b8e4a5134cb44d5a2d809ee8"
 APP = "Payload/Army2Hoanggia.app/"
 FW = "AGWheel.framework/"
 INFO = APP + "Info.plist"
+NATIVE = APP + "Army2Hoanggia"
 PREFIX = APP + "Frameworks/"
 
 def digest(path):
@@ -31,7 +33,7 @@ def assemble(base, framework, target, version):
             if (not entry.filename.startswith(FW) or ".." in path.parts or chr(92) in entry.filename or
                     (entry.external_attr >> 16) & 0o170000 == 0o120000):
                 raise ValueError("Invalid framework entry")
-        required = {"AGWheel","Info.plist","_CodeSignature/CodeResources","viewer/index.html","viewer/screen.js","viewer/protocol.js"}
+        required = {"AGWheel","Info.plist","_CodeSignature/CodeResources","viewer/index.html","viewer/screen.js","viewer/protocol.js","viewer/lobby.html","viewer/lobby.js"}
         paths = {p[len(FW):] for p in lib.namelist()}
         if not required.issubset(paths) or lib.read(FW+"AGWheel")==old.read(PREFIX+FW+"AGWheel"):
             raise ValueError("Incomplete or unchanged framework")
@@ -42,11 +44,14 @@ def assemble(base, framework, target, version):
         if (info["CFBundleIdentifier"],info["CFBundleVersion"]) != ("vn.army2hoanggia.game","269"):
             raise ValueError("Unexpected application identity")
         info["CFBundleVersion"]=str(version)
+        native=patch_menu(old.read(NATIVE))
+        if b'_AGLobbyOpenNative\0' not in lib.read(FW+'AGWheel'):
+            raise ValueError('Missing native menu callback')
         staged=Path(tmp)/"app.ipa"
         with ZipFile(staged,"w") as out:
             for e in old.infolist():
                 if e.filename.startswith(PREFIX+FW): continue
-                data=plistlib.dumps(info,fmt=plistlib.FMT_BINARY) if e.filename==INFO else old.read(e)
+                data=plistlib.dumps(info,fmt=plistlib.FMT_BINARY) if e.filename==INFO else native if e.filename==NATIVE else old.read(e)
                 out.writestr(e,data)
             for e in lib.infolist():
                 member=copy.copy(e);member.filename=PREFIX+e.filename
@@ -56,8 +61,9 @@ def assemble(base, framework, target, version):
             if set(check.namelist())!=wanted or len(check.namelist())!=len(wanted) or check.testzip():
                 raise ValueError("Incomplete QA IPA")
             for p in old.namelist():
-                if p!=INFO and not p.startswith(PREFIX+FW) and old.read(p)!=check.read(p):
+                if p not in (INFO,NATIVE) and not p.startswith(PREFIX+FW) and old.read(p)!=check.read(p):
                     raise ValueError("Unexpected application change: "+p)
+            if check.read(NATIVE)!=native:raise ValueError('Native menu patch missing')
             for p in lib.namelist():
                 if lib.read(p)!=check.read(PREFIX+p):raise ValueError("Framework was modified after signing")
             if plistlib.loads(check.read(INFO))!=info:raise ValueError("Unexpected build metadata")

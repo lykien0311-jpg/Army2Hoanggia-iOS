@@ -12,6 +12,7 @@
 #include "Spectator.h"
 #include "Lobby.h"
 extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
+extern int AGNotesMapDenied(void *message,int variant);
 typedef struct {
     uintptr_t connection;
     uint8_t *arena,*canvas,*players;
@@ -50,6 +51,7 @@ __attribute__((visibility("default"))) int AGCorpseReceive(void *env,void *messa
     if(AGViewerReceive(env,message,v))return 1;
     AGShipTraceReceive(env,message,v);
     int command=*(int8_t *)((uint8_t *)message+0x30);
+    if(command==45&&AGNotesMapDenied(message,v))return 1;
     if(command==20){pthread_mutex_lock(&corpseMutex);memset(motions[v],0,sizeof(motions[v]));pthread_mutex_unlock(&corpseMutex);return 0;}
     if(command!=93)return 0;
     uint8_t *input=*(uint8_t **)((uint8_t *)message+0x20);

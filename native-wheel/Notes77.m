@@ -85,6 +85,7 @@ int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uin
     if(!env||variant<0||variant>=6||!connection||!bytes||!length)return 0;
     if(command==-121){if(length>1024||bytes[0]>4)return 0;}
     else if(command==-120){if(length<9||length>18||memcmp(bytes,"CT46",4)||bytes[4]<1||bytes[4]>6)return 0;}
+    else if(command==-14){if(length!=2||bytes[0]!=3||bytes[1]>9)return 0;}
     else return 0;
     NJob job={.variant=variant,.command=command,.expected=connection,.length=length,.payload=bytes};
     return NRun(env,NNative,&job)>0;
@@ -92,6 +93,37 @@ int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uin
 uintptr_t AGViewerConnection(void *env,int variant){
     NJob probe={.variant=variant};
     return NRun(env,NNative,&probe)>0?probe.connection:0;
+}
+
+int AGNotesMapDenied(void *message,int variant){
+    if(!NRoom(variant))return 0;
+    uint8_t *room=*(uint8_t **)(NBase()+AGNotesMaps[variant].room_class);
+    int id=room[0x130];
+    if(id!=18&&id!=19)return 0;
+    uintptr_t wait=AGViewerWaitToken(variant);
+    if(!wait)return 0;
+    uint8_t *in=*(uint8_t **)((uint8_t *)message+0x20);
+    uint8_t *a=in?*(uint8_t **)(in+0x10):NULL;
+    if(!a)return 0;
+    int count=*(int *)(in+0x18),pos=*(int *)(in+0x20),capacity=*(int *)(a+0x10);
+    if(pos<0||count<pos||count>capacity||count-pos<3||count-pos>512)return 0;
+    const uint8_t *p=a+0x14+pos;
+    size_t size=(p[0]<<8)|p[1];
+    if(size!=(size_t)(count-pos-2))return 0;
+    NSString *text=[[NSString alloc] initWithBytes:p+2 length:size encoding:NSUTF8StringEncoding];
+    NSString *map=id==18?@"Thung Lũng Rồng":@"Kẻ Mạo Danh";
+    BOOL version=[text hasPrefix:@"Phiên bản này chưa hỗ trợ phòng"]&&[text containsString:map];
+    BOOL closed=[text isEqualToString:id==18?@"Phòng Rồng đang tạm đóng trong quản trị.":@"Phòng Kẻ Mạo Danh đang tạm đóng trong quản trị."];
+    if(!version&&!closed)return 0;
+    if(!AGSpectatorClearWait(NCanvas(variant),wait))return 0;
+    NClear(variant);
+    NInit();
+    pthread_mutex_lock(&NMutex);
+    NAlert=version?[NSString stringWithFormat:@"%@ chưa hỗ trợ iOS trên server hiện tại.",map]:text;
+    atomic_store(&NCurrent,variant);
+    pthread_mutex_unlock(&NMutex);
+    NRefresh();
+    return 1;
 }
 int AGViewerSend(void *env,int variant,uintptr_t connection,int command,const uint8_t *bytes,size_t length){
     if(!connection || !bytes || !((command==7 && length==1) || (command==-102 && (length==12 || length==14))))return 0;
@@ -110,11 +142,11 @@ static int NCallback(void *env,void *context){
 void AGNotesTick(void *env,int variant){
     if(env&&variant>=0&&variant<6)AGViewerTick(env,variant);
     if(!env||variant<0||variant>=6)return;
-    if(!atomic_load(&NInitialized)&&!AGLobbyKnown(variant))return;
+    if(!atomic_load(&NInitialized)&&!AGLobbyOpened(variant))return;
     if(!atomic_load(&NInitialized))NInit();
     double now=NNow();int changed=0;NJob probe={.variant=variant};int connected=NRun(env,NNative,&probe);
     uint8_t *canvas=NCanvas(variant);int room=NRoom(variant);NCallbackJob cb={.variant=variant,.which=-1};NJob job={.variant=variant};uint64_t generation;
-    AGLobbyTick(env,variant,canvas?*(void **)(canvas+0xb8):NULL,canvas&&*(uintptr_t *)(canvas+0x108),connected>0?probe.connection:0);
+    AGLobbyTick(env,variant,connected>0?probe.connection:0);
     pthread_mutex_lock(&NMutex);NModel *m=&NModels[variant];
     if(connected<=0||m->connection!=probe.connection){
         if(m->connection||m->known||m->cap.active||m->cap.boss||m->inboxVisible){AGCaptchaClose(&m->cap);m->cap.boss=0;m->deferred=0;m->known=0;m->pending=0;m->sendInvite=0;m->dirty=0;m->editing=0;m->inboxVisible=0;m->inboxDialog=0;m->inboxAction=-1;NInboxBodies[variant]=nil;m->generation++;changed=1;}
