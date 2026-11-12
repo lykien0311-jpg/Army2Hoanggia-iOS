@@ -14,6 +14,7 @@ typedef NS_ENUM(int, WatchAction) { NoAction, Accept, Leave, Refresh };
 @property(nonatomic) uint8_t room, area;
 @property(nonatomic,copy) NSData *ticket;
 @property(nonatomic,copy) NSString *question;
+@property(nonatomic,copy) NSString *problem;
 @property(nonatomic) WatchPhase phase;
 @property(nonatomic) WatchAction action;
 @property(nonatomic) NSTimeInterval deadline;
@@ -24,7 +25,7 @@ typedef NS_ENUM(int, WatchAction) { NoAction, Accept, Leave, Refresh };
 @property(nonatomic,strong) UIButton *yes, *dismissButton;
 @property(nonatomic,strong) NSMutableArray *pending;
 @property(nonatomic) NSUInteger pendingBytes;
-@property(nonatomic) BOOL webReady, delivering;
+@property(nonatomic) BOOL webReady, delivering, retryScheduled, snapshotReceived;
 - (void)show;
 - (void)close;
 - (void)flush;
@@ -32,9 +33,25 @@ typedef NS_ENUM(int, WatchAction) { NoAction, Accept, Leave, Refresh };
 
 static ArmyWatch *current;
 static atomic_bool active;
+static atomic_uintptr_t nativeWait[6];
 static uintptr_t battlefieldSession[6];
 static NSTimeInterval battlefieldUntil[6];
 static NSTimeInterval now(void) { return NSProcessInfo.processInfo.systemUptime; }
+static UIWindow *visibleHost(void) {
+    UIApplication *app=UIApplication.sharedApplication;
+    UIWindow *key=app.keyWindow;
+    if(key && !key.hidden && key.rootViewController)return key;
+    if(@available(iOS 13.0,*)){
+        for(UIScene *scene in app.connectedScenes){
+            if(![scene isKindOfClass:UIWindowScene.class] || scene.activationState!=UISceneActivationStateForegroundActive)continue;
+            for(UIWindow *window in ((UIWindowScene *)scene).windows)
+                if(!window.hidden && window.rootViewController && window.windowLevel==UIWindowLevelNormal)return window;
+        }
+    }
+    for(UIWindow *window in app.windows)
+        if(!window.hidden && window.rootViewController && window.windowLevel==UIWindowLevelNormal)return window;
+    return nil;
+}
 void AGViewerExpectBattlefield(int variant,uintptr_t connection) {
     if(variant<0||variant>=6||!connection)return;
     @synchronized(ArmyWatch.class){battlefieldSession[variant]=connection;battlefieldUntil[variant]=now()+15;}
@@ -72,6 +89,7 @@ static BOOL combatPacket(int cmd) {
     }
 }
 int AGViewerReceive(void *env,void *message,int variant) {
+    if(!env||!message||variant<0||variant>=6)return 0;
     int cmd=*(const int8_t *)((const uint8_t *)message+0x30);
     if(cmd!=-102 && !atomic_load(&active))return 0;
     @autoreleasepool {
@@ -91,6 +109,8 @@ int AGViewerReceive(void *env,void *message,int variant) {
                     if(w && w.phase!=Offered)return 1;
                     uintptr_t conn=AGViewerConnection(env,variant);
                     if(!conn)return 1;
+                    uintptr_t wait=AGViewerWaitToken(variant);
+                    if(wait)atomic_store(&nativeWait[variant],wait);
                     if(w)finish(w);
                     w=[ArmyWatch new];w.variant=variant;w.connection=conn;w.room=p[4];w.area=p[5];
                     w.ticket=[body subdataWithRange:NSMakeRange(6,8)];
@@ -117,7 +137,8 @@ int AGViewerReceive(void *env,void *message,int variant) {
                     w.phase=InMatch;w.deadline=now()+20;screen(w);
                 }else if(p[3]!=4&&p[3]!=5&&p[3]!=7)return 1;
                 if(w.phase!=InMatch)return 1;
-                if(p[3]==7)w.deadline=0;
+                if(!w.snapshotReceived)w.deadline=now()+20;
+                if(p[3]==7)w.snapshotReceived=YES;
             }
             if(w.phase==Leaving)return 1;
             if(w.pending.count>=4096 || w.pendingBytes+n>24*1024*1024){leave(w);return 1;}
@@ -129,6 +150,9 @@ int AGViewerReceive(void *env,void *message,int variant) {
     }
 }
 void AGViewerTick(void *env,int variant) {
+    if(!env||variant<0||variant>=6)return;
+    uintptr_t wait=atomic_exchange(&nativeWait[variant],0);
+    if(wait)AGViewerDismissWait(variant,wait);
     if(!atomic_load(&active))return;
     @autoreleasepool {
         ArmyWatch *w;WatchAction action;uintptr_t connection;
@@ -139,7 +163,10 @@ void AGViewerTick(void *env,int variant) {
             if(connection!=w.connection){finish(w);return;}
             if(w.deadline&&now()>w.deadline){
                 if(w.phase==Leaving)w.action=Refresh;
-                else leave(w);
+                else {
+                    w.problem=w.phase==Offered?@"Lời mời xem đã hết hạn.":@"Chưa tải được trận. Đang trở lại danh sách khu vực…";
+                    leave(w);
+                }
             }
             action=w.action;w.action=NoAction;
         }
@@ -172,7 +199,7 @@ void AGViewerTick(void *env,int variant) {
     [super viewDidLayoutSubviews];
     CGRect safe=UIEdgeInsetsInsetRect(self.view.bounds,self.view.safeAreaInsets);
     CGFloat x=CGRectGetMinX(safe),y=CGRectGetMinY(safe),width=safe.size.width,h=safe.size.height;
-    if(self.web){
+    if(self.web&&!self.web.hidden){
         self.web.frame=CGRectMake(x,y,width,MAX(1,h-48));
         self.dismissButton.frame=CGRectMake(x,y+h-48,width,48);
     }else{
@@ -183,10 +210,20 @@ void AGViewerTick(void *env,int variant) {
 }
 - (void)show {
     WatchPhase phase;
-    @synchronized(ArmyWatch.class){if(current!=self)return;phase=self.phase;}
+    NSString *problem;
+    @synchronized(ArmyWatch.class){if(current!=self)return;phase=self.phase;problem=self.problem;}
     if(!self.window){
-        UIWindow *previous=UIApplication.sharedApplication.keyWindow;
-        if(!previous)return;
+        UIWindow *previous=visibleHost();
+        if(!previous){
+            if(!self.retryScheduled){
+                self.retryScheduled=YES;
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,250*NSEC_PER_MSEC),dispatch_get_main_queue(),^{
+                    self.retryScheduled=NO;
+                    [self show];
+                });
+            }
+            return;
+        }
         self.previous=previous;
         if(@available(iOS 13.0,*)){self.window=previous.windowScene?[[UIWindow alloc] initWithWindowScene:previous.windowScene]:[[UIWindow alloc] initWithFrame:previous.bounds];}
         else self.window=[[UIWindow alloc] initWithFrame:previous.bounds];
@@ -194,8 +231,10 @@ void AGViewerTick(void *env,int variant) {
         self.window.rootViewController=self;[self.window makeKeyAndVisible];
     }
     self.yes.hidden=phase!=Offered;
-    self.label.text=phase==Offered?self.question:(phase==Leaving?@"Đang rời trận…":@"Đang nhận trận đấu…");
+    self.label.text=phase==Offered?self.question:(phase==Leaving?(problem?:@"Đang rời trận…"):@"Đang nhận trận đấu…");
     [self.dismissButton setTitle:phase==Offered?@"Không":@"Rời xem trận" forState:UIControlStateNormal];
+    self.dismissButton.enabled=phase!=Leaving;
+    self.web.hidden=phase==Leaving;
     if(phase==InMatch&&!self.web){
         NSURL *html=[[NSBundle bundleForClass:ArmyWatch.class] URLForResource:@"index" withExtension:@"html" subdirectory:@"viewer"];
         if(!html){[self cancel];return;}
@@ -221,11 +260,14 @@ void AGViewerTick(void *env,int variant) {
     [self.web stopLoading];self.web.navigationDelegate=nil;
     BOOL restore=self.window.isKeyWindow;
     self.window.hidden=YES;self.window.rootViewController=nil;self.window=nil;
-    if(restore)[self.previous makeKeyWindow];
+    if(restore){UIWindow *previous=self.previous;[(previous&&!previous.hidden?previous:visibleHost()) makeKeyWindow];}
 }
 - (void)userContentController:(WKUserContentController *)controller didReceiveScriptMessage:(WKScriptMessage *)message {
     if(message.webView!=self.web||!message.frameInfo.isMainFrame)return;
     if([message.body isEqual:@"ready"]){self.webReady=YES;[self flush];}
+    else if([message.body isEqual:@"live"]){
+        @synchronized(ArmyWatch.class){if(current==self&&self.phase==InMatch&&self.snapshotReceived)self.deadline=0;}
+    }
     else if([message.body isEqual:@"failed"])[self cancel];
 }
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {[self cancel];}

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "Notes77.h"
 #include "Spectator.h"
+#include "SpectatorWait.h"
 #include "Lobby.h"
 #include "NotesMap.h"
 #include "NativeMap.h"
@@ -57,6 +58,10 @@ static void NClear(int variant){
     uint8_t *c=NCanvas(variant);if(!c)return;
     for(int off=0xa0;off<=0xa8;off+=8){uint8_t *a=*(uint8_t **)(c+off);if(a){int n=*(int *)(a+0x10);if(n>=0&&n<=64)memset(a+0x14,0,n);}}
     c[0x140]=0;c[0x141]=0;
+}
+uintptr_t AGViewerWaitToken(int variant){return AGSpectatorWaitToken(NCanvas(variant));}
+void AGViewerDismissWait(int variant,uintptr_t token){
+    if(AGSpectatorClearWait(NCanvas(variant),token))NClear(variant);
 }
 static void NRefresh(void){dispatch_async(dispatch_get_main_queue(),^{NUpdateUI();});}
 static void NNotice(const char *text){NAlert=NText(text);}

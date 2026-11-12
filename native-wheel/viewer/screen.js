@@ -3,16 +3,21 @@ const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 const state = document.getElementById('state');
 const tiles = [], queue = [];
-let shot = null, failed = false, lastTime = 0;
+let shot = null, failed = false, lastTime = 0, liveReported = false;
 const game = new ArmySpectator(tile => {
     const image = new Image();
     const url = URL.createObjectURL(new Blob([tile.bytes], {type:'image/png'}));
     const entry = {image,x:tile.x,y:tile.y,ready:false};
     tiles.push(entry);
-    image.onload = () => { URL.revokeObjectURL(url); entry.ready = true; };
+    image.onload = () => { URL.revokeObjectURL(url); entry.ready = true; reportLive(); };
     image.onerror = () => { URL.revokeObjectURL(url); fail('Không đọc được ảnh bản đồ.'); };
     image.src = url;
 });
+function reportLive() {
+    if (failed || liveReported || game.phase !== 'live' || tiles.some(tile => !tile.ready)) return;
+    liveReported = true;
+    window.webkit.messageHandlers.viewer.postMessage('live');
+}
 function fail(message) {
     if (failed) return;
     failed = true;
@@ -23,7 +28,9 @@ function fail(message) {
 function apply(frame) {
     const bin = atob(frame[1]), bytes = new Uint8Array(bin.length);
     for (let i=0; i<bytes.length; i++) bytes[i] = bin.charCodeAt(i);
-    return game.receive(frame[0], bytes);
+    const result = game.receive(frame[0], bytes);
+    reportLive();
+    return result;
 }
 function pump() {
     try {

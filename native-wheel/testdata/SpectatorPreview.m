@@ -4,6 +4,7 @@
 #import <WebKit/WebKit.h>
 #include <string.h>
 #include "../Spectator.h"
+#include "../SpectatorWait.h"
 #include "../Lobby.h"
 static NSMutableArray *sent;
 static NSMutableArray *frames;
@@ -11,11 +12,15 @@ static UIWindow *host;
 static uint8_t lobbyScreen;
 static int lobbyCommand;
 static NSData *lobbyPayload;
+static uintptr_t canvas[0x110 / sizeof(uintptr_t)];
+static uintptr_t waitDialog[6];
 static void save(NSString *result) {
     NSURL *dir=[NSFileManager.defaultManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].firstObject;
     [result writeToURL:[dir URLByAppendingPathComponent:@"viewer-result.txt"] atomically:YES encoding:NSUTF8StringEncoding error:nil];
 }
 uintptr_t AGViewerConnection(void *env,int v) { return 44; }
+uintptr_t AGViewerWaitToken(int v){return AGSpectatorWaitToken(canvas);}
+void AGViewerDismissWait(int v,uintptr_t token){AGSpectatorClearWait(canvas,token);}
 int AGLobbySend(void *env,int v,uintptr_t connection,int command,const uint8_t *bytes,size_t length){
     if(v!=0||connection!=44)return 0;
     lobbyCommand=command;lobbyPayload=[NSData dataWithBytes:bytes length:length];return 1;
@@ -79,7 +84,7 @@ static void testLobby(int step,int tries){
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?7:6,tries-1);});
         }];return;
     }else if(step==7 && window==host && !find(host,UIButton.class,@"Chiến trường · Gian hàng")){
-        save(@"PASS prompt, decline, snapshot, live roster, leave; lobby entry, marketplace browse, battlefield board, restore game");return;
+        save(@"PASS native wait dismissed, replacement modal preserved, prompt, decline, snapshot, live roster, leave, timeout return; marketplace and battlefield");return;
     }
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby(step,tries-1);});
 }
@@ -90,11 +95,29 @@ static void runStep(int step,int tries) {
         UIButton *button;
         NSData *prompt=frames[0][1];
         const uint8_t *p=prompt.bytes;
-        if(step==0){NSCAssert(deliver(-102,prompt)==1,@"receive prompt");step++;}
+        if(step==0){
+            canvas[0xc8/sizeof(uintptr_t)]=(uintptr_t)waitDialog;
+            canvas[0x108/sizeof(uintptr_t)]=(uintptr_t)waitDialog;
+            waitDialog[5]=81;
+            NSCAssert(deliver(-102,prompt)==1,@"receive prompt");
+            AGViewerTick((void *)1,0);
+            NSCAssert(!canvas[0x108/sizeof(uintptr_t)],@"close native wait for incoming invitation");
+            step++;
+        }
         else if(step==1 && (button=(UIButton *)find(window,UIButton.class,@"Không"))){
             [button sendActionsForControlEvents:UIControlEventTouchUpInside];AGViewerTick((void *)1,0);
             NSCAssert([sent.lastObject[0] intValue]==7,@"decline refresh");step++;
-        }else if(step==2&&window==host){[sent removeAllObjects];deliver(-102,prompt);step++;}
+        }else if(step==2&&window==host){
+            [sent removeAllObjects];
+            canvas[0x108/sizeof(uintptr_t)]=(uintptr_t)waitDialog;
+            waitDialog[5]=82;
+            deliver(-102,prompt);
+            waitDialog[5]=83;
+            AGViewerTick((void *)1,0);
+            NSCAssert(canvas[0x108/sizeof(uintptr_t)]==(uintptr_t)waitDialog,@"preserve a replacement dialog");
+            canvas[0x108/sizeof(uintptr_t)]=0;
+            step++;
+        }
         else if(step==3 && (button=(UIButton *)find(window,UIButton.class,@"Có"))){
             [button sendActionsForControlEvents:UIControlEventTouchUpInside];AGViewerTick((void *)1,0);
             NSData *payload=sent.lastObject[1];const uint8_t *s=payload.bytes;
@@ -104,6 +127,7 @@ static void runStep(int step,int tries) {
                 if(c==-102 && ((const uint8_t *)b.bytes)[3]==6)break;
                 deliver(c,b);
             }
+            NSCAssert([[window.rootViewController valueForKey:@"deadline"] doubleValue]>0,@"keep timeout until the map is visible");
             step++;
         }else if(step==4){
             WKWebView *web=(WKWebView *)find(window,WKWebView.class,nil);
@@ -122,6 +146,22 @@ static void runStep(int step,int tries) {
             }
         }else if(step==5&&window==host){
             if(deliver(24,[NSData dataWithBytes:"x" length:1])!=0){save(@"FAIL ordinary player intercepted");return;}
+            deliver(-102,prompt);step++;
+        }else if(step==6 && (button=(UIButton *)find(window,UIButton.class,@"Có"))){
+            [button sendActionsForControlEvents:UIControlEventTouchUpInside];AGViewerTick((void *)1,0);
+            for(NSArray *f in frames){
+                NSData *body=f[1];
+                if([f[0] intValue]==-102&&((const uint8_t *)body.bytes)[3]==3){deliver(-102,body);break;}
+            }
+            UIViewController *watch=window.rootViewController;
+            NSNumber *past=@(NSProcessInfo.processInfo.systemUptime-1);
+            [watch setValue:past forKey:@"deadline"];AGViewerTick((void *)1,0);
+            NSData *payload=sent.lastObject[1];
+            NSCAssert([sent.lastObject[0] intValue]==-102&&payload.length==12&&((const uint8_t *)payload.bytes)[3]==2,@"timeout leaves the match");
+            [watch setValue:past forKey:@"deadline"];AGViewerTick((void *)1,0);
+            NSCAssert([sent.lastObject[0] intValue]==7,@"refresh if the leave reply never arrives");
+            step++;
+        }else if(step==7&&window==host){
             testLobby(0,150);return;
         }
         int next=step;dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(next,tries-1);});
