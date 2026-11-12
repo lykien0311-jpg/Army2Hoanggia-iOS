@@ -32,7 +32,13 @@ typedef NS_ENUM(int, WatchAction) { NoAction, Accept, Leave, Refresh };
 
 static ArmyWatch *current;
 static atomic_bool active;
+static uintptr_t battlefieldSession[6];
+static NSTimeInterval battlefieldUntil[6];
 static NSTimeInterval now(void) { return NSProcessInfo.processInfo.systemUptime; }
+void AGViewerExpectBattlefield(int variant,uintptr_t connection) {
+    if(variant<0||variant>=6||!connection)return;
+    @synchronized(ArmyWatch.class){battlefieldSession[variant]=connection;battlefieldUntil[variant]=now()+15;}
+}
 static void screen(ArmyWatch *w) { dispatch_async(dispatch_get_main_queue(),^{ [w show]; }); }
 static void finish(ArmyWatch *w) {
     if(current!=w)return;
@@ -91,6 +97,13 @@ int AGViewerReceive(void *env,void *message,int variant) {
                     w.question=[[NSString alloc] initWithBytes:p+16 length:n-16 encoding:NSUTF8StringEncoding]?:@"Bạn muốn xem trận đang diễn ra?";
                     w.pending=[NSMutableArray array];w.phase=Offered;w.deadline=now()+60;
                     current=w;atomic_store(&active,true);screen(w);return 1;
+                }
+                if(!w && p[3]==3 && n==21 && p[4]==0 && p[5]==0 &&
+                   battlefieldUntil[variant]>now() && battlefieldSession[variant]==AGViewerConnection(env,variant)){
+                    w=[ArmyWatch new];w.variant=variant;w.connection=battlefieldSession[variant];
+                    w.room=p[4];w.area=p[5];w.ticket=[body subdataWithRange:NSMakeRange(6,8)];
+                    w.pending=[NSMutableArray array];w.phase=WaitingForMatch;
+                    current=w;atomic_store(&active,true);battlefieldUntil[variant]=0;
                 }
                 if(!w || w.variant!=variant)return 1;
                 if(p[3]==6){

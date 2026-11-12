@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src data:; form-action 'none'">
+<title>Sảnh Army2</title>
+<style>
+*{box-sizing:border-box}body{margin:0;color:#18324c;background:#edf3f9;font:16px -apple-system,sans-serif}
+nav,main,#notice{padding:10px 12px}nav{display:flex;gap:8px;background:#1d486d}button,input,select{font:inherit}button,select{min-height:40px}
+button{background:#fff;border:1px solid #7590a5;border-radius:5px;padding:6px 11px;color:#163c5e}button:disabled{opacity:.55}
+h1{font-size:21px;margin:3px 0 12px}p{margin:6px 0;white-space:pre-line;overflow-wrap:anywhere}
+.row{padding:10px 0;border-bottom:1px solid #b5c6d6}.buttons{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+label{display:block;margin:10px 0}input{display:block;width:100%;max-width:28em;padding:8px}
+#notice{margin:0;color:#573500;background:#fff1c9}#notice:empty{display:none}img{width:36px;height:36px;object-fit:contain;image-rendering:pixelated;vertical-align:middle;margin-right:6px}
+</style></head><body>
+<nav><button id="field">Chiến trường</button><button id="market">Gian hàng</button></nav>
+<p role="status" id="notice"></p><main id="body"><h1>Sảnh</h1></main>
+<script src="protocol.js"></script><script src="market.js"></script><script src="battlefield.js"></script><script src="lobby.js"></script>
+</body></html>

@@ -13,7 +13,7 @@ cp build/WheelPreview.app/Info.plist "$preview/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set CFBundleExecutable SpectatorPreview' "$preview/Info.plist"
 xcrun --sdk iphonesimulator clang -arch "$(uname -m)" -isysroot "$sim_sdk" -mios-simulator-version-min=16.0 \
   -fobjc-arc -fblocks -Wno-deprecated-declarations -framework UIKit -framework Foundation -framework CoreGraphics -framework WebKit \
-  testdata/SpectatorPreview.m Spectator.m -o "$preview/SpectatorPreview"
+  testdata/SpectatorPreview.m Spectator.m Lobby.m -o "$preview/SpectatorPreview"
 codesign --force --sign - --timestamp=none "$preview"
 device="$(cat build/simulator-id)"
 xcrun simctl install "$device" "$preview"
@@ -26,7 +26,7 @@ cp "$result" build/viewer-result.txt
 framework=build/QA/AGWheel.framework
 mkdir -p "$framework/viewer"
 cp build/AGWheel.dylib "$framework/AGWheel"
-cp viewer/index.html viewer/protocol.js viewer/screen.js "$framework/viewer/"
+cp viewer/*.html viewer/*.js "$framework/viewer/"
 python3 - <<'PY'
 import plistlib
 from pathlib import Path

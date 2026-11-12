@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "Notes77.h"
 #include "Spectator.h"
+#include "Lobby.h"
 #include "NotesMap.h"
 #include "NativeMap.h"
 #include "Blind.h"
@@ -61,7 +62,7 @@ static void NRefresh(void){dispatch_async(dispatch_get_main_queue(),^{NUpdateUI(
 static void NNotice(const char *text){NAlert=NText(text);}
 // All Java operations below run with the original Env on its game thread.
 // The guard can longjmp: no ARC ownership or locks cross these callbacks.
-typedef struct {uintptr_t connection,expected;int variant,command;size_t length;uint8_t bytes[AG_CAP_NONCE+16];} NJob;
+typedef struct {uintptr_t connection,expected;int variant,command;size_t length;const uint8_t *payload;uint8_t bytes[AG_CAP_NONCE+16];} NJob;
 __attribute__((noinline,optnone)) static int NNative(void *env,void *context){
     NJob *j=context;uintptr_t base=NBase();const AGNativeMap *m=&AGMaps[j->variant];
     void *(*get)(void *)=(void *)(base+m->service);void *volatile service=get(env);
@@ -71,9 +72,18 @@ __attribute__((noinline,optnone)) static int NNative(void *env,void *context){
     void (*write)(void *,void *,int)=(void *)(base+0xa64a3c);void (*send)(void *,void *,void *)=(void *)(base+m->send);
     void *volatile message=allocate(env);if(!message)return 0;ctor(env,message,j->command);
     void *volatile writer=*(void **)((uint8_t *)message+0x18);if(!writer)return 0;
-    for(size_t i=0;i<j->length;i++)write(env,writer,j->bytes[i]);send(env,session,message);return 1;
+    const uint8_t *data=j->payload?j->payload:j->bytes;
+    for(size_t i=0;i<j->length;i++)write(env,writer,data[i]);send(env,session,message);return 1;
 }
 static int NRun(void *env,int (*fn)(void *,void *),void *context){return AGWheelGuard(env,fn,context,(void *)(NBase()+0x1300d54));}
+int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uint8_t *bytes,size_t length){
+    if(!env||variant<0||variant>=6||!connection||!bytes||!length)return 0;
+    if(command==-121){if(length>1024||bytes[0]>4)return 0;}
+    else if(command==-120){if(length<9||length>18||memcmp(bytes,"CT46",4)||bytes[4]<1||bytes[4]>6)return 0;}
+    else return 0;
+    NJob job={.variant=variant,.command=command,.expected=connection,.length=length,.payload=bytes};
+    return NRun(env,NNative,&job)>0;
+}
 uintptr_t AGViewerConnection(void *env,int variant){
     NJob probe={.variant=variant};
     return NRun(env,NNative,&probe)>0?probe.connection:0;
@@ -94,9 +104,12 @@ static int NCallback(void *env,void *context){
 }
 void AGNotesTick(void *env,int variant){
     if(env&&variant>=0&&variant<6)AGViewerTick(env,variant);
-    if(!env||variant<0||variant>=6||!atomic_load(&NInitialized))return;
+    if(!env||variant<0||variant>=6)return;
+    if(!atomic_load(&NInitialized)&&!AGLobbyKnown(variant))return;
+    if(!atomic_load(&NInitialized))NInit();
     double now=NNow();int changed=0;NJob probe={.variant=variant};int connected=NRun(env,NNative,&probe);
     uint8_t *canvas=NCanvas(variant);int room=NRoom(variant);NCallbackJob cb={.variant=variant,.which=-1};NJob job={.variant=variant};uint64_t generation;
+    AGLobbyTick(env,variant,canvas?*(void **)(canvas+0xb8):NULL,canvas&&*(uintptr_t *)(canvas+0x108),connected>0?probe.connection:0);
     pthread_mutex_lock(&NMutex);NModel *m=&NModels[variant];
     if(connected<=0||m->connection!=probe.connection){
         if(m->connection||m->known||m->cap.active||m->cap.boss||m->inboxVisible){AGCaptchaClose(&m->cap);m->cap.boss=0;m->deferred=0;m->known=0;m->pending=0;m->sendInvite=0;m->dirty=0;m->editing=0;m->inboxVisible=0;m->inboxDialog=0;m->inboxAction=-1;NInboxBodies[variant]=nil;m->generation++;changed=1;}

@@ -4,14 +4,22 @@
 #import <WebKit/WebKit.h>
 #include <string.h>
 #include "../Spectator.h"
+#include "../Lobby.h"
 static NSMutableArray *sent;
 static NSMutableArray *frames;
 static UIWindow *host;
+static uint8_t lobbyScreen;
+static int lobbyCommand;
+static NSData *lobbyPayload;
 static void save(NSString *result) {
     NSURL *dir=[NSFileManager.defaultManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].firstObject;
     [result writeToURL:[dir URLByAppendingPathComponent:@"viewer-result.txt"] atomically:YES encoding:NSUTF8StringEncoding error:nil];
 }
 uintptr_t AGViewerConnection(void *env,int v) { return 44; }
+int AGLobbySend(void *env,int v,uintptr_t connection,int command,const uint8_t *bytes,size_t length){
+    if(v!=0||connection!=44)return 0;
+    lobbyCommand=command;lobbyPayload=[NSData dataWithBytes:bytes length:length];return 1;
+}
 int AGViewerSend(void *env,int v,uintptr_t connection,int cmd,const uint8_t *bytes,size_t length) {
     if(connection!=44)return 0;
     [sent addObject:@[@(cmd),[NSData dataWithBytes:bytes length:length]]];return 1;
@@ -24,12 +32,56 @@ static int deliver(int cmd,NSData *body) {
     memcpy(storage+0x10,&n,4);memcpy(storage+0x14,body.bytes,n);
     memcpy(input+0x10,&storage,sizeof storage);memcpy(input+0x18,&n,4);
     uint8_t *in=input;memcpy(msg+0x20,&in,sizeof in);msg[0x30]=(uint8_t)cmd;
+    if(AGLobbyReceive((void *)1,msg,0))return 1;
     return AGViewerReceive((void *)1,msg,0);
 }
 static UIView *find(UIView *root,Class cls,NSString *title) {
     if([root isKindOfClass:cls]&&(!title||[[(UIButton *)root currentTitle] isEqual:title]))return root;
     for(UIView *child in root.subviews){UIView *v=find(child,cls,title);if(v)return v;}
     return nil;
+}
+static void testLobby(int step,int tries){
+    if(tries<=0){save([NSString stringWithFormat:@"FAIL lobby timed out at %d",step]);return;}
+    UIWindow *window=UIApplication.sharedApplication.keyWindow;
+    WKWebView *web=(WKWebView *)find(window,WKWebView.class,nil);
+    if(step==0){
+        AGLobbyRemember(&lobbyScreen,0);AGLobbyTick((void *)1,0,&lobbyScreen,0,44);step++;
+    }else if(step==1){
+        UIButton *open=(UIButton *)find(host,UIButton.class,@"Chiến trường · Gian hàng");
+        if(open){[open sendActionsForControlEvents:UIControlEventTouchUpInside];step++;}
+    }else if(step==2 && web){
+        [web evaluateJavaScript:@"typeof receiveFrame==='function' && (document.getElementById('market').click(),true)"
+            completionHandler:^(id v,NSError *err){dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?3:2,tries-1);});}];return;
+    }else if(step==3){
+        AGLobbyTick((void *)1,0,&lobbyScreen,0,44);
+        const uint8_t expected[]={0,0,0,0,0,255,0};
+        if(lobbyCommand==-121 && [lobbyPayload isEqual:[NSData dataWithBytes:expected length:sizeof expected]]){
+            const uint8_t empty[]={0,0,0,0,0,255,0,0,0,0};
+            deliver(-121,[NSData dataWithBytes:empty length:sizeof empty]);step++;
+        }
+    }else if(step==4 && web){
+        [web evaluateJavaScript:@"document.body.innerText.includes('Chưa có món đang bán.') && (document.getElementById('field').click(),true)"
+            completionHandler:^(id v,NSError *err){dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?5:4,tries-1);});}];return;
+    }else if(step==5){
+        AGLobbyTick((void *)1,0,&lobbyScreen,0,44);
+        const uint8_t expected[]={0x43,0x54,0x34,0x36,1,0,0,0,1,49};
+        if(lobbyCommand==-120 && [lobbyPayload isEqual:[NSData dataWithBytes:expected length:sizeof expected]]){
+            const uint8_t reply[]={0x43,0x54,0x34,0x36,1,0,0,0,1,0,0,0,2,0,0,0,7,0};
+            deliver(-120,[NSData dataWithBytes:reply length:sizeof reply]);step++;
+        }
+    }else if(step==6 && web){
+        [web evaluateJavaScript:@"document.body.innerText.includes('Trận đang đấu')" completionHandler:^(id v,NSError *err){
+            if([v isEqual:@YES]){
+                UIButton *back=(UIButton *)find(window,UIButton.class,@"Về sảnh");
+                [back sendActionsForControlEvents:UIControlEventTouchUpInside];
+                AGLobbyTick((void *)1,0,NULL,0,44);
+            }
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?7:6,tries-1);});
+        }];return;
+    }else if(step==7 && window==host && !find(host,UIButton.class,@"Chiến trường · Gian hàng")){
+        save(@"PASS prompt, decline, snapshot, live roster, leave; lobby entry, marketplace browse, battlefield board, restore game");return;
+    }
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby(step,tries-1);});
 }
 static void runStep(int step,int tries) {
     @try {
@@ -70,7 +122,7 @@ static void runStep(int step,int tries) {
             }
         }else if(step==5&&window==host){
             if(deliver(24,[NSData dataWithBytes:"x" length:1])!=0){save(@"FAIL ordinary player intercepted");return;}
-            save(@"PASS prompt, decline, confirm, terrain, live roster, leave, game window restored");return;
+            testLobby(0,150);return;
         }
         int next=step;dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(next,tries-1);});
     }@catch(NSException *e){save([@"FAIL " stringByAppendingString:e.reason]);}
