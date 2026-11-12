@@ -13,7 +13,7 @@ xcrun install_name_tool -id '@rpath/AGWheel.framework/AGWheel' native-wheel/buil
 PYTHONPATH=native-wheel python3 native-wheel/testdata/prepare_native_probe.py "$base" native-wheel/build/AGWheel.dylib "$staged"
 app="$staged/Payload/Army2Hoanggia.app"
 for binary in "$app/Army2Hoanggia" "$app/Frameworks/gdx.framework/gdx" "$app/Frameworks/ObjectAL.framework/ObjectAL" "$app/Frameworks/AGWheel.framework/AGWheel"; do
-    xcrun vtool -set-build-version iossimulator 12.0 18.5 -replace -output "$binary.tmp" "$binary"
+    xcrun vtool -set-build-version 7 12.0 18.5 -replace -output "$binary.tmp" "$binary"
     mv "$binary.tmp" "$binary"
     chmod +x "$binary"
 done
