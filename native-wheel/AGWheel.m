@@ -12,12 +12,13 @@
 #include "Notes77.h"
 #include "Turn33.h"
 #include "Blind.h"
+#include "BossNative.h"
 #include "ShipTrace.h"
 #import "GameViewport.h"
 extern void AGInventoryTick(int);
 
 // Exported release identity binds the Apple artifact to the native login patch.
-__attribute__((visibility("default"))) const char *AGReleaseIdentity(void) { return "2.4.1-HG78-IPA"; }
+__attribute__((visibility("default"))) const char *AGReleaseIdentity(void) { return "2.4.1-B275-IPA"; }
 
 // UI work stays on UIKit's main thread. Java calls stay on the original game
 // thread with its Env, protected by RoboVM's catch-all exception context.
@@ -45,7 +46,10 @@ static double AGNow(void) { struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);
 // Retained ABI for the bridge; no diagnostic window, label or timer.
 __attribute__((visibility("default"))) void AGTurnStatusUpdate(int variant,int reason) {(void)variant;(void)reason;}
 __attribute__((visibility("default"))) void AGTurnPulse(void *env,int variant) {
-    if(atomic_load(&AGForeground)){AGTurnTick(env,variant);AGShipTraceTick(env,variant,1);}
+    if(atomic_load(&AGForeground)){
+        AGBossTick(env,variant);
+        AGTurnTick(env,variant);AGShipTraceTick(env,variant,1);
+    }
 }
 static NSString *AGString(const char *s) {return [NSString stringWithUTF8String:s]?:@"";}
 static NSString *AGMoney(int64_t value) {

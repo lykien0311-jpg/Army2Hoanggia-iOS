@@ -1,4 +1,5 @@
 #include "Blind.h"
+#include "BossNative.h"
 #include "BlindState.h"
 #include "NotesMap.h"
 #include "TurnMap.h"
@@ -53,8 +54,12 @@ static int drawWhite(void *env,void *opaque){
     color(env,g,0xffffff);fill(env,g,0,0,j->width,j->height);return 1;
 }
 __attribute__((visibility("default"))) int AGBlindPaint(void *env,void *graphics,int v){
-    if(!env||!graphics||v<0||v>=6||!AGBlindActive(v))return 0;BlindContext c=context(v);
+    if(!env||!graphics||v<0||v>=6)return 0;
+    int bossBlind=AGBossBlind(v);
+    if(!bossBlind&&!AGBlindActive(v))return 0;
+    BlindContext c=context(v);
     pthread_mutex_lock(&blindLock);int active=AGBlindContext(&states[v],c.arena,c.local)&&states[v].active;pthread_mutex_unlock(&blindLock);
+    active|=bossBlind;
     if(!active||c.width<32||c.width>4096||c.height<32||c.height>4096)return 0;
     // Validated native Graphics primitive layout: RGBA at28, clip at38,
     // translation at48, flags at50. Preserve color and recover all fields on

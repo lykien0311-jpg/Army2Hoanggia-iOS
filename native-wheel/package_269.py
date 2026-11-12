@@ -6,8 +6,10 @@ import os
 from pathlib import Path, PurePosixPath
 import plistlib
 import tempfile
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 from patch_menu_269 import patch_menu
+from patch_boss_maps import patch_boss_maps, MARKER
+from boss_assets import boss_assets
 
 BASE_SHA = "cde926d904e076e428b6d3c911ed673f0b80fc10b8e4a5134cb44d5a2d809ee8"
 APP = "Payload/Army2Hoanggia.app/"
@@ -19,11 +21,14 @@ PREFIX = APP + "Frameworks/"
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
-def assemble(base, framework, target, version):
+def assemble(base, framework, target, version, boss_client=None, boss_server=None):
     if target.exists() or version <= 269:
         raise ValueError("Choose a new output and a build number above 269")
     if digest(base) != BASE_SHA:
         raise ValueError("Unexpected baseline IPA")
+    if version != 275 or boss_client is None or boss_server is None:
+        raise ValueError("Build 275 requires the matching client and server JARs")
+    maps = {APP + "BossMaps/" + name: data for name, data in boss_assets(boss_client, boss_server).items()}
     target.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=target.parent) as tmp, ZipFile(base) as old, ZipFile(framework) as lib:
         if len(lib.namelist()) != len(set(lib.namelist())) or lib.testzip():
@@ -44,10 +49,11 @@ def assemble(base, framework, target, version):
         if (info["CFBundleIdentifier"],info["CFBundleVersion"]) != ("vn.army2hoanggia.game","269"):
             raise ValueError("Unexpected application identity")
         info["CFBundleVersion"]=str(version)
-        native=patch_menu(old.read(NATIVE))
+        native=patch_boss_maps(patch_menu(old.read(NATIVE)))
         framework_code=lib.read(FW+'AGWheel')
-        if any(symbol not in framework_code for symbol in (b'_AGLobbyOpenNative\0',b'_AGAuraPaintActor\0')):
-            raise ValueError('Missing native menu or arena callback')
+        if any(symbol not in framework_code for symbol in (b'_AGLobbyOpenNative\0',
+                b'_AGAuraPaintActor\0', b'_AGBossNativeHook\0', MARKER + b'\0')):
+            raise ValueError('Missing native menu or boss map callback')
         staged=Path(tmp)/"app.ipa"
         with ZipFile(staged,"w") as out:
             for e in old.infolist():
@@ -57,8 +63,10 @@ def assemble(base, framework, target, version):
             for e in lib.infolist():
                 member=copy.copy(e);member.filename=PREFIX+e.filename
                 out.writestr(member,lib.read(e))
+            for name, data in maps.items():
+                out.writestr(name, data, compress_type=ZIP_DEFLATED)
         with ZipFile(staged) as check:
-            wanted={p for p in old.namelist() if not p.startswith(PREFIX+FW)}|{PREFIX+p for p in lib.namelist()}
+            wanted={p for p in old.namelist() if not p.startswith(PREFIX+FW)}|{PREFIX+p for p in lib.namelist()}|maps.keys()
             if set(check.namelist())!=wanted or len(check.namelist())!=len(wanted) or check.testzip():
                 raise ValueError("Incomplete QA IPA")
             for p in old.namelist():
@@ -67,6 +75,8 @@ def assemble(base, framework, target, version):
             if check.read(NATIVE)!=native:raise ValueError('Native menu patch missing')
             for p in lib.namelist():
                 if lib.read(p)!=check.read(PREFIX+p):raise ValueError("Framework was modified after signing")
+            for name, data in maps.items():
+                if data != check.read(name): raise ValueError("Changed boss resource: " + name)
             if plistlib.loads(check.read(INFO))!=info:raise ValueError("Unexpected build metadata")
         # Publish only a fully checked file, without replacing a concurrent build.
         os.link(staged,target)
@@ -76,5 +86,7 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser()
     for name in ("baseline","framework","output"):parser.add_argument(name,type=Path)
     parser.add_argument("--build",type=int,required=True)
+    parser.add_argument("--boss-client",type=Path,required=True)
+    parser.add_argument("--boss-server",type=Path,required=True)
     args=parser.parse_args()
-    assemble(args.baseline,args.framework,args.output,args.build)
+    assemble(args.baseline,args.framework,args.output,args.build,args.boss_client,args.boss_server)

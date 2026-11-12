@@ -16,7 +16,7 @@ xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=1
   -Wno-unused-parameter -Wno-deprecated-declarations -Wno-unused-function \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics -framework WebKit \
   -Wl,-headerpad,4000 -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
-  AGWheel.m Spectator.m Lobby.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c Aura.c AuraState.c BattleWait.c Corpse.c Stats.c ShipTraceDisabled.c NativeGuard.S \
+  AGWheel.m Spectator.m Lobby.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c Aura.c AuraState.c BattleWait.c Corpse.c Stats.c ShipTraceDisabled.c BossMaps.c BossNative.m NativeGuard.S \
   -o build/AGWheel.dylib
 codesign --force --sign - --timestamp=none build/AGWheel.dylib
 codesign --verify --strict --verbose=2 build/AGWheel.dylib 2>build/code-signing.txt
@@ -34,7 +34,8 @@ p=pathlib.Path('build/AGWheel.dylib');exports=pathlib.Path('build/exports.txt').
 for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoomRebuild','AGMoveAllow','AGCameraAllow','AGBlindPaint','AGBlindReceive','AGBlindActive','AGNotesReceive','AGNotesInput','AGNotesSettings','AGNotesInbox','AGGridAdjust','AGWheelSuppressFooter','AGTurnReceive','AGTurnManual','AGTurnPulse','AGTurnChange','AGTurnAwait','AGBattleAwait','AGCorpseReceive','AGCorpseUpdate','AGTurnStatusUpdate','AGViewportKeypad','AGLobbyOpenNative','AGAuraPaintActor'):
     assert '_'+name in exports,name
 assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
-assert '_AGReleaseIdentity' in exports and b'2.4.1-HG78-IPA\0' in p.read_bytes()
+assert '_AGReleaseIdentity' in exports and b'2.4.1-B275-IPA\0' in p.read_bytes()
+assert '_AGBossNativeHook' in exports
 assert '_AGUfoDiagnosticsGet' in exports
 assert '_AGShipTraceGet' in exports
 assert '_AGStatsApply' in exports
@@ -44,7 +45,7 @@ for diagnostic_ui in (b'AGUfoDiagnosticWindow',b'AutoUFO-Build253.txt','B253 •
                       'B260 •'.encode(),'B261 •'.encode(),b'vn.army2hoanggia.airship-log'):
     assert diagnostic_ui not in p.read_bytes(),'Diagnostic overlay in device dylib'
 info={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
-      'release_version':'2.4.1','login_marker':'2.4.1-HG78-IPA',
+      'release_version':'2.4.1','login_marker':'2.4.1-B275-IPA',
       'xcode':subprocess.check_output(['xcodebuild','-version'],text=True).strip(),
       'compiler':subprocess.check_output(['xcrun','--sdk','iphoneos','clang','--version'],text=True).splitlines()[0],
       'sdk':subprocess.check_output(['xcrun','--sdk','iphoneos','--show-sdk-version'],text=True).strip(),
@@ -65,7 +66,7 @@ xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wno-deprecated-declarations \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics -framework WebKit \
   -Wl,-headerpad,4000 -Wl,-install_name,@rpath/libAGWheelPreview.dylib \
-  AGWheel.m Spectator.m Lobby.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c Aura.c AuraState.c BattleWait.c Corpse.c Stats.c ShipTrace.c AirshipDiagnostics.m \
+  AGWheel.m Spectator.m Lobby.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c Aura.c AuraState.c BattleWait.c Corpse.c Stats.c ShipTrace.c AirshipDiagnostics.m BossMaps.c BossNative.m \
   -o build/WheelPreview.app/Frameworks/libAGWheelPreview.dylib
 xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -mios-simulator-version-min=16.0 -fobjc-arc -fblocks -O1 -framework UIKit \

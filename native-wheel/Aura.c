@@ -1,4 +1,5 @@
 #include "Aura.h"
+#include "BossNative.h"
 #include "AuraState.h"
 #include "Spectator.h"
 #include <mach-o/dyld.h>
@@ -203,6 +204,7 @@ static void draw(void *env,Paint *p) {
 }
 
 __attribute__((visibility("default"))) void AGAuraPaintActor(void *env,uint8_t *actor,uint8_t *graphics,int v,Painter nativePaint) {
+    if(AGBossPaintActor(env,actor,graphics,v))return;
     const uint32_t id=*(uint32_t *)(actor+0x7c);
     const unsigned hero=actor[0x16c];
     int aura=0;
