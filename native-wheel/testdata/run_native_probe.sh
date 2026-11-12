@@ -29,9 +29,11 @@ if [[ -z "$device" ]]; then
 fi
 bundle=vn.army2hoanggia.game
 xcrun simctl install "$device" "$app"
-xcrun simctl launch "$device" "$bundle"
+launched="$(xcrun simctl launch "$device" "$bundle")"
+printf '%s\n' "$launched"
+pid="${launched##*: }"
 log="$(xcrun simctl get_app_container "$device" "$bundle" data)/Documents/map-native-probe.txt"
-for iteration in {1..36}; do
+for iteration in {1..20}; do
     if [[ -s "$log" ]] && grep -Eq '^(PASS|FAIL)' "$log"; then
         cat "$log"
         grep -q '^PASS ' "$log"
@@ -40,5 +42,7 @@ for iteration in {1..36}; do
     sleep 1
 done
 if [[ -s "$log" ]]; then cat "$log"; fi
+sample "$pid" 1 -file "$RUNNER_TEMP/boss-sample.txt" 2>&1 || true
+if [[ -s "$RUNNER_TEMP/boss-sample.txt" ]]; then head -170 "$RUNNER_TEMP/boss-sample.txt"; fi
 xcrun simctl spawn "$device" log show --last 1m --predicate 'process == "Army2Hoanggia"' --style compact | tail -50
 exit 1
