@@ -33,7 +33,8 @@ launched="$(xcrun simctl launch "$device" "$bundle")"
 printf '%s\n' "$launched"
 pid="${launched##*: }"
 log="$(xcrun simctl get_app_container "$device" "$bundle" data)/Documents/map-native-probe.txt"
-for iteration in {1..20}; do
+(sleep 3; sample "$pid" 1 -file "$RUNNER_TEMP/boss-early-sample.txt" >/dev/null 2>&1 || true) &
+for iteration in {1..16}; do
     if [[ -s "$log" ]] && grep -Eq '^(PASS|FAIL)' "$log"; then
         cat "$log"
         grep -q '^PASS ' "$log"
@@ -44,5 +45,7 @@ done
 if [[ -s "$log" ]]; then cat "$log"; fi
 sample "$pid" 1 -file "$RUNNER_TEMP/boss-sample.txt" 2>&1 || true
 if [[ -s "$RUNNER_TEMP/boss-sample.txt" ]]; then head -170 "$RUNNER_TEMP/boss-sample.txt"; fi
-xcrun simctl spawn "$device" log show --last 1m --predicate 'process == "Army2Hoanggia"' --style compact | tail -50
+if [[ -s "$RUNNER_TEMP/boss-early-sample.txt" ]]; then head -125 "$RUNNER_TEMP/boss-early-sample.txt"; fi
+xcrun simctl spawn "$device" log show --last 1m --predicate 'eventMessage CONTAINS "AGMAP" || process == "ReportCrash"' --style compact | tail -65
+find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 2 -name 'Army2Hoanggia*.ips' -mmin -3 -print -exec head -c 10500 {} \; || true
 exit 1

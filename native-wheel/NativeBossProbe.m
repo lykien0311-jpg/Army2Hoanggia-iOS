@@ -19,10 +19,13 @@ static int test(void *env, void *context) {
     void *(*vector)(void *) = (void *)(b + tileVector[v]);
     int (*count)(void *, void *) = (void *)(b + 0x1dfca4);
     int (*pixel)(void *, int, int) = (void *)(b + collide[v]);
+    NSLog(@"AGMAP enter variant=%d main=%d", v, NSThread.isMainThread);
     void *original = vector(env);
+    NSLog(@"AGMAP original vector initialized");
     uint64_t dummy[4] = {0};
     r->stage = 1;
     if (!AGBossNativeHook(env, (uintptr_t)dummy, 41, 0, v, 0)) return 0;
+    NSLog(@"AGMAP map 41 loaded");
     r->stage = 2;
     r->dragonCount = count(env, vector(env));
     r->dragonPixels = pixel(env, 143, 303) && !pixel(env, 138, 301);

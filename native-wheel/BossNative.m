@@ -80,11 +80,14 @@ static void unpin(void *env, void *object) {
 }
 static void *image(void *env, const uint8_t *bytes, int length) {
     void **jni = *(void ***)env;
+    NSLog(@"AGMAP image array allocation");
     void *volatile array = ((void *(*)(void *, int))jni[176])(env, length);
     if (!array) return NULL;
     ((void (*)(void *, void *, int, int, const uint8_t *))jni[208])(env, array, 0, length, bytes);
     /* Image.f([BII), with the normal GDX render-thread handoff. */
+    NSLog(@"AGMAP decode texture");
     void *result = ((void *(*)(void *, void *, int, int))(base() + 0xc46e04))(env, array, 0, length);
+    NSLog(@"AGMAP decoded texture");
     ((void (*)(void *, void *))jni[23])(env, array);
     return result;
 }
@@ -92,9 +95,12 @@ __attribute__((noinline,optnone)) static int buildMap(void *env, void *context) 
     Load *j = context;
     uintptr_t b = base();
     const AGBossNativeMap *native = &AGBossNativeMaps[j->variant];
+    NSLog(@"AGMAP buildMap enter");
     void *volatile vector = ((void *(*)(void *))(b + 0xbe3f1c))(env);
     ((void (*)(void *, void *))(b + 0xbe6b7c))(env, vector);
+    NSLog(@"AGMAP constructed map vector");
     j->vector = pin(env, vector);
+    NSLog(@"AGMAP pinned map vector");
     if (!j->vector) return 0;
     for (int i = 0; i < j->spec.count; ++i) {
         const AGBossTile *spec = &j->spec.tiles[i];
