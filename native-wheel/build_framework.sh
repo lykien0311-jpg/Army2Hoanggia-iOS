@@ -12,7 +12,7 @@ cp build/WheelPreview.app/Info.plist "$preview/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set CFBundleIdentifier vn.army2hoanggia.spectatorpreview' "$preview/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set CFBundleExecutable SpectatorPreview' "$preview/Info.plist"
 xcrun --sdk iphonesimulator clang -arch "$(uname -m)" -isysroot "$sim_sdk" -mios-simulator-version-min=16.0 \
-  -fobjc-arc -fblocks -Wno-deprecated-declarations -framework UIKit -framework Foundation -framework WebKit \
+  -fobjc-arc -fblocks -Wno-deprecated-declarations -framework UIKit -framework Foundation -framework CoreGraphics -framework WebKit \
   testdata/SpectatorPreview.m Spectator.m -o "$preview/SpectatorPreview"
 codesign --force --sign - --timestamp=none "$preview"
 device="$(cat build/simulator-id)"
