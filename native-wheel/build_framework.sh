@@ -2,6 +2,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 node test_spectator.js
+mkdir -p build
+cc -std=c11 -Wall -Wextra -Werror AuraState.c testdata/AuraStateTest.c -o build/aura-state-test
+build/aura-state-test
 bash build.sh
 sim_sdk="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 preview=build/SpectatorPreview.app

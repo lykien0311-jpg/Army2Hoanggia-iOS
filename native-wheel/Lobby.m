@@ -4,6 +4,7 @@
 #include <string.h>
 #include "Lobby.h"
 #include "Spectator.h"
+#include "Aura.h"
 
 @interface AGLobby : UIViewController <WKScriptMessageHandler,WKNavigationDelegate>
 @property(nonatomic,strong) UIWindow *overlay;
@@ -24,6 +25,25 @@ static atomic_bool opened[6];
 static uintptr_t connections[6];
 static uintptr_t battlefield[6];
 static AGLobby *activePanel;
+
+static NSString *eventAuras(NSData *body,int variant,uintptr_t connection){
+    const uint8_t *p=body.bytes;
+    size_t length=body.length;
+    if(length<4)return @"[]";
+    size_t pos=4+((p[2]<<8)|p[3]);
+    NSMutableArray *codes=[NSMutableArray arrayWithCapacity:10];
+    while(pos<length&&codes.count<10){
+        if(length-pos<6)return @"[]";
+        uint32_t id=(uint32_t)p[pos]<<24|(uint32_t)p[pos+1]<<16|(uint32_t)p[pos+2]<<8|p[pos+3];
+        pos+=6+((p[pos+4]<<8)|p[pos+5]);
+        if(pos>length||length-pos<25)return @"[]";
+        [codes addObject:[NSString stringWithFormat:@"%d",AGAuraRank(variant,connection,id,p[pos])]];
+        pos+=23;
+        pos+=2+((p[pos]<<8)|p[pos+1]);
+    }
+    if(pos!=length)return @"[]";
+    return [NSString stringWithFormat:@"[%@]",[codes componentsJoinedByString:@","]];
+}
 
 int AGLobbyOpened(int variant){return atomic_load(&opened[variant]);}
 
@@ -104,9 +124,10 @@ int AGLobbyReceive(void *env,void *message,int v){
         dispatch_async(dispatch_get_main_queue(),^{[active close];});return 1;
     }
     NSString *blob=[body base64EncodedStringWithOptions:0];
+    NSString *auras=cmd==-14?eventAuras(body,v,connection):@"[]";
     dispatch_async(dispatch_get_main_queue(),^{
         if(!active.web)return;
-        NSString *js=[NSString stringWithFormat:@"receiveFrame(%d,'%@')",cmd,blob];
+        NSString *js=[NSString stringWithFormat:@"receiveFrame(%d,'%@',%@)",cmd,blob,auras];
         [active.web evaluateJavaScript:js completionHandler:^(id val,NSError *err){if(err)[active close];}];
     });
     return 1;

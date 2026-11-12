@@ -68,12 +68,12 @@ function auraIcon(parent,aura){
     icon.setAttribute('role','img');
 }
 
-function showEvent(reply){
-    if(reply.page!==eventRequest){notice.textContent='Đã đến trang cuối.';return;}
+function showEvent(reply,auras){
+    if(reply.page!==eventRequest && reply.heading.startsWith('BXH')){notice.textContent='Đã đến trang cuối.';return;}
     title(reply.heading);
     if(!reply.rows.length&&reply.heading.startsWith('BXH'))el('p','Chưa có người chơi ghi điểm.');
-    for(const person of reply.rows){
-        const div=row();el('strong','#'+person.rank+' '+person.name,div);
+    for(const [index,person] of reply.rows.entries()){
+        const div=row();auraIcon(div,auras[index]);el('strong','#'+person.rank+' '+person.name,div);
         el('p','Cấp '+person.level+' · '+BigInt(person.score).toLocaleString('vi-VN')+' điểm',div);
     }
     const nav=controls();
@@ -171,7 +171,7 @@ function showField(reply){
         if(reply.more)action(main,'Trang sau',()=>send(-120,()=>field.request(op,null,reply.page+1)));
     }else if(reply.type==='notice'){notice.textContent=reply.text;}
 }
-window.receiveFrame=(cmd,encoded)=>{
+window.receiveFrame=(cmd,encoded,auras=[])=>{
     const bytes=Uint8Array.from(atob(encoded),s=>s.charCodeAt(0));
     try{
         if(cmd===-121 && tab==='market'){
@@ -183,7 +183,7 @@ window.receiveFrame=(cmd,encoded)=>{
             if(result==='browse')listMarket();else if(result==='inventory')listStock();
         }else if(cmd===-14 && tab==='event'){
             const reply=readEventRank(bytes);
-            unlock();notice.textContent='';showEvent(reply);
+            unlock();notice.textContent='';showEvent(reply,auras);
         }else if(cmd===-120 && tab==='field'){
             const reply=field.receive(bytes);
             if(reply.type==='stale')return;

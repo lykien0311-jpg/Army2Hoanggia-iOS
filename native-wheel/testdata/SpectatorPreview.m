@@ -18,6 +18,7 @@ static void save(NSString *result) {
     [result writeToURL:[dir URLByAppendingPathComponent:@"viewer-result.txt"] atomically:YES encoding:NSUTF8StringEncoding error:nil];
 }
 uintptr_t AGViewerConnection(void *env,int v) { return 44; }
+int AGAuraRank(int v,uintptr_t connection,uint32_t id,unsigned hero){return id==7&&hero==6?240:0;}
 uintptr_t AGViewerWaitToken(int v){return AGSpectatorWaitToken(canvas);}
 void AGViewerDismissWait(int v,uintptr_t token){AGSpectatorClearWait(canvas,token);}
 int AGLobbySend(void *env,int v,uintptr_t connection,int command,const uint8_t *bytes,size_t length){
@@ -85,7 +86,7 @@ static void testLobby(int step,int tries){
             [reply appendBytes:row length:sizeof row];deliver(-14,reply);step++;
         }
     }else if(step==7 && web){
-        [web evaluateJavaScript:@"document.body.innerText.includes('#1 QA1') && document.body.innerText.includes('42 điểm')" completionHandler:^(id v,NSError *err){
+        [web evaluateJavaScript:@"document.body.innerText.includes('#1 QA1') && document.body.innerText.includes('42 điểm') && !!document.querySelector('.aura[data-tier=\"7\"]')" completionHandler:^(id v,NSError *err){
             if([v isEqual:@YES]){
                 UIButton *back=(UIButton *)find(window,UIButton.class,@"Về sảnh");
                 [back sendActionsForControlEvents:UIControlEventTouchUpInside];

@@ -14,6 +14,7 @@
 #include "NotesMap.h"
 #include "NativeMap.h"
 #include "Blind.h"
+#include "Aura.h"
 #include "Stats.h"
 #include "NotesProtocol.h"
 #import "GameViewport.h"
@@ -90,6 +91,11 @@ int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uin
     NJob job={.variant=variant,.command=command,.expected=connection,.length=length,.payload=bytes};
     return NRun(env,NNative,&job)>0;
 }
+int AGAuraHello(void *env,int variant,uintptr_t connection){
+    static const uint8_t hello[]={'C','T','4','6',11,0,0,0,1};
+    NJob job={.variant=variant,.command=-120,.expected=connection,.length=sizeof hello,.payload=hello};
+    return NRun(env,NNative,&job)>0;
+}
 uintptr_t AGViewerConnection(void *env,int variant){
     NJob probe={.variant=variant};
     return NRun(env,NNative,&probe)>0?probe.connection:0;
@@ -142,11 +148,12 @@ static int NCallback(void *env,void *context){
 void AGNotesTick(void *env,int variant){
     if(env&&variant>=0&&variant<6)AGViewerTick(env,variant);
     if(!env||variant<0||variant>=6)return;
-    if(!atomic_load(&NInitialized)&&!AGLobbyOpened(variant))return;
+    if(!atomic_load(&NInitialized)&&!AGLobbyOpened(variant)&&!AGAuraKnown(variant))return;
     if(!atomic_load(&NInitialized))NInit();
     double now=NNow();int changed=0;NJob probe={.variant=variant};int connected=NRun(env,NNative,&probe);
     uint8_t *canvas=NCanvas(variant);int room=NRoom(variant);NCallbackJob cb={.variant=variant,.which=-1};NJob job={.variant=variant};uint64_t generation;
     AGLobbyTick(env,variant,connected>0?probe.connection:0);
+    AGAuraTick(env,variant,connected>0?probe.connection:0);
     pthread_mutex_lock(&NMutex);NModel *m=&NModels[variant];
     if(connected<=0||m->connection!=probe.connection){
         if(m->connection||m->known||m->cap.active||m->cap.boss||m->inboxVisible){AGCaptchaClose(&m->cap);m->cap.boss=0;m->deferred=0;m->known=0;m->pending=0;m->sendInvite=0;m->dirty=0;m->editing=0;m->inboxVisible=0;m->inboxDialog=0;m->inboxAction=-1;NInboxBodies[variant]=nil;m->generation++;changed=1;}

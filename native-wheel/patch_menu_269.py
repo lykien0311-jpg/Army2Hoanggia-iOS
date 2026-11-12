@@ -59,7 +59,8 @@ def patch_menu(native):
         write(file, data, bytes(len(data)))
 
     symbol, field, market = STRINGS, STRINGS + 0x20, STRINGS + 0x40
-    for at, label in [(symbol, 'AGLobbyOpenNative'), (field, 'CHIẾN TRƯỜNG'), (market, 'GIAN HÀNG')]:
+    aura = STRINGS + 0x60
+    for at, label in [(symbol, 'AGLobbyOpenNative'), (field, 'CHIẾN TRƯỜNG'), (market, 'GIAN HÀNG'), (aura, 'AGAuraPaintActor')]:
         data = label.encode('utf-8') + b'\0'
         assert at + len(data) <= RX_END
         write(RX_FILE + at - RX_VM, data, bytes(len(data)))
@@ -137,4 +138,30 @@ def patch_menu(native):
             branch(shim + 24, entry['home_after_action'] + 0x28),
         ])
         edit(confirm, 0x340004c9, branch(confirm, shim))
+
+    # Wrap the native arena's player paint call so both aura layers follow the
+    # original camera, visibility and drawing order. x4 carries the original
+    # renderer trampoline. A missing framework export falls back to it.
+    draw = 0x24ffd00
+    emit(draw, [
+        0xa9bc7bfd, 0x910003fd,  # stp x29,x30,[sp,#-64]!; mov x29,sp
+        0xa90107e0, 0xa9020fe2, 0xf9001be4,  # save env, actor, graphics, variant, trampoline
+        address(draw + 20, 0x2500000, 9, page=True), 0xf940e930,
+        near(draw + 28, draw + 56, 0xb5000010),  # cbnz x16,resolved
+        0x92800020, address(draw + 36, aura, 1), branch(draw + 40, DLSYM, True),
+        address(draw + 44, 0x2500000, 9, page=True), 0xf900e920, 0xaa0003f0,
+        0xa94107e0, 0xa9420fe2, 0xf9401be4, 0xa8c47bfd,
+        near(draw + 72, draw + 80, 0xb4000010), 0xd61f0200, 0xd61f0080,  # br x16 or br x4
+    ])
+    paint_maps = json.loads(Path(__file__).with_name('blind-map.json').read_text())
+    painters = (0x59bdbc, 0x684b80, 0x769844, 0x84e508, 0x9331cc, 0xa17e90)
+    assert len(paint_maps) == len(painters)
+    for variant,(entry,original) in enumerate(zip(paint_maps,painters)):
+        assert entry['variant'] == variant
+        site = entry['paint'] + 0x438
+        assert native[site - 12:site] == bytes.fromhex('21feffb4a28359f8e00313aa')
+        shim = draw + 0x60 + variant * 16
+        emit(shim, [mov(3, variant), address(shim+4, shim+12, 4),
+                    branch(shim+8, draw), branch(shim+12, original)])
+        edit(site, branch(site, original, True), branch(site, shim, True))
     return bytes(out)

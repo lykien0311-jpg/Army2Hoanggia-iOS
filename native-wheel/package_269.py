@@ -45,8 +45,9 @@ def assemble(base, framework, target, version):
             raise ValueError("Unexpected application identity")
         info["CFBundleVersion"]=str(version)
         native=patch_menu(old.read(NATIVE))
-        if b'_AGLobbyOpenNative\0' not in lib.read(FW+'AGWheel'):
-            raise ValueError('Missing native menu callback')
+        framework_code=lib.read(FW+'AGWheel')
+        if any(symbol not in framework_code for symbol in (b'_AGLobbyOpenNative\0',b'_AGAuraPaintActor\0')):
+            raise ValueError('Missing native menu or arena callback')
         staged=Path(tmp)/"app.ipa"
         with ZipFile(staged,"w") as out:
             for e in old.infolist():

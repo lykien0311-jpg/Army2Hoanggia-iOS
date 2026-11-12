@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, qa/ios-273-native-menus]
+    branches: [main, qa/ios-274-aura]
 permissions:
   contents: read
 concurrency:
@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   native-framework:
-    if: github.ref_name == 'qa/ios-273-native-menus' || github.head_ref == 'qa/ios-273-native-menus'
+    if: github.ref_name == 'qa/ios-274-aura' || github.head_ref == 'qa/ios-274-aura'
     runs-on: macos-15
     timeout-minutes: 30
     steps:
@@ -34,15 +34,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release download qa-input-269 --repo "$GITHUB_REPOSITORY" --pattern Army2HoangGiaTF.ipa --dir "$RUNNER_TEMP"
-          python3 native-wheel/package_269.py "$RUNNER_TEMP/Army2HoangGiaTF.ipa" native-wheel/build/AGWheel-framework.zip native-wheel/build/Army2HoangGia-QA273-unsigned.ipa --build 273
+          python3 native-wheel/package_269.py "$RUNNER_TEMP/Army2HoangGiaTF.ipa" native-wheel/build/AGWheel-framework.zip native-wheel/build/Army2HoangGia-QA274-unsigned.ipa --build 274
       - uses: actions/upload-artifact@v4
         with:
-          name: Army2HoangGia-QA273-unsigned-IPA
-          path: native-wheel/build/Army2HoangGia-QA273-unsigned.ipa
+          name: Army2HoangGia-QA274-unsigned-IPA
+          path: native-wheel/build/Army2HoangGia-QA274-unsigned.ipa
           if-no-files-found: error
           retention-days: 14
   compatibility:
-    if: github.ref_name != 'qa/ios-273-native-menus' && github.head_ref != 'qa/ios-273-native-menus'
+    if: github.ref_name != 'qa/ios-274-aura' && github.head_ref != 'qa/ios-274-aura'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
