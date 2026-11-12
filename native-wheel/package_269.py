@@ -52,7 +52,7 @@ def assemble(base, framework, target, version):
             for e in old.infolist():
                 if e.filename.startswith(PREFIX+FW): continue
                 data=plistlib.dumps(info,fmt=plistlib.FMT_BINARY) if e.filename==INFO else native if e.filename==NATIVE else old.read(e)
-                out.writestr(e,data)
+                out.writestr(copy.copy(e),data)
             for e in lib.infolist():
                 member=copy.copy(e);member.filename=PREFIX+e.filename
                 out.writestr(member,lib.read(e))
