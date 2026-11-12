@@ -1,0 +1,18 @@
+name: Test native map loading on iPhone Simulator
+on:
+  push:
+    branches: [qa/ios-275-native-smoke]
+permissions:
+  contents: read
+jobs:
+  simulator:
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load two maps in the native engine
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download qa-input-269 --repo "$GITHUB_REPOSITORY" --pattern Army2HoangGiaTF.ipa --dir "$RUNNER_TEMP"
+          bash native-wheel/testdata/run_native_probe.sh "$RUNNER_TEMP/Army2HoangGiaTF.ipa" "$RUNNER_TEMP/native-probe"
