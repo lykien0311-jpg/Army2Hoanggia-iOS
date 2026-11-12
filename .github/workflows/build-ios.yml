@@ -4,14 +4,45 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: [main, qa/ios-270-framework]
 permissions:
   contents: read
 concurrency:
   group: army-ios-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  native-framework:
+    if: github.ref_name == 'qa/ios-270-framework' || github.head_ref == 'qa/ios-270-framework'
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash native-wheel/build_framework.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Army2Hoanggia-QA-native-framework
+          path: |
+            native-wheel/build/AGWheel-framework.zip
+            native-wheel/build/build-info.json
+            native-wheel/build/ui-check.json
+            native-wheel/build/captcha-ui-check.json
+            native-wheel/build/viewer-result.txt
+          if-no-files-found: error
+          retention-days: 14
+      - name: Assemble native QA IPA from the private baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download qa-input-269 --repo "$GITHUB_REPOSITORY" --pattern Army2HoangGiaTF.ipa --dir "$RUNNER_TEMP"
+          python3 native-wheel/package_269.py "$RUNNER_TEMP/Army2HoangGiaTF.ipa" native-wheel/build/AGWheel-framework.zip native-wheel/build/Army2HoangGia-QA270-unsigned.ipa --build 270
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Army2HoangGia-QA270-unsigned-IPA
+          path: native-wheel/build/Army2HoangGia-QA270-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
   compatibility:
+    if: github.ref_name != 'qa/ios-270-framework' && github.head_ref != 'qa/ios-270-framework'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

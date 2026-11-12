@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Notes77.h"
+#include "Spectator.h"
 #include "NotesMap.h"
 #include "NativeMap.h"
 #include "Blind.h"
@@ -73,6 +74,16 @@ __attribute__((noinline,optnone)) static int NNative(void *env,void *context){
     for(size_t i=0;i<j->length;i++)write(env,writer,j->bytes[i]);send(env,session,message);return 1;
 }
 static int NRun(void *env,int (*fn)(void *,void *),void *context){return AGWheelGuard(env,fn,context,(void *)(NBase()+0x1300d54));}
+uintptr_t AGViewerConnection(void *env,int variant){
+    NJob probe={.variant=variant};
+    return NRun(env,NNative,&probe)>0?probe.connection:0;
+}
+int AGViewerSend(void *env,int variant,uintptr_t connection,int command,const uint8_t *bytes,size_t length){
+    if(!connection || !bytes || !((command==7 && length==1) || (command==-102 && (length==12 || length==14))))return 0;
+    NJob job={.variant=variant,.command=command,.expected=connection,.length=length};
+    memcpy(job.bytes,bytes,length);
+    return NRun(env,NNative,&job)>0;
+}
 typedef struct {int variant,which;uintptr_t dialog;} NCallbackJob;
 static int NCallback(void *env,void *context){
     NCallbackJob *j=context;uint8_t *c=NCanvas(j->variant);if(!c||*(uintptr_t *)(c+0x108)!=j->dialog)return 0;
@@ -82,6 +93,7 @@ static int NCallback(void *env,void *context){
     void (*invoke)(void *,void *)=(void *)(NBase()+AGNotesMaps[j->variant].callback);invoke(env,callback);return 1;
 }
 void AGNotesTick(void *env,int variant){
+    if(env&&variant>=0&&variant<6)AGViewerTick(env,variant);
     if(!env||variant<0||variant>=6||!atomic_load(&NInitialized))return;
     double now=NNow();int changed=0;NJob probe={.variant=variant};int connected=NRun(env,NNative,&probe);
     uint8_t *canvas=NCanvas(variant);int room=NRoom(variant);NCallbackJob cb={.variant=variant,.which=-1};NJob job={.variant=variant};uint64_t generation;

@@ -9,6 +9,7 @@
 #include "NotesMap.h"
 #include "TurnMap.h"
 #include "ShipTrace.h"
+#include "Spectator.h"
 extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
 typedef struct {
     uintptr_t connection;
@@ -44,6 +45,7 @@ static int airshipPart(const uint8_t *p){return p&&p[0x16c]>=17&&p[0x16c]<=21;}
 static int shortBE(const uint8_t *p){return (int16_t)((p[0]<<8)|p[1]);}
 __attribute__((visibility("default"))) int AGCorpseReceive(void *env,void *message,int v){
     if(!env||!message||v<0||v>=6)return 0;
+    if(AGViewerReceive(env,message,v))return 1;
     AGShipTraceReceive(env,message,v);
     int command=*(int8_t *)((uint8_t *)message+0x30);
     if(command==20){pthread_mutex_lock(&corpseMutex);memset(motions[v],0,sizeof(motions[v]));pthread_mutex_unlock(&corpseMutex);return 0;}

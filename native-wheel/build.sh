@@ -14,9 +14,9 @@ sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
 xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=12.0 \
   -dynamiclib -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wall -Wextra \
   -Wno-unused-parameter -Wno-deprecated-declarations -Wno-unused-function \
-  -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
+  -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics -framework WebKit \
   -Wl,-headerpad,4000 -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
-  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c Stats.c ShipTraceDisabled.c NativeGuard.S \
+  AGWheel.m Spectator.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c Stats.c ShipTraceDisabled.c NativeGuard.S \
   -o build/AGWheel.dylib
 codesign --force --sign - --timestamp=none build/AGWheel.dylib
 codesign --verify --strict --verbose=2 build/AGWheel.dylib 2>build/code-signing.txt
@@ -63,9 +63,9 @@ cp captcha-preview-fixtures.json build/WheelPreview.app/
 xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -mios-simulator-version-min=16.0 -DAG_WHEEL_PREVIEW=1 -dynamiclib \
   -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wno-deprecated-declarations \
-  -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
+  -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics -framework WebKit \
   -Wl,-headerpad,4000 -Wl,-install_name,@rpath/libAGWheelPreview.dylib \
-  AGWheel.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c Stats.c ShipTrace.c AirshipDiagnostics.m \
+  AGWheel.m Spectator.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c BattleWait.c Corpse.c Stats.c ShipTrace.c AirshipDiagnostics.m \
   -o build/WheelPreview.app/Frameworks/libAGWheelPreview.dylib
 xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -mios-simulator-version-min=16.0 -fobjc-arc -fblocks -O1 -framework UIKit \
