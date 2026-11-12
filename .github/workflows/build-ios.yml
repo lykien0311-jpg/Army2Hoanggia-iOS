@@ -15,10 +15,14 @@ jobs:
     if: github.ref_name == 'qa/ios-274-aura' || github.head_ref == 'qa/ios-274-aura'
     runs-on: macos-15
     timeout-minutes: 30
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - run: bash native-wheel/build_framework.sh
       - uses: actions/upload-artifact@v4
+        id: framework_artifact
+        continue-on-error: true
         with:
           name: Army2Hoanggia-QA-native-framework
           path: |
@@ -36,11 +40,30 @@ jobs:
           gh release download qa-input-269 --repo "$GITHUB_REPOSITORY" --pattern Army2HoangGiaTF.ipa --dir "$RUNNER_TEMP"
           python3 native-wheel/package_269.py "$RUNNER_TEMP/Army2HoangGiaTF.ipa" native-wheel/build/AGWheel-framework.zip native-wheel/build/Army2HoangGia-QA274-unsigned.ipa --build 274
       - uses: actions/upload-artifact@v4
+        id: ipa_artifact
+        if: steps.framework_artifact.outcome == 'success'
+        continue-on-error: true
         with:
           name: Army2HoangGia-QA274-unsigned-IPA
           path: native-wheel/build/Army2HoangGia-QA274-unsigned.ipa
           if-no-files-found: error
           retention-days: 14
+      - name: Retain QA framework if Actions artifact storage is unavailable
+        if: steps.framework_artifact.outcome == 'failure' || steps.ipa_artifact.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" = true
+          cd native-wheel/build
+          zip -q -j "$RUNNER_TEMP/qa-framework-result.zip" AGWheel-framework.zip build-info.json ui-check.json captcha-ui-check.json viewer-result.txt
+          python3 - "$RUNNER_TEMP/qa-framework-result.zip" > "$RUNNER_TEMP/qa-framework-blob.json" <<'PY'
+          import base64, json, sys
+          from pathlib import Path
+          content = base64.b64encode(Path(sys.argv[1]).read_bytes()).decode('ascii')
+          print(json.dumps({'encoding': 'base64', 'content': content}))
+          PY
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/blobs" --input "$RUNNER_TEMP/qa-framework-blob.json" --jq '"QA_FRAMEWORK_BLOB=" + .sha'
+          shasum -a 256 "$RUNNER_TEMP/qa-framework-result.zip"
   compatibility:
     if: github.ref_name != 'qa/ios-274-aura' && github.head_ref != 'qa/ios-274-aura'
     runs-on: ubuntu-24.04
