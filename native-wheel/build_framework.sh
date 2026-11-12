@@ -37,7 +37,7 @@ plist=dict(CFBundleDevelopmentRegion='en',CFBundleExecutable='AGWheel',
 Path('build/QA/AGWheel.framework/Info.plist').write_bytes(plistlib.dumps(plist,fmt=plistlib.FMT_BINARY))
 PY
 xcrun install_name_tool -id '@rpath/AGWheel.framework/AGWheel' "$framework/AGWheel"
-xcrun lipo -verify_arch arm64 "$framework/AGWheel"
+xcrun lipo "$framework/AGWheel" -verify_arch arm64
 test "$(xcrun otool -D "$framework/AGWheel" | tail -1)" = '@rpath/AGWheel.framework/AGWheel'
 codesign --force --sign - --timestamp=none "$framework"
 codesign --verify --strict --verbose=2 "$framework"
