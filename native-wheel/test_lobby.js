@@ -104,7 +104,7 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await open('market',6);
  const stock=w().byte(1).utf('test-stock-token').byte(0).short(22);for(let i=0;i<22;i++)item(stock,i);
  await page.evaluate(b=>receiveFrame(-121,b),Buffer.from(stock.bytes).toString('base64'));
- await page.evaluate(()=>market.stock.push({key:'M:1',category:'Ngọc',nv:-1,equipment:false,quantity:2},{key:'M:105',category:'Đá',nv:-1,equipment:false,quantity:2}));
+ await page.evaluate(()=>market.stock.push({key:'M:1',name:'Ngọc 1',category:'Ngọc',nv:-1,equipment:false,quantity:2,icon:[],detail:'',enhancement:0},{key:'M:105',name:'Đá 6',category:'Đá',nv:-1,equipment:false,quantity:2,icon:[],detail:'',enhancement:0}));
  assert.deepEqual(await page.evaluate(()=>currentItems().slice(-2).map(x=>x.category)),['Ngọc','Đá'],'Stock groups follow the native chest after equipment');
  await page.evaluate(()=>market.stock.splice(-2));
  assert.deepEqual(await page.evaluate(()=>market.stock[16].sprite),[6,1,0]);
