@@ -58,6 +58,8 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await soft(-6);
  assert.deepEqual(await labels(),['Lọc','Gian hàng','Rương gian hàng','Đồ của tôi']);
  await back();
+ const frameBeforeExit=await page.evaluate(()=>PixelUI.frame);
+ await page.waitForFunction(frame=>PixelUI.frame>frame,frameBeforeExit);
  await page.mouse.click(370,580);
  await page.waitForFunction(()=>sent.at(-1)?.[0]==='close');
  assert.equal(await page.evaluate(()=>waiting),false,'Touch exits while browse is pending');

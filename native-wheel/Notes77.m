@@ -89,7 +89,8 @@ int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uin
     else if(command==-120){if(length<9||length>18||memcmp(bytes,"CT46",4)||bytes[4]<1||bytes[4]>6)return 0;}
     else if(command==-14){if(length!=2||bytes[0]!=3||bytes[1]>9)return 0;}
     else if(command==5){
-        if(length<7||length>366||bytes[0]&128||!(bytes[0]|bytes[1]|bytes[2]|bytes[3])||
+        uint32_t recipient=length>=4?((uint32_t)bytes[0]<<24)|((uint32_t)bytes[1]<<16)|((uint32_t)bytes[2]<<8)|bytes[3]:0;
+        if(length<7||length>306||recipient<=2||recipient>INT32_MAX||
            (size_t)((bytes[4]<<8)|bytes[5])!=length-6)return 0;
     }
     else return 0;

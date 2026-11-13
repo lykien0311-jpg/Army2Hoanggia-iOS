@@ -67,7 +67,7 @@ function edit(title,[field],submit){
     input.type=field.type||'text';
     input.autocomplete='off';
     input.inputMode=field.type?'text':'numeric';
-    input.maxLength=field.max?String(field.max).length:field.type==='password'?40:120;
+    input.maxLength=field.max?String(field.max).length:field.type==='password'?40:100;
     input.value=field.value??'';
     form.append(input);
     const complete=editSubmit=()=>guard(()=>{
@@ -120,8 +120,16 @@ function sell(item){
         });
     });
 }
-function messagePlayer(){const person=reply?.rows?.[focus];if(!person)return;edit('Nhắn tin: '+person.name,[{label:'Nội dung',type:'text'}],([text])=>{text=text.trim();if(!text||text.length>120)throw Error('Nhập từ 1 đến 120 ký tự');send(5,()=>new ArmyWriter().int(person.id).utf(text).bytes);});}
-window.lobbyMessageSent=()=>{unlock();status('Đã gửi tin nhắn.');};
+function messagePlayer(){
+    const person=reply?.rows?.[focus];
+    if(!person||person.id<=2)return;
+    edit('Nhắn tin: '+person.name,[{type:'text'}],([text])=>{
+        text=text.trim();
+        if(!text||text.length>100)throw Error('Nhập từ 1 đến 100 ký tự');
+        send(5,()=>new ArmyWriter().int(person.id).utf(text).bytes);
+    });
+}
+window.lobbyMessageSent=()=>{unlock();status('Đã gửi yêu cầu nhắn tin.');};
 function currentItems(){
     const items=view==='stock'?market.stock:market.list;
     const now=Date.now();
