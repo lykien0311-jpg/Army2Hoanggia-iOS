@@ -1,0 +1,65 @@
+name: Build Army2 iOS 278
+on:
+  push:
+    branches: [qa/ios-278-notes]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: game-ui-278
+  cancel-in-progress: true
+jobs:
+  framework:
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash native-wheel/build_framework.sh
+      - uses: actions/upload-artifact@v4
+        id: artifact
+        continue-on-error: true
+        with:
+          name: Army2Hoanggia-B278-framework
+          path: |
+            native-wheel/build/AGWheel-framework.zip
+            native-wheel/build/build-info.json
+            native-wheel/build/viewer-result.txt
+          retention-days: 7
+      - name: Retain signed framework changes if artifact quota is unavailable
+        if: steps.artifact.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          from hashlib import sha256
+          import json
+          from zipfile import ZipFile, ZIP_DEFLATED
+          root = 'AGWheel.framework/'
+          changed = {'AGWheel', 'Info.plist', '_CodeSignature/CodeResources',
+                     'viewer/lobby.js', 'viewer/market.js', 'viewer/pixel-ui.js'}
+          with ZipFile('native-wheel/build/AGWheel-framework.zip') as archive, \
+               ZipFile('native-wheel/build/framework-delta.zip', 'w', ZIP_DEFLATED) as delta:
+              manifest = {}
+              for name in archive.namelist():
+                  if name.endswith('/'):
+                      continue
+                  data = archive.read(name)
+                  manifest[name] = sha256(data).hexdigest()
+                  if name.removeprefix(root) in changed:
+                      delta.writestr(name, data)
+              delta.writestr('framework-sha256.json', json.dumps(manifest, sort_keys=True))
+          PY
+          python3 native-wheel/retain_build.py B278_FRAMEWORK native-wheel/build/framework-delta.zip
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node native-wheel/test_lobby.js

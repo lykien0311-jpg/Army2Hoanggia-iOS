@@ -2,7 +2,7 @@
 const field=new ArmyBattlefield(),market=new ArmyMarket(),ui=PixelUI;
 const names=['Gunner','Miss 6','Electrician','King Kong','Rocketer','Granos','Chicky','Tarzan','Apache','Magenta'];
 let tab='',view='board',reply=null,focus=0,scroll=0,waiting=false,timeout,notice='',menuItems=null,menuFocus=0,eventRequest=0,filter=-1,modal=null,editSubmit=null,profileFocus=0,ownId=0,ownRank=0,character=-1,closed=false;
-let balance='';
+let balance='',fieldResult=null;
 const icons=new Map();
 function bytes64(bytes){return btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));}
 function status(message){notice=String(message);document.getElementById('status').textContent=notice;}
@@ -23,11 +23,11 @@ function board(){send(-120,()=>field.request(1));}
 function browse(page=0,character=filter,own=false){send(-121,()=>market.browse(page,character,own));}
 function stock(){send(-121,()=>market.inventory());}
 function eventRank(page=0){send(-14,()=>[3,page]);eventRequest=page;}
-function openTab(name,selected=-1,serial=0){
+function openTab(name,selected=-1,serial=0,outcome=null){
     if(tab||closed)return;
     reset(name);
     character=selected;
-    if(name==='field'){field.serial=serial;board();}
+    if(name==='field'){field.serial=serial;fieldResult=outcome;board();}
     else if(name==='event')eventRank();
     else browse();
 }
@@ -40,7 +40,7 @@ function challenge(){
         status('Hạng này không thể thách đấu.');
         return;
     }
-    modal={title:'Thách đấu hạng #'+row.rank+'?',lines:[row.name],yes:'Có',no:'Không',confirm:()=>{
+    modal={title:'Thách đấu hạng #'+row.rank+'?',lines:[row.name],yes:'Đồng ý',no:'Hủy',confirm:()=>{
         modal=null;
         send(-120,()=>field.request(3,row));
     }};
@@ -188,7 +188,7 @@ function drawField(){ui.heading(view==='board'?'Chiến trường':view==='profi
   const start=top.length?215:72,bottom=ui.height-64,capacity=Math.max(1,Math.floor((bottom-start)/37)),index=rest.indexOf(boardRows[focus]);if(index>=0){if(index<scroll)scroll=index;if(index>=scroll+capacity)scroll=index-capacity+1;}if(top.length)ui.text('...',160,190,{align:'center',scale:.8});
   rest.slice(scroll,scroll+capacity).forEach((r,i)=>{const y=start+i*37,index=boardRows.indexOf(r);row(r,y,focus===index);ui.zone(0,y,320,36,()=>{focus=index;});});
   if(!boardRows.length&&!waiting)ui.text('Chưa có người chơi.',160,95,{align:'center'});
-  if(field.self){const self=field.self,y=ui.height-62;ui.rect(0,y,320,38,'#9be0ef');ui.avatar(self,21,y+34);ui.text(self.name,42,y+2,{max:190});ui.text('Lv '+self.level+' '+self.percent+'%',42,y+15,{scale:.85,max:190});ui.rank(self.rank,316,y+3,28);}
+  if(field.self){const self=field.self,y=ui.height-62;ui.rect(0,y,320,38,'#9be0ef');ui.avatar(self,21,y+34);ui.text(self.name+' (Bạn)',42,y+2,{max:190});ui.text('Lv '+self.level+' '+self.percent+'%',42,y+15,{scale:.85,max:190});ui.rank(self.rank,316,y+3,28);}
   ui.footer('Menu','Thách đấu','Đóng',fieldMenu,()=>guard(challenge),close);
  }else if(view==='profile'&&reply){drawProfile();ui.footer('Menu','Chọn','Đóng',fieldMenu,profileDetails,fieldBack);}
  else{
@@ -219,6 +219,35 @@ function drawProfile(){const r=reply,gear=r.items.concat(r.display?.outfit||[]),
 }
 function itemImage(item,x,y,side){if(item.icon.length&&!icons.has(item.key)){const im=new Image();im.src='data:image/png;base64,'+bytes64(item.icon);icons.set(item.key,im);}const im=icons.get(item.key);if(im?.complete&&im.naturalWidth){const size=Math.min(15,side-8),scale=Math.min(size/im.width,size/im.height);ui.g.drawImage(im,Math.round(x+(side-im.width*scale)/2),Math.round(y+(side-im.height*scale)/2),im.width*scale,im.height*scale);}else ui.text(item.name,x+side/2,y+10,{align:'center',max:side-4});
  const up=item.enhancement||0;if(up){const rgb=up<=4?'#164dff':up<=8?'#00b300':up<=11?'#ff7f00':up<=14?'#ce00ff':'#ff0019';ui.text('+'+up,x+2,y+1,{color:rgb,scale:.75,shadow:true});if(up>=12){for(let i=0;i<4;i++){const a=ui.frame*.15+i*Math.PI/2,xx=x+side/2+Math.cos(a)*(side/2-3),yy=y+side/2+Math.sin(a)*(side/2-3);ui.rect(xx-2,yy,5,1,rgb);ui.rect(xx,yy-2,1,5,'#fff');}}}if(item.quantity>1)ui.text(item.quantity,x+side-2,y+side-10,{align:'right',color:'#fff27a',shadow:true,max:side-4,scale:.65});}
+function inventoryIcon(item,x,y,side){
+    const cx=x+Math.floor(side/2),cy=y+Math.floor(side/2);
+    const up=item.enhancement;
+    if(up>=15)ui.rect(cx-7,cy-6,14,14,'#750919');
+    let w=13,h=13;
+    const drawn=item.sprite&&ui.gearIcon(...item.sprite,cx,cy,13);
+    if(!drawn){
+        if(item.icon.length&&!icons.has(item.key)){
+            const icon=new Image();
+            icon.src='data:image/png;base64,'+bytes64(item.icon);
+            icons.set(item.key,icon);
+        }
+        const im=icons.get(item.key);
+        if(im?.complete&&im.naturalWidth){
+            const scale=Math.min(1,13/Math.max(im.width,im.height));
+            w=Math.max(1,Math.round(im.width*scale));
+            h=Math.max(1,Math.round(im.height*scale));
+            ui.g.drawImage(im,cx-Math.floor(w/2),cy-Math.floor(h/2),w,h);
+        }else if(!item.icon.length){
+            ui.text(item.name,cx,cy-5,{align:'center',max:side-4,scale:.65});
+        }
+    }
+    if(up)ui.text('+'+up,cx+5,cy-8,{color:'#fff',scale:.65,shadow:true});
+    if(item.quantity>1){
+        const left=cx+Math.floor(w/2)-3;
+        ui.text(String(item.quantity),left,cy+Math.floor(h/2)-2,
+            {color:'#f5d452',shadow:true,max:x+side-left-1,scale:.62});
+    }
+}
 function drawMarket(){
     ui.panel(view==='stock'?'Rương gian hàng':market.own?'Đồ của tôi':'Gian hàng');
     const items=currentItems(),cell=41,capacity=Math.max(1,Math.floor((ui.height-124)/cell));
@@ -229,7 +258,8 @@ function drawMarket(){
     items.slice(scroll*7,(scroll+capacity)*7).forEach((item,i)=>{
         const x=17+i%7*cell,y=58+Math.floor(i/7)*cell,index=scroll*7+i;
         if(index===focus)ui.rect(x,y,cell-2,cell-2,'#ffde4d');
-        itemImage(item,x,y,cell-2);
+        if(view==='stock')inventoryIcon(item,x,y,cell-2);
+        else itemImage(item,x,y,cell-2);
         ui.zone(x,y,cell,cell,()=>{if(focus===index)guard(marketSelect);else focus=index;});
     });
     if(!items.length&&!waiting)ui.text('Chưa có vật phẩm.',160,67,{align:'center'});
@@ -329,7 +359,14 @@ window.receiveFrame=(cmd,encoded,auras=[])=>{
             if(r.type==='notice'){status(r.text);return;}
             if(['board','profile','matches','history'].includes(r.type)){
                 reply=r;
-                if(r.type==='board'){ownId=r.id;ownRank=r.rank;}
+                if(r.type==='board'){
+                    ownId=r.id;ownRank=r.rank;
+                    if(fieldResult!==null){
+                        const result=fieldResult===1?'Chiến thắng':fieldResult===-1?'Thua trận':fieldResult===0?'Hòa':'Trận bị gián đoạn';
+                        modal={title:'Chiến trường',lines:[result]};
+                        fieldResult=null;
+                    }
+                }
                 view=r.type;focus=scroll=profileFocus=0;
             }
         }

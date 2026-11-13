@@ -34,7 +34,9 @@ function marketItem(r) {
     const enhancement=meta&&Number.isInteger(meta[4])&&meta[4]>=0&&meta[4]<=16?meta[4]:0;
     const equipment=meta?.[0]===1||nv>=0;
     const expiresAt=meta&&Number.isSafeInteger(meta[5])&&meta[5]>=0?Date.now()+meta[5]:0;
-    return {key,name,category,nv,quantity,price,seller,equipment,enhancement,expiresAt,detail:description.split('\u001e')[0],icon};
+    const sprite=meta?.[0]===1&&meta[1]===nv&&Number.isInteger(meta[2])&&Number.isInteger(meta[3])
+        ? [nv,meta[2],meta[3]] : null;
+    return {key,name,category,nv,quantity,price,seller,equipment,enhancement,expiresAt,sprite,detail:description.split('\u001e')[0],icon};
 }
 class ArmyMarket {
     constructor(){this.list=[];this.stock=[];this.token='';this.staging=null;this.pending=false;this.own=false;}

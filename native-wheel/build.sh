@@ -36,6 +36,7 @@ for name in ('AGWheelOpen','AGWheelTick','AGWheelReceive','AGRoomReceive','AGRoo
 assert 'AGWheelPreview' not in exports,'Simulator fixtures in device dylib'
 assert '_AGReleaseIdentity' in exports and b'2.4.1-B275-IPA\0' in p.read_bytes()
 assert '_AGBossNativeHook' in exports
+assert '_AGSceneHook' in exports
 assert '_AGUfoDiagnosticsGet' in exports
 assert '_AGShipTraceGet' in exports
 assert '_AGStatsApply' in exports

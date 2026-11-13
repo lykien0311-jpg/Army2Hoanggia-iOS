@@ -70,21 +70,29 @@ int AGAuraRank(int v,uintptr_t connection,uint32_t id,unsigned hero) {
     return aura;
 }
 
+int AGAuraPaintCode(int v,uint32_t id,unsigned hero,int inScene) {
+    if(v<0||v>=6||!id||id>INT32_MAX||hero>=10)return 0;
+    pthread_mutex_lock(&lock);
+    int aura=AGAuraLookup(&states[v],id,hero,inScene);
+    pthread_mutex_unlock(&lock);
+    return aura;
+}
+
+int AGAuraPaintFrame(void) {
+    return (int)((uint64_t)(now()/0.042)&63);
+}
+
 typedef void (*Painter)(void *,void *,void *);
-extern int AGAuraSpritePaint(void *,void *,int,int,int,int,int,int);
 __attribute__((visibility("default"))) void AGAuraPaintActor(void *env,uint8_t *actor,uint8_t *graphics,int v,Painter nativePaint) {
     if(AGBossPaintActor(env,actor,graphics,v))return;
     const uint32_t id=*(uint32_t *)(actor+0x7c);
     const unsigned hero=actor[0x16c];
     int aura=0;
-    if(hero<10 && id && id<=INT32_MAX && actor[0x159] && *(int64_t *)(actor+0x68)>0){
-        pthread_mutex_lock(&lock);
-        aura=AGAuraLookup(&states[v],id,hero,1);
-        pthread_mutex_unlock(&lock);
-    }
+    if(actor[0x159] && *(int64_t *)(actor+0x68)>0)
+        aura=AGAuraPaintCode(v,id,hero,1);
     if(!aura){nativePaint(env,actor,graphics);return;}
     const int x=*(int *)(actor+0x114),y=*(int *)(actor+0x118);
-    const int frame=(int)((uint64_t)(now()/0.042)&63);
+    const int frame=AGAuraPaintFrame();
     AGAuraSpritePaint(env,graphics,x,y,aura>>5,aura&31,0,frame);
     nativePaint(env,actor,graphics);
     AGAuraSpritePaint(env,graphics,x,y,aura>>5,aura&31,1,frame);

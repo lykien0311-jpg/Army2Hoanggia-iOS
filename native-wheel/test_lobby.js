@@ -8,15 +8,15 @@ const {ArmyWriter}=require('./viewer/market.js');
 const root=path.join(__dirname,'build');fs.mkdirSync(root,{recursive:true});
 const w=()=>new ArmyWriter();
 const png=fs.readFileSync(path.join(__dirname,'viewer/art/b.png'));
-function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte(i%10).int(123+i).long(100000).utf('QA').utf('Đồ thử\u001e119,1,0,1,0,'+(i%17)).short(png.length);for(const b of png)out.byte(b);}
+function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte(i%10).int(123+i).long(100000).utf('QA').utf('Đồ thử\u001e119,1,'+(i%10)+',1,0,'+(i%17)).short(png.length);for(const b of png)out.byte(b);}
 (async()=>{
  const browser=await chromium.launch({args:['--no-sandbox'],executablePath:process.env.ARMY2_CHROMIUM});
  const page=await browser.newPage({viewport:{width:390,height:592},deviceScaleFactor:2});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(()=>{window.sent=[];window.webkit={messageHandlers:{lobby:{postMessage:a=>sent.push(a)}}};});
- async function open(name, character=-1){
+ async function open(name, character=-1, result=null){
   await page.goto(pathToFileURL(path.join(__dirname,'viewer/lobby.html')).href);
-  await page.evaluate(([tab,hero])=>openTab(tab,hero),[name,character]);
+  await page.evaluate(([tab,hero,result])=>openTab(tab,hero,0,result),[name,character,result]);
  }
  const labels=()=>page.evaluate(()=>menuItems?.map(item=>item[0]));
  const back=()=>page.evaluate(()=>lobbyKey(-22));
@@ -38,6 +38,7 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await back();
  await soft(-5);
  assert.equal(await page.evaluate(()=>modal.title),'Thách đấu hạng #1?');
+ assert.deepEqual(await page.evaluate(()=>[modal.yes,modal.no]),['Đồng ý','Hủy']);
  assert.equal(await page.evaluate(()=>sent.length),1,'Opening confirmation must not send a challenge');
  await back();
  await page.evaluate(()=>profile());
@@ -54,6 +55,11 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await back();
  await back();
  assert.deepEqual(await page.evaluate(()=>sent.at(-1)),['close',0],'A list back first returns to the board and then the native submenu');
+ await open('field',-1,-1);
+ await page.evaluate(b=>receiveFrame(-120,b),Buffer.from(board.bytes).toString('base64'));
+ assert.deepEqual(await page.evaluate(()=>[view,modal.lines[0]]),['board','Thua trận']);
+ await soft(-5);
+ assert.equal(await page.evaluate(()=>modal),null);
  await open('market',6);
  await soft(-6);
  assert.deepEqual(await labels(),['Lọc','Gian hàng','Rương gian hàng','Đồ của tôi']);
@@ -85,6 +91,8 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await open('market',6);
  const stock=w().byte(1).utf('test-stock-token').byte(0).short(22);for(let i=0;i<22;i++)item(stock,i);
  await page.evaluate(b=>receiveFrame(-121,b),Buffer.from(stock.bytes).toString('base64'));
+ assert.deepEqual(await page.evaluate(()=>market.stock[16].sprite),[6,1,0]);
+ assert.equal(await page.evaluate(()=>market.stock[16].enhancement),16);
  await page.evaluate(()=>lobbyBalance('520490301781','49618047296'));
  assert.equal(await page.evaluate(()=>balance),'Tiền: 520490301781 xu - 49618047296 lượng');
  await page.waitForTimeout(300);await page.screenshot({path:path.join(root,'lobby-market.png')});

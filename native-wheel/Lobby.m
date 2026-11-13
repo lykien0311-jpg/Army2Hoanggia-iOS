@@ -21,6 +21,7 @@
 @property(nonatomic) int command;
 @property(nonatomic) uint32_t watchSerial;
 @property(nonatomic) uint32_t challengeSerial;
+@property(nonatomic) int fieldResult;
 @property(nonatomic) BOOL closing;
 @property(nonatomic,strong) NSData *outgoing;
 - (void)open;
@@ -32,8 +33,11 @@ static unsigned char held[6][256],pointer[6];
 static BOOL opening;
 static uintptr_t connections[6];
 static uintptr_t battlefield[6];
+static uintptr_t returnToBoard[6];
+static int fieldResult[6];
 static uint32_t nextFieldSerial;
 static AGLobby *activePanel;
+enum { NoFieldResult = 256 };
 
 static NSString *eventAuras(NSData *body,int variant,uintptr_t connection){
     const uint8_t *p=body.bytes;
@@ -80,7 +84,7 @@ int AGLobbyInput(int variant,int kind,int code,int b){
     return consumed;
 }
 
-__attribute__((visibility("default"))) void AGLobbyOpenNative(void *env,int variant,int tab){
+static void openLobby(void *env,int variant,int tab,int outcome){
     if(!env||variant<0||variant>=6||tab<AGLobbyField||tab>AGLobbyEvent)return;
     uintptr_t connection=AGViewerConnection(env,variant);
     if(!connection)return;
@@ -100,26 +104,39 @@ __attribute__((visibility("default"))) void AGLobbyOpenNative(void *env,int vari
     dispatch_async(dispatch_get_main_queue(),^{
         AGLobby *lobby=[AGLobby new];
         lobby.variant=variant;lobby.connection=connection;lobby.tab=tab;
-        lobby.account=account;lobby.firstSerial=serial;
+        lobby.account=account;lobby.firstSerial=serial;lobby.fieldResult=outcome;
         [lobby open];
     });
 }
 
+__attribute__((visibility("default"))) void AGLobbyOpenNative(void *env,int variant,int tab){
+    openLobby(env,variant,tab,NoFieldResult);
+}
+
 // The game thread owns the connection. UIKit enqueues requests against it.
 void AGLobbyTick(void *env,int v,uintptr_t connection){
-    AGLobby *active;NSData *body;int cmd=0;
+    AGLobby *active;NSData *body;int cmd=0,outcome=NoFieldResult;
+    BOOL reopen=NO;
     @synchronized(AGLobby.class){
         connections[v]=connection;
         if(battlefield[v]!=connection)battlefield[v]=0;
+        if(returnToBoard[v]!=connection)returnToBoard[v]=0;
         active=activePanel;
-        if(!active||active.variant!=v||active.closing)return;
-        if(active.connection!=connection){
+        if(!active&&!opening&&returnToBoard[v]){
+            reopen=YES;
+            outcome=fieldResult[v];
+            returnToBoard[v]=0;
+        }
+        if(active&&active.variant==v&&!active.closing&&active.connection!=connection){
             active.closing=YES;
             dispatch_async(dispatch_get_main_queue(),^{[active close];});
             return;
         }
-        body=active.outgoing;cmd=active.command;active.outgoing=nil;
+        if(active&&active.variant==v&&!active.closing){
+            body=active.outgoing;cmd=active.command;active.outgoing=nil;
+        }
     }
+    if(reopen)openLobby(env,v,AGLobbyField,outcome);
     if(body && !AGLobbySend(env,v,connection,cmd,body.bytes,body.length)){
         dispatch_async(dispatch_get_main_queue(),^{[active close];});
     }else if(body&&cmd==5){
@@ -163,18 +180,10 @@ int AGLobbyReceive(void *env,void *message,int v){
     }
     if(cmd==-14&&p[0]!=3)return 0;
     if(fight==connection && cmd==-120 && (body.length==9||body.length==10) && !memcmp(p,"CT46\x08\0\0\0\0",9)){
-        @synchronized(AGLobby.class){battlefield[v]=0;}
-        if(body.length==10){
-            int outcome=(int8_t)p[9];
-            NSString *text=outcome==1?@"Chiến thắng":outcome==-1?@"Thua trận":outcome==0?@"Hòa":@"Trận bị gián đoạn";
-            dispatch_async(dispatch_get_main_queue(),^{
-                UIViewController *top=UIApplication.sharedApplication.keyWindow.rootViewController;
-                while(top.presentedViewController)top=top.presentedViewController;
-                if(!top)return;
-                UIAlertController *result=[UIAlertController alertControllerWithTitle:@"Chiến trường" message:text preferredStyle:UIAlertControllerStyleAlert];
-                [result addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                [top presentViewController:result animated:YES completion:nil];
-            });
+        @synchronized(AGLobby.class){
+            battlefield[v]=0;
+            returnToBoard[v]=connection;
+            fieldResult[v]=body.length==10?(int8_t)p[9]:NoFieldResult;
         }
         return 1;
     }
@@ -258,8 +267,9 @@ int AGLobbyReceive(void *env,void *message,int v){
     if(web!=self.web||self.loaded)return;
     NSString *tab=self.tab==AGLobbyField?@"field":self.tab==AGLobbyMarket?@"market":@"event";
     AGLobbyAccount account=self.account;
-    NSString *start=[NSString stringWithFormat:@"openTab('%@',%d,%u);lobbyBalance('%lld','%lld')",
-                     tab,account.character,self.firstSerial,(long long)account.xu,(long long)account.luong];
+    NSString *outcome=self.fieldResult==NoFieldResult?@"null":[NSString stringWithFormat:@"%d",self.fieldResult];
+    NSString *start=[NSString stringWithFormat:@"openTab('%@',%d,%u,%@);lobbyBalance('%lld','%lld')",
+                     tab,account.character,self.firstSerial,outcome,(long long)account.xu,(long long)account.luong];
     self.loaded=YES;
     [web evaluateJavaScript:start completionHandler:^(id value,NSError *error){if(error)[self close];}];
 }

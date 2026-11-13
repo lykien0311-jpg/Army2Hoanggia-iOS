@@ -9,6 +9,8 @@
 #include "BossNativeMap.h"
 #include "NotesMap.h"
 #include "TurnMap.h"
+#include "Aura.h"
+#include "StatsNativeMap.h"
 
 extern int AGWheelGuard(void *, int (*)(void *, void *), void *, void *);
 
@@ -558,4 +560,200 @@ __attribute__((visibility("default"))) int AGBossNativeHook(void *env, uintptr_t
     guarded(env, operation == PaintEffects ? renderEffects : renderBackground, &p);
     memcpy(p.g + 0x28, colors, sizeof colors);
     return 0;
+}
+
+enum { WaitRoomAssets, WaitRoomBoss, LocalAura, RoomPlayerAura };
+enum { Preview, Fire, Ice, WaitArtCount };
+
+typedef struct {
+    void *art[WaitArtCount];
+    void *name;
+    int width, height;
+} WaitRoomArt;
+typedef struct {
+    WaitRoomArt *art;
+    const uint8_t *png[WaitArtCount];
+    int length[WaitArtCount];
+    int map, width, height;
+} WaitArtJob;
+
+// Java draws the waiting room and its previews on the game render thread.
+static WaitRoomArt waitRoomArt[3];
+
+static int loadWaitArt(void *env, void *opaque) {
+    WaitArtJob *job = opaque;
+    WaitRoomArt result = { .width = job->width, .height = job->height };
+    void **jni = *(void ***)env;
+    const char *name = job->map == AGDragonMap ? "Thung Lũng Rồng" : "Đền Gương Vỡ";
+    void *javaName = ((void *(*)(void *, const char *))jni[167])(env, name);
+    result.name = javaName ? pin(env, javaName) : NULL;
+    if (javaName) ((void (*)(void *, void *))jni[23])(env, javaName);
+    for (int i = 0; i < WaitArtCount && result.name; ++i) {
+        if (!job->length[i]) continue;
+        void *picture = image(env, job->png[i], job->length[i]);
+        if (!picture || !(result.art[i] = pin(env, picture))) break;
+    }
+    if (!result.name || !result.art[Preview] || !result.art[Fire] ||
+        (job->map == AGDragonMap && !result.art[Ice])) {
+        unpin(env, result.name);
+        for (int i = 0; i < WaitArtCount; ++i) unpin(env, result.art[i]);
+        return 0;
+    }
+    *job->art = result;
+    return 1;
+}
+
+static WaitRoomArt *roomArt(void *env, int map, int width) {
+    const BOOL dragon = map == AGDragonMap, large = dragon && width >= 350;
+    WaitRoomArt *art = &waitRoomArt[dragon ? (large ? 1 : 0) : 2];
+    if (art->name) return art;
+    NSString *root = dragon ? @"BossMaps/dragon105" : @"BossMaps/mimic111";
+    NSArray<NSString *> *names = dragon ?
+        @[@"preview-map.png", large ? @"fire-160.png" : @"fire-100.png",
+                              large ? @"ice-160.png" : @"ice-100.png"] :
+        @[@"minimap.png", @"boss.png"];
+    __attribute__((objc_precise_lifetime)) NSMutableArray<NSData *> *data = [NSMutableArray array];
+    WaitArtJob job = { .map = map, .art = art, .width = large ? 160 : 100,
+                      .height = large ? 149 : 93 };
+    for (NSUInteger i = 0; i < names.count; ++i) {
+        NSData *png = asset(root, names[i]);
+        if (!png.length || png.length > 1024 * 1024) return NULL;
+        [data addObject:png];
+        job.png[i] = png.bytes;
+        job.length[i] = (int)png.length;
+    }
+    return guarded(env, loadWaitArt, &job) > 0 ? art : NULL;
+}
+
+typedef struct {
+    uint8_t *room;
+    WaitRoomArt *art;
+    uintptr_t namesGetter;
+    int index;
+} WaitPreview;
+
+static int arrayCount(uint8_t *array) {
+    return array ? *(int *)(array + 0x10) : 0;
+}
+
+static void **arrayItems(uint8_t *array) {
+    return (void **)(array + 0x18);
+}
+
+static uint8_t *withPreviewEntry(void *env, uint8_t *old, void *entry, int index) {
+    int count = arrayCount(old);
+    if (count < 0 || count > 256) return NULL;
+    if (count > index) {
+        if (arrayItems(old)[index] != entry)
+            ((void (*)(void *, void *, int, void *))(base() + 0x12e7f74))(env, old, index, entry);
+        return old;
+    }
+    void **jni = *(void ***)env;
+    void *example = entry;
+    for (int i = 0; i < count; ++i) {
+        if (arrayItems(old)[i]) { example = arrayItems(old)[i]; break; }
+    }
+    void *klass = ((void *(*)(void *, void *))jni[31])(env, example);
+    if (!klass) return NULL;
+    uint8_t *array = ((void *(*)(void *, int, void *, void *))jni[172])(env, 43, klass, NULL);
+    ((void (*)(void *, void *))jni[23])(env, klass);
+    if (!array) return NULL;
+    if (count) memcpy(arrayItems(array), arrayItems(old), (size_t)count * sizeof(void *));
+    arrayItems(array)[index] = entry;
+    return array;
+}
+
+static int installWaitPreview(void *env, void *opaque) {
+    WaitPreview *job = opaque;
+    uint8_t **thumbs = (uint8_t **)(job->room + 0xb0);
+    uint8_t *oldNames = ((void *(*)(void *))job->namesGetter)(env);
+    uint8_t *names = withPreviewEntry(env, oldNames, job->art->name, job->index);
+    if (!names) return 0;
+    if (names != oldNames) {
+        ((void (*)(void *, void *))(job->namesGetter + 0x3c))(env, names);
+        ((void (*)(void *, void *))(*(void ***)env)[23])(env, names);
+    }
+    uint8_t *oldThumbs = *thumbs;
+    uint8_t *updated = withPreviewEntry(env, oldThumbs, job->art->art[Preview], job->index);
+    if (!updated) return 0;
+    if (updated != oldThumbs) {
+        *thumbs = updated;
+        ((void (*)(void *, void *))(*(void ***)env)[23])(env, updated);
+    }
+    return 1;
+}
+
+typedef struct {
+    Paint paint;
+    WaitRoomArt *art;
+    int x, y;
+} WaitBoss;
+
+static int drawWaitBoss(void *env, void *opaque) {
+    WaitBoss *job = opaque;
+    if (job->paint.map == AGMimicMap) {
+        drawImage(env, &job->paint, job->art->art[Fire], job->x, job->y, 33);
+    } else {
+        const int width = job->art->width, height = job->art->height;
+        const int frame = (int)(now() / 140 % 8), offset = width / 2 + 9;
+        region(env, &job->paint, job->art->art[Fire], width, height, frame, 1, job->x - offset, job->y);
+        region(env, &job->paint, job->art->art[Ice], width, height, frame, 0, job->x + offset, job->y);
+    }
+    return 1;
+}
+
+typedef void (*SpritePainter)(void *, void *, int, int, int, int, int, void *);
+typedef struct { int variant; uint32_t id; } LocalAuraPlayer;
+
+static int readLocalAuraPlayer(void *env, void *opaque) {
+    LocalAuraPlayer *job = opaque;
+    uint8_t *player = ((void *(*)(void *))(base() + AGStatsMaps[job->variant].player))(env);
+    job->id = player ? *(uint32_t *)(player + 0xb8) : 0;
+    return 1;
+}
+
+__attribute__((visibility("default"))) void AGSceneHook(void *env, void *graphics, int hero, int pose,
+    int x, int y, int mode, void *costume, uintptr_t hook, uintptr_t original, uintptr_t data) {
+    const int v = (int)(hook >> 4), operation = (int)(hook & 15);
+    if (operation == WaitRoomAssets) {
+        ((void (*)(void *, void *))original)(env, graphics);
+        const int map = roomMap(v);
+        if (!map || !graphics) return;
+        int width = *(int *)((uint8_t *)graphics + 0x48);
+        WaitRoomArt *art = roomArt(env, map, width);
+        if (!art) return;
+        WaitPreview job = { .room = globals(AGNotesMaps[v].room_class), .art = art,
+                            .index = map == AGDragonMap ? 41 : 42, .namesGetter = data };
+        guarded(env, installWaitPreview, &job);
+        return;
+    }
+    SpritePainter paint = (SpritePainter)original;
+    if (operation == WaitRoomBoss) {
+        const int map = roomMap(v);
+        if (map && graphics) {
+            WaitRoomArt *art = roomArt(env, map, *(int *)((uint8_t *)graphics + 0x48));
+            if (art) {
+                WaitBoss job = { .paint = { .g = graphics, .map = map },
+                                 .art = art, .x = x, .y = y };
+                if (guarded(env, drawWaitBoss, &job) > 0) return;
+            }
+        }
+        paint(env, graphics, hero, pose, x, y, mode, costume);
+        return;
+    }
+    LocalAuraPlayer player = { .variant = v };
+    if (operation == RoomPlayerAura) {
+        if (data) player.id = *(uint32_t *)(data + 0xb8);
+    } else if (AGAuraKnown(v)) {
+        guarded(env, readLocalAuraPlayer, &player);
+    }
+    int aura = AGAuraPaintCode(v, player.id, (unsigned)hero, operation == RoomPlayerAura);
+    if (!aura) {
+        paint(env, graphics, hero, pose, x, y, mode, costume);
+        return;
+    }
+    const int frame = AGAuraPaintFrame();
+    AGAuraSpritePaint(env, graphics, x, y, aura >> 5, aura & 31, 0, frame);
+    paint(env, graphics, hero, pose, x, y, mode, costume);
+    AGAuraSpritePaint(env, graphics, x, y, aura >> 5, aura & 31, 1, frame);
 }
