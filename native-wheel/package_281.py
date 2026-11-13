@@ -31,3 +31,66 @@ if __name__=='__main__':
     import sys
     source,target=map(Path,sys.argv[1:]);target.write_bytes(patch(source.read_bytes()))
     print('B281 native rank hooks',sha256(target.read_bytes()).hexdigest())
+
+
+def strip_signature(blob):
+    """Use the same unsigned, ready-to-resign form as the supplied IPA."""
+    image=bytearray(blob);count,size=unpack_from('<II',blob,16);p=32;commands=[]
+    for _ in range(count):
+        command,length=unpack_from('<II',blob,p)
+        if command!=0x1d:commands.append(blob[p:p+length])
+        p+=length
+    header=b''.join(commands)
+    image[32:32+size]=header+bytes(size-len(header))
+    pack_into('<II',image,16,len(commands),len(header))
+    return bytes(image)
+
+
+def assemble(source,retained,target):
+    from copy import copy
+    import json,plistlib
+    from zipfile import ZipFile,ZipInfo,ZIP_DEFLATED
+    source,retained,target=map(Path,(source,retained,target))
+    assert sha256(source.read_bytes()).hexdigest()=='1fc2febe2519732728cc5e3ef58ff30839fe7f542883277a1ac55d22abbf67f5'
+    app='Payload/Army2Hoanggia.app/';fw=app+'Frameworks/';replaced={}
+    with ZipFile(source)as base,ZipFile(retained)as retained:
+        manifest=json.loads(retained.read('framework-sha256.json'))
+        for name,digest in manifest.items():
+            data=retained.read(name) if name in retained.namelist() else base.read(fw+name)
+            assert sha256(data).hexdigest()==digest,name
+            replaced[fw+name]=data
+        raw=replaced[fw+'AGWheel.framework/AGWheel']
+        assert b'_AGNativeWatchPacket\0' in raw and b'_AGSceneHook\0' in raw
+        assert raw[:8]==bytes.fromhex('cffaedfe0c000001')
+        replaced[fw+'AGWheel.framework/AGWheel']=strip_signature(raw)
+        info=plistlib.loads(base.read(app+'Info.plist'));assert info['CFBundleVersion']=='280'
+        info['CFBundleVersion']='281';replaced[app+'Info.plist']=plistlib.dumps(info,fmt=plistlib.FMT_BINARY)
+        old=base.read(app+'Army2Hoanggia');replaced[app+'Army2Hoanggia']=patch(old)
+        # No original byte outside the six row calls and their new shims changes.
+        allowed=set()
+        for v,site in enumerate(SITES):
+            allowed.update(range(site,site+4));a=FILE+0x1000+v*32;allowed.update(range(a,a+20))
+        assert all(i in allowed for i,(a,b)in enumerate(zip(old,replaced[app+'Army2Hoanggia']))if a!=b)
+        target.parent.mkdir(parents=True,exist_ok=True);assert not target.exists()
+        with ZipFile(target,'w',ZIP_DEFLATED,compresslevel=6)as out:
+            for entry in base.infolist():
+                name=entry.filename
+                if '/_CodeSignature/' in name or name.endswith('embedded.mobileprovision') or name.startswith(fw+'AGWheel.framework/'):continue
+                out.writestr(copy(entry),replaced.pop(name) if name in replaced else base.read(name))
+            for name,data in replaced.items():
+                if '/_CodeSignature/' in name:continue
+                entry=ZipInfo(name);entry.create_system=3;entry.external_attr=(0o100755 if name.endswith('/AGWheel') else 0o100644)<<16;entry.compress_type=ZIP_DEFLATED
+                out.writestr(entry,data)
+    with ZipFile(target)as z,ZipFile(source)as base:
+        assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))
+        assert plistlib.loads(z.read(app+'Info.plist'))['CFBundleVersion']=='281'
+        for name in z.namelist():
+            if name not in (app+'Info.plist',app+'Army2Hoanggia') and not name.startswith(fw+'AGWheel.framework/'):
+                assert z.read(name)==base.read(name),name
+        for name in (app+'Army2Hoanggia',fw+'AGWheel.framework/AGWheel'):
+            b=z.read(name);n=unpack_from('<I',b,16)[0];p=32
+            for _ in range(n):
+                command,size=unpack_from('<II',b,p);assert command!=0x1d
+                if command==0x2c:assert unpack_from('<I',b,p+16)[0]==0
+                p+=size
+    print('Verified B281 IPA',target,sha256(target.read_bytes()).hexdigest())
