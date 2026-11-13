@@ -61,19 +61,36 @@ class ArmyBattlefield {
             const rank=r.i32(),name=r.utf(),level=r.i32(),character=r.utf(),abilities=ints(r);
             const items=Array.from({length:5},()=>gear(r));
             const avatar=look(r);
+            if(avatar.character>9||abilities.length<5)throw Error('Thông tin nhân vật không hợp lệ');
             let display=null;
             if(r.u8()){
                 display={percent:r.u8(),xu:readWallet(r),luong:readWallet(r),aura:r.i32()};
                 if(r.u8())display.outfit=gear(r);
             }
-            if(r.i32()!==1145394248||r.u8()!==6)throw Error('Chi tiết trang bị');
-            const details=Array.from({length:6},()=>r.u8()?{flat:ints(r),percent:ints(r),days:r.i32(),slots:r.u8()}:null);
-            const gems=[];
-            if(r.pos<bytes.length){
-                if(r.i32()!==1195724105||r.u8()!==6)throw Error('Chi tiết ngọc');
-                for(let i=0;i<6;i++)gems.push(Array.from({length:r.u8()},()=>({name:r.utf(),detail:r.utf()})));
+            const profile={type:'profile',rank,name,level,character,abilities,items,avatar,display,details:[],gems:[],icons:[]};
+            const seen=new Set();
+            while(r.pos<bytes.length){
+                const section=r.i32();
+                if(seen.has(section)||r.u8()!==6)throw Error('Thông tin trang bị không hợp lệ');
+                seen.add(section);
+                if(section===0x44455448){
+                    profile.details=Array.from({length:6},()=>r.u8()?{flat:ints(r),percent:ints(r),days:r.i32(),slots:r.u8()}:null);
+                }else if(section===0x47454d49){
+                    profile.gems=Array.from({length:6},()=>{
+                        const n=r.u8();
+                        if(n>8)throw Error('Số ô ngọc không hợp lệ');
+                        return Array.from({length:n},()=>({name:r.utf(),detail:r.utf()}));
+                    });
+                }else if(section===0x49434f4e){
+                    profile.icons=Array.from({length:6},()=>{
+                        const size=r.u16();
+                        if(size>4000)throw Error('Icon quá lớn');
+                        const start=r.take(size);
+                        return r.bytes.subarray(start,start+size);
+                    });
+                }else throw Error('Định dạng trang bị chưa hỗ trợ');
             }
-            r.end();return {type:'profile',rank,name,level,character,abilities,items,avatar,display,details,gems};
+            return profile;
         }
         if(op===4||op===5){
             const page=r.u16(),more=!!r.u8(),n=r.u8(),rows=[];

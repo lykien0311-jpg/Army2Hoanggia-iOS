@@ -29,10 +29,12 @@ assert.throws(()=>incomplete.receive(-102,tile));
 assert.throws(()=>new ArmySpectator().receive(-102,begin.subarray(0,12)));
 assert.throws(()=>game.receive(22,Buffer.from([0,1,2])));
 const reports = [], images = [];
+const phases=[];
 const screen = vm.createContext({
     window:{webkit:{messageHandlers:{viewer:{postMessage:message=>reports.push(message)}}}},
-    document:{querySelector:()=>({getContext:()=>({})}),getElementById:()=>({})},
-    requestAnimationFrame:()=>{},
+    document:{getElementById:()=>({}),createElement:()=>({getContext:()=>({drawImage(){}})})},
+    PixelUI:{start:renderer=>phases.push(renderer),g:{},canvas:{addEventListener(){}}},
+    addEventListener:()=>{},performance:{now:()=>0},
     URL:{createObjectURL:()=> 'blob:test',revokeObjectURL:()=>{}},
     Image:class { constructor(){images.push(this);} },
     Blob,atob,
@@ -41,11 +43,28 @@ for(const file of ['protocol.js','screen.js']) {
     vm.runInContext(fs.readFileSync(__dirname+'/viewer/'+file,'utf8'),screen,{filename:file});
 }
 screen.window.receiveArmyFrames(packets.map(([command,bytes])=>[command,bytes.toString('base64')]));
-assert.equal(images.length,52);
+const terrain=images.filter(image=>image.src==='blob:test');
+assert.equal(terrain.length,52);
 assert.deepEqual(reports,['ready']);
-for(const image of images.slice(0,-1)) image.onload();
+for(const image of terrain.slice(0,-1)) image.onload();
 assert.deepEqual(reports,['ready']);
-images.at(-1).onload();
-images.at(-1).onload();
+terrain.at(-1).onload();
+terrain.at(-1).onload();
 assert.deepEqual(reports,['ready','live']);
-console.log('PASS spectator: 2 fighters, 52 terrain tiles, live shot, invalid sequence, missing data, offsets and rendered-map acknowledgement');
+const {setWatchPhase,watchKey}=screen.window;
+setWatchPhase(0,'Khu vực đang chiến đấu bạn có muốn xem');
+watchKey(-7);
+watchKey(-6);
+assert.equal(reports.at(-1),'decline');
+setWatchPhase(0,'Khu vực đang chiến đấu bạn có muốn xem');
+watchKey(-6);
+assert.equal(reports.at(-1),'accept');
+setWatchPhase(0,'Khu vực đang chiến đấu bạn có muốn xem');
+watchKey(-5);
+assert.deepEqual(reports.slice(-3),['decline','accept','accept']);
+setWatchPhase(2,'');
+watchKey(-6);
+watchKey(-1);
+watchKey(-5);
+assert.equal(reports.at(-1),'leave');
+console.log('PASS spectator: terrain, fighters, shot, map acknowledgement, enter with left/OK, decline with right, leave through in-match menu');

@@ -1,99 +1,185 @@
 'use strict';
-const canvas = document.querySelector('canvas');
-const ctx = canvas.getContext('2d');
-const state = document.getElementById('state');
-const tiles = [], queue = [];
-let shot = null, failed = false, lastTime = 0, liveReported = false;
-const game = new ArmySpectator(tile => {
-    const image = new Image();
-    const url = URL.createObjectURL(new Blob([tile.bytes], {type:'image/png'}));
-    const entry = {image,x:tile.x,y:tile.y,ready:false};
-    tiles.push(entry);
-    image.onload = () => { URL.revokeObjectURL(url); entry.ready = true; reportLive(); };
-    image.onerror = () => { URL.revokeObjectURL(url); fail('Không đọc được ảnh bản đồ.'); };
-    image.src = url;
+// Read-only spectator: native keypad, bitmap fonts, real gear and world camera.
+const ui=PixelUI,ctx=ui.g,state=document.getElementById('state');
+const tiles=[],queue=[],images=new Map(),numbers=[],explosions=[];
+const WORLD_SCALE=320/400,FRAME_MS=30,IMPACT_MS=360;
+let shot=null,failed=false,liveReported=false,lastTime=0,menuOpen=false,menuFocus=0;
+let freeCamera=false,cameraX=0,cameraY=0,cameraReady=false,drag=null,clockAt=0,angle=0;
+let phase=-1,question='',awaiting=false,showTeam=true,forceMax=false,watchNotice='';
+function asset(name){let im=images.get(name);if(!im){im=new Image();im.src='art/'+name+'.png';images.set(name,im);}return im;}
+for(const name of ['main-ar','main-no','main-wicon','main-bpa','main-cooldown','projectile-dan','projectile-grenade','projectile-cannon','projectile-rocket2','projectile-laser','projectile-bomb','gui-bar','pb1'])asset(name);
+const holeNames=['h32x26','smallhole','smallhole','h36x30','rocket','rangehole','hrangcua','hgrenade','h14x12','h55x50'];
+const holeMap={0:3,1:1,2:0,3:9,6:6,7:7,9:5,10:4,11:2,12:6,15:7,17:2,18:2,19:2,20:0,21:2,22:7,24:3,25:8,27:1,30:0,31:7,32:3,35:3,37:7,40:2,41:2,42:7,43:7,44:2,45:7,47:8,48:3,52:3,57:7};
+const holes=holeNames.map(name=>{
+ const im=asset('hole-'+name),entry={image:im};
+ im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');g.drawImage(im,0,0);entry.pixels=g.getImageData(0,0,c.width,c.height).data;};return entry;
 });
-function reportLive() {
-    if (failed || liveReported || game.phase !== 'live' || tiles.some(tile => !tile.ready)) return;
-    liveReported = true;
-    window.webkit.messageHandlers.viewer.postMessage('live');
+const game=new ArmySpectator(tile=>{
+ const image=new Image(),url=URL.createObjectURL(new Blob([tile.bytes],{type:'image/png'}));
+ const entry={x:tile.x,y:tile.y,solid:!!tile.solid,ready:false,id:tile.id};tiles.push(entry);
+ image.onload=()=>{URL.revokeObjectURL(url);const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0);Object.assign(entry,{canvas:c,ctx:g,ready:true});reportLive();};
+ image.onerror=()=>{URL.revokeObjectURL(url);fail('Không đọc được ảnh bản đồ.');};image.src=url;
+});
+game.onHealth=(actor,delta)=>numbers.push({x:actor.x,y:actor.y-38,delta,at:performance.now()});
+function post(message){window.webkit.messageHandlers.viewer.postMessage(message);}
+function reportLive(){if(failed||liveReported||game.phase!=='live'||tiles.some(t=>!t.ready))return;liveReported=true;clockAt=performance.now();state.textContent='Đang xem trận';post('live');}
+function fail(message){if(failed)return;failed=true;queue.length=0;state.textContent=message;post('failed');}
+function apply(frame){
+ const bytes=Uint8Array.from(atob(frame[1]),c=>c.charCodeAt(0)),previousTurn=game.turn,result=game.receive(frame[0],bytes);
+ if(frame[0]===24||game.turn!==previousTurn)clockAt=performance.now();
+ if(result?.paths){angle=result.angle;const actor=game.players[result.player];if(actor)actor.facing=result.angle>90&&result.angle<270?-1:1;}
+ reportLive();return result;
 }
-function fail(message) {
-    if (failed) return;
-    failed = true;
-    queue.length = 0;
-    state.textContent = message;
-    window.webkit.messageHandlers.viewer.postMessage('failed');
+function pump(){try{let count=0;while(queue.length&&!shot&&!failed){const next=apply(queue.shift());if(next?.paths.some(p=>p.length))shot={...next,samples:Math.max(...next.paths.map(p=>p.length)),elapsed:0,landed:new Set()};if(++count>=256){setTimeout(pump,0);break;}}}catch(e){fail(e.message);}}
+window.receiveArmyFrames=frames=>{if(failed)return;if(!Array.isArray(frames)||frames.length+queue.length>4096){fail('Phiên xem bị gián đoạn.');return;}for(const frame of frames)queue.push(frame);pump();};
+function impact(x,y,bullet){
+ explosions.push({x,y,at:performance.now()});
+ if([14,16,27,28,29,30,33,34,36,39,44,45,47,49].includes(bullet))return;
+ const mask=holes[holeMap[bullet]??0];if(!mask.pixels)return;const w=mask.image.width,h=mask.image.height;
+ for(const tile of tiles){
+  if(!tile.ready||!tile.solid)continue;
+  const ox=Math.trunc(x-tile.x-Math.floor(w/2)),oy=Math.trunc(y-tile.y-Math.floor(h/2));
+  if(ox>=tile.canvas.width||oy>=tile.canvas.height||ox+w<=0||oy+h<=0)continue;
+  const data=tile.ctx.getImageData(0,0,tile.canvas.width,tile.canvas.height);
+  for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){
+   const tx=ox+xx,ty=oy+yy;if(tx<0||ty<0||tx>=data.width||ty>=data.height)continue;
+   const m=(yy*w+xx)*4,p=(ty*data.width+tx)*4;
+   if(mask.pixels[m+3]!==255||mask.pixels[m+1]||mask.pixels[m+2])continue;
+   if(mask.pixels[m]===0)data.data[p+3]=0;
+   else if(mask.pixels[m]===255&&data.data[p+3]){data.data[p]=data.data[p+1]=data.data[p+2]=0;data.data[p+3]=255;}
+  }
+  tile.ctx.putImageData(data,0,0);
+ }
 }
-function apply(frame) {
-    const bin = atob(frame[1]), bytes = new Uint8Array(bin.length);
-    for (let i=0; i<bytes.length; i++) bytes[i] = bin.charCodeAt(i);
-    const result = game.receive(frame[0], bytes);
-    reportLive();
-    return result;
+function updateShot(delta){
+ if(!shot)return;shot.elapsed+=delta*(forceMax?2:1);const sample=Math.floor(shot.elapsed/FRAME_MS);
+ for(let i=0;i<shot.paths.length;i++){const p=shot.paths[i];if(p.length&&sample>=p.length&&!shot.landed.has(i)){shot.landed.add(i);impact(...p[p.length-1],shot.bullet);}}
+ if(shot.elapsed>=shot.samples*FRAME_MS+IMPACT_MS){shot=null;pump();}
 }
-function pump() {
-    try {
-        while (queue.length && !shot && !failed) {
-            const next = apply(queue.shift());
-            if (next && next.paths.some(p=>p.length)) {
-                const samples = Math.max(...next.paths.map(p=>p.length));
-                shot = {paths:next.paths,samples,elapsed:0};
-            }
-        }
-    } catch (e) { fail(e.message); }
+function camera(delta){
+ const width=320/WORLD_SCALE,height=ui.height/WORLD_SCALE,actor=game.players[game.turn]??game.players.find(p=>p&&p.hp>0);
+ let tx=actor?.x??width/2,ty=actor?.y??height/2;
+ if(shot){const p=shot.paths.find(p=>p.length);if(p){const point=p[Math.min(p.length-1,Math.floor(shot.elapsed/FRAME_MS))];tx=point[0];ty=point[1];}}
+ const maxX=Math.max(0,(game.width??width)-width),maxY=Math.max(0,(game.height??height)-height);
+ if(!freeCamera){const x=Math.max(0,Math.min(maxX,tx-width/2)),y=Math.max(0,Math.min(maxY,ty-height/2)),k=cameraReady?Math.min(1,delta/100):1;cameraX+=(x-cameraX)*k;cameraY+=(y-cameraY)*k;cameraReady=true;}
+ cameraX=Math.max(0,Math.min(maxX,cameraX));cameraY=Math.max(0,Math.min(maxY,cameraY));
 }
-window.receiveArmyFrames = frames => {
-    if (frames.length + queue.length > 4096) { fail('Phiên xem bị gián đoạn.'); return; }
-    for (const frame of frames) queue.push(frame);
-    pump();
+function drawSprite(name,x,y,w,h,frame=0){const im=asset(name);if(!im.complete||!im.naturalWidth)return;const sw=w??im.width,sh=h??im.height;ctx.drawImage(im,0,Math.min(im.height-sh,frame*sh),sw,sh,Math.round(x),Math.round(y),sw,sh);}
+function paintActor(actor,i){
+ if(actor.x===undefined||actor.hp===undefined)return;const x=actor.x,y=actor.y;
+ if(actor.hp<=0){ctx.save();ctx.globalAlpha=.6;ui.avatar(actor,x,y,1);ctx.restore();return;}
+ ctx.save();ctx.translate(x,y);if(actor.facing===-1)ctx.scale(-1,1);ui.avatar({character:actor.character,parts:actor.parts,aura:actor.aura??0},0,0,1);ctx.restore();
+ ui.text('HP: '+actor.hp+'/'+actor.max,x,y-59,{align:'center',color:'#d82532',shadow:true,max:170});
+ ui.text(actor.name,x,y-42,{align:'center',color:showTeam&&i%2?'#8acbf1':'#ffe23c',shadow:true,max:100});
+ ctx.fillStyle='#173448';ctx.fillRect(x-13,y-24,26,4);ctx.fillStyle='#4fff37';ctx.fillRect(x-12,y-23,24*Math.max(0,Math.min(1,actor.hp/Math.max(1,actor.max))),2);
+ if(actor.frozen)ui.text('*',x,y-63,{align:'center',color:'#ffff30'});
+ if(i===game.turn&&!shot)drawSprite('main-bar',x-5,y-20);
+}
+function paintProjectiles(){
+ if(!shot)return;const sample=Math.floor(shot.elapsed/FRAME_MS);
+ for(const p of shot.paths){if(!p.length||sample>=p.length)continue;const [x,y]=p[sample],old=p[Math.max(0,sample-1)];let name='projectile-dan',w=18;
+  if([0,24,35,48,52].includes(shot.bullet)){name='projectile-grenade';w=20;}else if([2,3,10].includes(shot.bullet)){name='projectile-rocket2';w=15;}else if([11,12,18].includes(shot.bullet)){name='projectile-cannon';w=14;}else if([7,31,37].includes(shot.bullet)){name='projectile-laser';w=19;}
+  ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(y-old[1],x-old[0]));drawSprite(name,-w/2,-w/2,w,w);ctx.restore();
+ }
+}
+function leave(){menuOpen=false;state.textContent='Đang rời chế độ xem…';post('leave');}
+function toggleCamera(){menuOpen=false;freeCamera=!freeCamera;}
+function showWatchNotice(label){menuOpen=false;watchNotice='Chưa mở được '+label+' khi xem trận.';}
+const mainMenu=[
+ ['TIẾP TỤC',()=>{menuOpen=false;}],
+ ['LỰC MAX',()=>{forceMax=!forceMax;menuOpen=false;}],
+ ['V9 MENU',()=>{menuOpen='camera';menuFocus=0;}],
+ ['BẬT/TẮT ICON ĐỘI',()=>{showTeam=!showTeam;menuOpen=false;}],
+ ['BẠN BÈ',()=>showWatchNotice('Bạn bè')],
+ ['TIN NHẮN',()=>showWatchNotice('Tin nhắn')],
+ ['RỜI TRẬN CHIẾN',leave],
+];
+const cameraMenu=[['CAMERA',toggleCamera],['TRỞ RA',()=>{menuOpen=true;menuFocus=0;}]];
+function options(){return menuOpen==='camera'?cameraMenu:mainMenu;}
+function answer(accept){
+ if(phase!==0||awaiting)return;
+ awaiting=true;
+ post(accept?'accept':'decline');
+}
+window.setWatchPhase=(value,message)=>{
+ phase=value;question=message;awaiting=false;
+ state.textContent=value===0?question:value===1?'Đang tải trận đấu…':value===3?'Đang rời chế độ xem…':'Đang xem trận';
 };
-function paint(time) {
-    const delta = lastTime ? Math.max(0,time-lastTime) : 0;
-    lastTime = time;
-    if (shot) {
-        shot.elapsed += delta;
-        if (shot.elapsed >= shot.samples*28+150) { shot=null; pump(); }
-    }
-    const w = Math.max(1,canvas.clientWidth), h = Math.max(1,canvas.clientHeight);
-    const d = Math.min(devicePixelRatio || 1,2);
-    if (canvas.width !== Math.round(w*d) || canvas.height !== Math.round(h*d)) {
-        canvas.width=Math.round(w*d); canvas.height=Math.round(h*d);
-    }
-    ctx.setTransform(d,0,0,d,0,0);
-    ctx.clearRect(0,0,w,h);
-    if (game.width && game.height) {
-        const zoom=Math.min(w/game.width,h/game.height);
-        ctx.translate((w-game.width*zoom)/2,(h-game.height*zoom)/2); ctx.scale(zoom,zoom);
-        ctx.imageSmoothingEnabled=false;
-        for(const t of tiles) if(t.ready)ctx.drawImage(t.image,t.x,t.y);
-        ctx.textAlign='center';
-        for(let i=0;i<game.players.length;i++) {
-            const a=game.players[i]; if(!a || a.x===undefined || a.hp<=0) continue;
-            ctx.fillStyle=i%2?'#9e2228':'#194882';
-            ctx.beginPath();ctx.arc(a.x,a.y-5,5,0,2*Math.PI);ctx.fill();
-            ctx.font='bold 11px -apple-system,sans-serif';
-            ctx.lineWidth=2;ctx.strokeStyle='#152637';ctx.fillStyle='white';
-            ctx.strokeText(a.name,a.x,a.y-15);ctx.fillText(a.name,a.x,a.y-15);
-            ctx.fillStyle='#283544';ctx.fillRect(a.x-12,a.y-12,24,3);
-            ctx.fillStyle='#64de7b';ctx.fillRect(a.x-12,a.y-12,24*Math.min(1,a.hp/Math.max(1,a.max)),3);
-        }
-        if (shot) for (const path of shot.paths) {
-            if(!path.length)continue;
-            const sample=Math.floor(shot.elapsed/28);
-            const [x,y]=path[Math.min(path.length-1,sample)];
-            if(sample>path.length+5)continue;
-            ctx.beginPath();ctx.fillStyle=sample>=path.length?'#ffb52b':'#3d331a';
-            ctx.arc(x,y,sample>=path.length?6:2,0,2*Math.PI);ctx.fill();
-        }
-        document.getElementById('room').textContent='Phòng '+game.room+' · Khu '+game.area;
-        const current=game.players[game.turn];
-        document.getElementById('turn').textContent=current?'Lượt '+current.name:'';
-        if(!failed)state.textContent=game.phase==='live'?
-            game.players.filter(p=>p&&p.hp!==undefined).map(a=>a.name+' '+a.hp+'/'+a.max+' HP').join('  ·  '):
-            'Đang nhận bản đồ '+game.nextTile+'/'+game.tiles;
-    }
-    if(!failed)requestAnimationFrame(paint);
+function key(code){
+ if(failed)return;
+ if([76,108,-21].includes(code))code=-6;
+ if([82,114,-22,-11,27].includes(code))code=-7;
+ if(phase===0){
+  if([-6,-5,13,10,53].includes(code))answer(true);
+  else if(code===-7)answer(false);
+  return;
+ }
+ if(phase!==2)return;
+ if(watchNotice){if([-7,-6,-5,13,10,53].includes(code))watchNotice='';return;}
+ if(code===-6){if(menuOpen)options()[menuFocus]?.[1]();else{menuOpen=true;menuFocus=0;}return;}
+ if(code===-7){if(menuOpen)menuOpen=false;else toggleCamera();return;}
+ if(menuOpen){
+  const list=options(),direction=([-1,50].includes(code)?-1:[-2,56].includes(code)?1:0);
+  if(direction)menuFocus=(menuFocus+direction+list.length)%list.length;
+  else if([-5,13,10,53].includes(code))list[menuFocus]?.[1]();
+  return;
+ }
+ if(!freeCamera)return;if([-3,52].includes(code))cameraX-=20;if([-4,54].includes(code))cameraX+=20;if([-1,50].includes(code))cameraY-=20;if([-2,56].includes(code))cameraY+=20;
 }
-requestAnimationFrame(paint);
-window.webkit.messageHandlers.viewer.postMessage('ready');
+window.watchKey=key;
+addEventListener('keydown',e=>{const code={ArrowUp:-1,ArrowDown:-2,ArrowLeft:-3,ArrowRight:-4,Enter:-5,Escape:-7,F1:-6,F2:-7}[e.key];if(code){e.preventDefault();key(code);}});
+ui.canvas.addEventListener('pointerdown',e=>{if(freeCamera&&!menuOpen)drag={x:e.clientX,y:e.clientY,cx:cameraX,cy:cameraY};});
+ui.canvas.addEventListener('pointermove',e=>{if(!drag)return;const scale=ui.canvas.clientWidth*WORLD_SCALE/320;cameraX=drag.cx-(e.clientX-drag.x)/scale;cameraY=drag.cy-(e.clientY-drag.y)/scale;});
+for(const event of ['pointerup','pointercancel','pointerleave'])ui.canvas.addEventListener(event,()=>{drag=null;});
+function clock(seconds){
+ const center=160,y=15,radius=11;
+ ctx.save();ctx.translate(center,y);
+ for(let segment=0;segment<12;segment++){
+  const a=segment*Math.PI/6-Math.PI/2,b=a+Math.PI/6;
+  ctx.beginPath();ctx.arc(0,0,radius,a,b);ctx.arc(0,0,5,b,a,true);ctx.closePath();
+  ctx.fillStyle=segment/12<seconds/40?'#e5ac75':'#e2c995';ctx.fill();ctx.strokeStyle='#9a613b';ctx.lineWidth=.55;ctx.stroke();
+ }
+ ctx.restore();
+ ui.text(seconds,center,y-5,{align:'center',color:'#fff',shadow:true,max:19});
+}
+function paintMenu(){
+ const list=options(),w=136,h=22+list.length*22,x=92,y=Math.max(7,Math.floor((ui.height-h)/2));
+ ui.zone(0,0,320,ui.height,()=>{menuOpen=false;});
+ ui.stripedBox(x,y,w,h);
+ list.forEach(([label,action],i)=>{
+  const row=y+19+i*22;
+  if(i===menuFocus)ui.rect(x+5,row,w-10,19,'#ffdf4e');
+  ui.text(label,160,row+3,{title:true,align:'center',color:'#ffdf39',max:w-12});
+  ui.zone(x+5,row,w-10,19,action);
+ });
+}
+ui.start(()=>{
+ if(phase===0||phase===1||phase===3){
+  const message=phase===0?question:phase===1?'Đang tải trận đấu…':question||'Đang rời chế độ xem…';
+  ui.bottomDialog(ui.wrapText(message,288));
+  ui.footer(phase===0?'Có':'','',phase===0?'Không':'',()=>answer(true),null,()=>answer(false));
+  return;
+ }
+ if(phase!==2)return;
+ const now=performance.now(),delta=lastTime?Math.min(250,Math.max(0,now-lastTime)):0;lastTime=now;updateShot(delta);camera(delta);
+ if(game.width){
+  ui.rect(0,0,320,ui.height,game.map===0?'#58e1e7':'#60cdf7');ctx.save();ctx.beginPath();ctx.rect(0,0,320,ui.height);ctx.clip();ctx.scale(WORLD_SCALE,WORLD_SCALE);ctx.translate(-Math.round(cameraX),-Math.round(cameraY));
+  for(const t of tiles)if(t.ready)ctx.drawImage(t.canvas,t.x,t.y);
+  game.players.forEach((p,i)=>{if(p)paintActor(p,i);});paintProjectiles();
+  for(let i=explosions.length-1;i>=0;i--){const p=explosions[i],age=now-p.at;if(age>360){explosions.splice(i,1);continue;}const size=16+Math.sin(age/360*Math.PI)*18,im=asset('main-no');if(im.complete&&im.naturalWidth)ctx.drawImage(im,0,Math.floor(age/90)%2*10,10,10,p.x-size/2,p.y-size/2,size,size);}
+  for(let i=numbers.length-1;i>=0;i--){const p=numbers[i],age=now-p.at;if(age>850){numbers.splice(i,1);continue;}ui.text((p.delta>0?'+':'')+p.delta,p.x,p.y-age/70,{color:p.delta>0?'#55ff44':'#ffff30',align:'center',shadow:true,max:180});}
+  ctx.restore();
+  ui.sprite('watch-iconmenu',18,4,10,6);ui.sprite('watch-iconChat',48,4,10,10);
+  if(!freeCamera)ui.text('Đang xem',5,15,{max:100});
+  const seconds=Math.max(0,(game.seconds??40)-Math.floor((now-clockAt)/1000));
+  clock(seconds);
+  ui.text('Góc '+angle,160,28,{align:'center',color:'#fff',shadow:true,max:105});
+  ctx.save();ctx.translate(303,20);ctx.scale(1,-1);ui.sprite('watch-menu',-17,-16,34,32);ctx.restore();
+  ui.zone(282,0,38,39,()=>showWatchNotice('Đổi PB'));
+  ui.zone(0,0,44,40,()=>{menuOpen=true;menuFocus=0;});
+  ui.zone(45,0,24,38,()=>showWatchNotice('Tin nhắn'));
+  if(menuOpen)paintMenu();
+  if(watchNotice){ui.zone(0,0,320,ui.height,()=>{});ui.bottomDialog(ui.wrapText(watchNotice,288));ui.footer('','OK','',null,()=>{watchNotice='';});}
+ }else{ui.bottomDialog(['Đang tải trận đấu…']);}
+},{transparent:true});
+post('ready');

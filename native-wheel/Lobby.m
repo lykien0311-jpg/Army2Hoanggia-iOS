@@ -138,7 +138,11 @@ void AGLobbyTick(void *env,int v,uintptr_t connection){
     }
     if(reopen)openLobby(env,v,AGLobbyField,outcome);
     if(body && !AGLobbySend(env,v,connection,cmd,body.bytes,body.length)){
-        dispatch_async(dispatch_get_main_queue(),^{[active close];});
+        dispatch_async(dispatch_get_main_queue(),^{
+            if(cmd==-120){
+                [active.web evaluateJavaScript:@"lobbyRequestFailed()" completionHandler:nil];
+            }else [active close];
+        });
     }else if(body&&cmd==5){
         dispatch_async(dispatch_get_main_queue(),^{if(active.web)[active.web evaluateJavaScript:@"lobbyMessageSent()" completionHandler:nil];});
     }

@@ -115,7 +115,7 @@ static void runStep(int step,int tries) {
     @try {
         if(tries<=0){save([NSString stringWithFormat:@"FAIL timeout at step %d",step]);return;}
         UIWindow *window=UIApplication.sharedApplication.keyWindow;
-        UIButton *button;
+        WKWebView *watchWeb=(WKWebView *)find(window,WKWebView.class,nil);
         NSData *prompt=frames[0][1];
         const uint8_t *p=prompt.bytes;
         if(step==0){
@@ -127,10 +127,15 @@ static void runStep(int step,int tries) {
             NSCAssert(!canvas[0x108/sizeof(uintptr_t)],@"close native wait for incoming invitation");
             step++;
         }
-        else if(step==1 && (button=(UIButton *)find(window,UIButton.class,@"Không"))){
-            [button sendActionsForControlEvents:UIControlEventTouchUpInside];AGViewerTick((void *)1,0);
-            NSCAssert([sent.lastObject[0] intValue]==7,@"decline refresh");step++;
+        else if(step==1 && window!=host && watchWeb){
+            [watchWeb evaluateJavaScript:@"typeof phase!=='undefined'&&phase===0" completionHandler:^(id value,NSError *error){
+                BOOL ready=[value isEqual:@YES];
+                if(ready)NSCAssert(AGViewerInput(0,0,-7)&&AGViewerInput(0,1,-7),@"right key declines");
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(ready?2:1,tries-1);});
+            }];
+            return;
         }else if(step==2&&window==host){
+            NSCAssert(sent.count==0,@"decline leaves the area list without joining");
             [sent removeAllObjects];
             canvas[0x108/sizeof(uintptr_t)]=(uintptr_t)waitDialog;
             waitDialog[5]=82;
@@ -141,8 +146,21 @@ static void runStep(int step,int tries) {
             canvas[0x108/sizeof(uintptr_t)]=0;
             step++;
         }
-        else if(step==3 && (button=(UIButton *)find(window,UIButton.class,@"Có"))){
-            [button sendActionsForControlEvents:UIControlEventTouchUpInside];AGViewerTick((void *)1,0);
+        else if(step==3 && window!=host && watchWeb){
+            [watchWeb evaluateJavaScript:@"typeof phase!=='undefined'&&phase===0" completionHandler:^(id value,NSError *error){
+                BOOL ready=[value isEqual:@YES];
+                if(ready)NSCAssert(AGViewerInput(0,0,-6)&&AGViewerInput(0,1,-6),@"left key accepts");
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(30+(ready?1:0),tries-1);});
+            }];
+            return;
+        }else if(step==30){
+            step=3;
+        }else if(step==31){
+            AGViewerTick((void *)1,0);
+            if(!sent.count){
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(31,tries-1);});
+                return;
+            }
             NSData *payload=sent.lastObject[1];const uint8_t *s=payload.bytes;
             NSCAssert([sent.lastObject[0] intValue]==-102&&payload.length==14&&s[3]==1&&!memcmp(p+4,s+4,10),@"confirm wire");
             for(NSUInteger i=1;i<frames.count;i++) {
@@ -151,27 +169,46 @@ static void runStep(int step,int tries) {
                 deliver(c,b);
             }
             NSCAssert([[window.rootViewController valueForKey:@"deadline"] doubleValue]>0,@"keep timeout until the map is visible");
-            step++;
+            step=4;
         }else if(step==4){
             WKWebView *web=(WKWebView *)find(window,WKWebView.class,nil);
             if(web){
-                [web evaluateJavaScript:@"typeof game!=='undefined' && game.phase==='live' && game.nextTile===52 && game.players.filter(p=>p&&p.hp>0).length===2"
+                [web evaluateJavaScript:@"typeof game!=='undefined' && phase===2 && liveReported && game.nextTile===52 && game.players.filter(p=>p&&p.hp>0).length===2"
                        completionHandler:^(id v,NSError *e){if([v isEqual:@YES]){
-                            UIButton *leave=(UIButton *)find(window,UIButton.class,@"Rời xem trận");
-                            [leave sendActionsForControlEvents:UIControlEventTouchUpInside];AGViewerTick((void *)1,0);
-                            NSData *body=sent.lastObject[1];const uint8_t *b=body.bytes;
-                            if(!leave||body.length!=12||b[3]!=2||memcmp(b+4,p+6,8)){save(@"FAIL leave wire");return;}
-                            uint8_t done[12]={0x53,0x50,1,6};memcpy(done+4,p+6,8);
-                            deliver(-102,[NSData dataWithBytes:done length:12]);
-                            dispatch_async(dispatch_get_main_queue(),^{runStep(5,tries-1);});
+                            NSCAssert(AGViewerInput(0,0,-6)&&AGViewerInput(0,1,-6),@"left key opens the match menu");
+                            NSCAssert(AGViewerInput(0,0,-1)&&AGViewerInput(0,1,-1),@"up to leave");
+                            NSCAssert(AGViewerInput(0,0,-5)&&AGViewerInput(0,1,-5),@"select leave");
+                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(40,tries-1);});
                        }else dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(4,tries-1);});}];
                 return;
             }
+        }else if(step==40){
+            AGViewerTick((void *)1,0);
+            NSData *body=sent.lastObject[1];const uint8_t *b=body.bytes;
+            if(body.length!=12||b[3]!=2||memcmp(b+4,p+6,8)){
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(40,tries-1);});
+                return;
+            }
+            uint8_t done[12]={0x53,0x50,1,6};memcpy(done+4,p+6,8);
+            deliver(-102,[NSData dataWithBytes:done length:12]);
+            step=5;
         }else if(step==5&&window==host){
             if(deliver(24,[NSData dataWithBytes:"x" length:1])!=0){save(@"FAIL ordinary player intercepted");return;}
             deliver(-102,prompt);step++;
-        }else if(step==6 && (button=(UIButton *)find(window,UIButton.class,@"Có"))){
-            [button sendActionsForControlEvents:UIControlEventTouchUpInside];AGViewerTick((void *)1,0);
+        }else if(step==6 && window!=host && watchWeb){
+            [watchWeb evaluateJavaScript:@"typeof phase!=='undefined'&&phase===0" completionHandler:^(id value,NSError *error){
+                BOOL ready=[value isEqual:@YES];
+                if(ready)NSCAssert(AGViewerInput(0,0,-5)&&AGViewerInput(0,1,-5),@"OK accepts");
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(ready?60:6,tries-1);});
+            }];
+            return;
+        }else if(step==60){
+            AGViewerTick((void *)1,0);
+            NSData *accept=sent.lastObject[1];
+            if(accept.length!=14){
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{runStep(60,tries-1);});
+                return;
+            }
             for(NSArray *f in frames){
                 NSData *body=f[1];
                 if([f[0] intValue]==-102&&((const uint8_t *)body.bytes)[3]==3){deliver(-102,body);break;}
@@ -183,7 +220,7 @@ static void runStep(int step,int tries) {
             NSCAssert([sent.lastObject[0] intValue]==-102&&payload.length==12&&((const uint8_t *)payload.bytes)[3]==2,@"timeout leaves the match");
             [watch setValue:past forKey:@"deadline"];AGViewerTick((void *)1,0);
             NSCAssert([sent.lastObject[0] intValue]==7,@"refresh if the leave reply never arrives");
-            step++;
+            step=7;
         }else if(step==7&&window==host){
             testLobby(0,150);return;
         }

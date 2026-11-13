@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "Spectator.h"
+#import "GameViewport.h"
 
 typedef NS_ENUM(int, WatchPhase) { Offered, WaitingForMatch, InMatch, Leaving };
 typedef NS_ENUM(int, WatchAction) { NoAction, Accept, Leave, Refresh };
@@ -21,22 +22,49 @@ typedef NS_ENUM(int, WatchAction) { NoAction, Accept, Leave, Refresh };
 @property(nonatomic,strong) UIWindow *window;
 @property(nonatomic,weak) UIWindow *previous;
 @property(nonatomic,strong) WKWebView *web;
-@property(nonatomic,strong) UILabel *label;
-@property(nonatomic,strong) UIButton *yes, *dismissButton;
 @property(nonatomic,strong) NSMutableArray *pending;
 @property(nonatomic) NSUInteger pendingBytes;
 @property(nonatomic) BOOL webReady, delivering, retryScheduled, snapshotReceived;
 - (void)show;
 - (void)close;
 - (void)flush;
+- (void)accept;
+- (void)cancel;
+- (void)updatePhase;
 @end
 
 static ArmyWatch *current;
 static atomic_bool active;
+static bool heldKeys[6][256];
 static atomic_uintptr_t nativeWait[6];
 static uintptr_t battlefieldSession[6];
 static NSTimeInterval battlefieldUntil[6];
 static NSTimeInterval now(void) { return NSProcessInfo.processInfo.systemUptime; }
+
+int AGViewerInput(int variant,int kind,int code) {
+    if(variant<0||variant>=6||(unsigned)kind>1)return 0;
+    ArmyWatch *watch;
+    const unsigned index=(unsigned)code+128;
+    @synchronized(ArmyWatch.class){
+        if(kind==1&&index<256&&heldKeys[variant][index]){
+            heldKeys[variant][index]=false;
+            return 1;
+        }
+        watch=current;
+        if(!watch||watch.variant!=variant)return 0;
+        if(kind==0&&index<256)heldKeys[variant][index]=true;
+    }
+    if(kind==0)dispatch_async(dispatch_get_main_queue(),^{
+        if(watch.webReady){
+            [watch.web evaluateJavaScript:[NSString stringWithFormat:@"watchKey(%d)",code] completionHandler:nil];
+        }else if(code==-6||code==-5||code==-21||code=='L'||code=='l'||code==13||code==10||code=='5'){
+            [watch accept];
+        }else if(code==-7||code==-22||code==-11||code=='R'||code=='r'||code==27){
+            [watch cancel];
+        }
+    });
+    return 1;
+}
 static UIWindow *visibleHost(void) {
     UIApplication *app=UIApplication.sharedApplication;
     UIWindow *key=app.keyWindow;
@@ -64,7 +92,8 @@ static void finish(ArmyWatch *w) {
 }
 static void leave(ArmyWatch *w) {
     if(w.phase==Leaving)return;
-    w.action = w.phase==Offered || (w.phase==WaitingForMatch && w.action==Accept) ? Refresh : Leave;
+    w.action = w.phase==Offered ? NoAction : (w.phase==WaitingForMatch && w.action==Accept) ? Refresh : Leave;
+    if(w.action==NoAction){finish(w);return;}
     w.phase=Leaving;w.deadline=now()+5;
     [w.pending removeAllObjects];w.pendingBytes=0;
     screen(w);
@@ -123,6 +152,7 @@ int AGViewerReceive(void *env,void *message,int variant) {
                     w=[ArmyWatch new];w.variant=variant;w.connection=battlefieldSession[variant];
                     w.room=p[4];w.area=p[5];w.ticket=[body subdataWithRange:NSMakeRange(6,8)];
                     w.pending=[NSMutableArray array];w.phase=WaitingForMatch;
+                    w.deadline=now()+15;
                     current=w;atomic_store(&active,true);battlefieldUntil[variant]=0;
                 }
                 if(!w || w.variant!=variant)return 1;
@@ -181,37 +211,17 @@ void AGViewerTick(void *env,int variant) {
 }
 
 @implementation ArmyWatch
-- (UIButton *)button:(NSString *)title action:(SEL)action {
-    UIButton *button=[UIButton buttonWithType:UIButtonTypeSystem];
-    [button setTitle:title forState:UIControlStateNormal];
-    button.titleLabel.font=[UIFont boldSystemFontOfSize:17];
-    [button addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];
-    return button;
-}
 - (void)loadView {
-    UIView *view=[UIView new];view.backgroundColor=[UIColor colorWithWhite:0.95 alpha:1];self.view=view;
-    self.label=[UILabel new];self.label.textAlignment=NSTextAlignmentCenter;self.label.numberOfLines=0;
-    self.yes=[self button:@"Có" action:@selector(accept)];
-    self.dismissButton=[self button:@"Không" action:@selector(cancel)];
-    for(UIView *child in @[self.label,self.yes,self.dismissButton])[view addSubview:child];
+    UIView *view=[UIView new];view.backgroundColor=UIColor.clearColor;self.view=view;
 }
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
-    CGRect safe=UIEdgeInsetsInsetRect(self.view.bounds,self.view.safeAreaInsets);
-    CGFloat x=CGRectGetMinX(safe),y=CGRectGetMinY(safe),width=safe.size.width,h=safe.size.height;
-    if(self.web&&!self.web.hidden){
-        self.web.frame=CGRectMake(x,y,width,MAX(1,h-48));
-        self.dismissButton.frame=CGRectMake(x,y+h-48,width,48);
-    }else{
-        self.label.frame=CGRectMake(x+16,y+h*0.35,width-32,90);
-        self.yes.frame=CGRectMake(x,y+h*0.35+96,width/2,54);
-        self.dismissButton.frame=CGRectMake(x+(self.yes.hidden?0:width/2),y+h*0.35+96,self.yes.hidden?width:width/2,54);
-    }
+    CGRect game=AGGameRect(self.view);
+    self.web.frame=game;
+    ((AGGameWindow *)self.window).gameBottom=CGRectGetMaxY(game);
 }
 - (void)show {
-    WatchPhase phase;
-    NSString *problem;
-    @synchronized(ArmyWatch.class){if(current!=self)return;phase=self.phase;problem=self.problem;}
+    @synchronized(ArmyWatch.class){if(current!=self)return;}
     if(!self.window){
         UIWindow *previous=visibleHost();
         if(!previous){
@@ -225,27 +235,45 @@ void AGViewerTick(void *env,int variant) {
             return;
         }
         self.previous=previous;
-        if(@available(iOS 13.0,*)){self.window=previous.windowScene?[[UIWindow alloc] initWithWindowScene:previous.windowScene]:[[UIWindow alloc] initWithFrame:previous.bounds];}
-        else self.window=[[UIWindow alloc] initWithFrame:previous.bounds];
+        if(@available(iOS 13.0,*)){if(previous.windowScene)self.window=[[AGGameWindow alloc] initWithWindowScene:previous.windowScene];}
+        if(!self.window)self.window=[[AGGameWindow alloc] initWithFrame:previous.bounds];
+        ((AGGameWindow *)self.window).passesGameKeys=YES;
+        ((AGGameWindow *)self.window).gameBottom=CGRectGetMaxY(AGGameRect(previous.rootViewController.view));
+        AGViewportWheelVisible(1);
         self.window.windowLevel=UIWindowLevelAlert+1;
         self.window.rootViewController=self;[self.window makeKeyAndVisible];
     }
-    self.yes.hidden=phase!=Offered;
-    self.label.text=phase==Offered?self.question:(phase==Leaving?(problem?:@"Đang rời trận…"):@"Đang nhận trận đấu…");
-    [self.dismissButton setTitle:phase==Offered?@"Không":@"Rời xem trận" forState:UIControlStateNormal];
-    self.dismissButton.enabled=phase!=Leaving;
-    self.web.hidden=phase==Leaving;
-    if(phase==InMatch&&!self.web){
+    if(!self.web){
         NSURL *html=[[NSBundle bundleForClass:ArmyWatch.class] URLForResource:@"index" withExtension:@"html" subdirectory:@"viewer"];
         if(!html){[self cancel];return;}
         WKWebViewConfiguration *config=[WKWebViewConfiguration new];
         config.websiteDataStore=[WKWebsiteDataStore nonPersistentDataStore];
         [config.userContentController addScriptMessageHandler:self name:@"viewer"];
         self.web=[[WKWebView alloc] initWithFrame:CGRectZero configuration:config];self.web.navigationDelegate=self;
-        [self.view insertSubview:self.web belowSubview:self.dismissButton];
+        self.web.opaque=NO;
+        self.web.backgroundColor=UIColor.clearColor;
+        self.web.scrollView.backgroundColor=UIColor.clearColor;
+        self.web.scrollView.scrollEnabled=NO;
+        self.web.scrollView.bounces=NO;
+        self.web.scrollView.contentInsetAdjustmentBehavior=UIScrollViewContentInsetAdjustmentNever;
+        [self.view addSubview:self.web];
         [self.web loadFileURL:html allowingReadAccessToURL:html.URLByDeletingLastPathComponent];
     }
     [self.view setNeedsLayout];
+    [self updatePhase];
+}
+- (void)updatePhase {
+    if(!self.webReady)return;
+    WatchPhase phase;
+    NSString *message;
+    @synchronized(ArmyWatch.class){
+        if(current!=self)return;
+        phase=self.phase;
+        message=phase==Offered?self.question:self.problem;
+    }
+    NSData *data=[NSJSONSerialization dataWithJSONObject:@[@(phase),message?:@""] options:0 error:nil];
+    NSString *arg=[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    if(arg)[self.web evaluateJavaScript:[NSString stringWithFormat:@"setWatchPhase(...%@)",arg] completionHandler:nil];
 }
 - (void)accept {
     @synchronized(ArmyWatch.class){
@@ -259,16 +287,18 @@ void AGViewerTick(void *env,int variant) {
     [self.web.configuration.userContentController removeScriptMessageHandlerForName:@"viewer"];
     [self.web stopLoading];self.web.navigationDelegate=nil;
     BOOL restore=self.window.isKeyWindow;
+    if(self.window)AGViewportWheelVisible(0);
     self.window.hidden=YES;self.window.rootViewController=nil;self.window=nil;
     if(restore){UIWindow *previous=self.previous;[(previous&&!previous.hidden?previous:visibleHost()) makeKeyWindow];}
 }
 - (void)userContentController:(WKUserContentController *)controller didReceiveScriptMessage:(WKScriptMessage *)message {
     if(message.webView!=self.web||!message.frameInfo.isMainFrame)return;
-    if([message.body isEqual:@"ready"]){self.webReady=YES;[self flush];}
+    if([message.body isEqual:@"ready"]){self.webReady=YES;[self updatePhase];[self flush];}
     else if([message.body isEqual:@"live"]){
         @synchronized(ArmyWatch.class){if(current==self&&self.phase==InMatch&&self.snapshotReceived)self.deadline=0;}
     }
-    else if([message.body isEqual:@"failed"])[self cancel];
+    else if([message.body isEqual:@"accept"])[self accept];
+    else if([message.body isEqual:@"decline"]||[message.body isEqual:@"leave"]||[message.body isEqual:@"failed"])[self cancel];
 }
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {[self cancel];}
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)nav withError:(NSError *)error {[self cancel];}

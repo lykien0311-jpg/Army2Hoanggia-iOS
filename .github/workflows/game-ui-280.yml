@@ -1,0 +1,42 @@
+name: Build Army2 iOS 280
+on:
+  push:
+    branches: [qa/ios-280-profile-watch]
+permissions:
+  contents: read
+concurrency:
+  group: game-ui-280
+  cancel-in-progress: true
+jobs:
+  framework:
+    runs-on: macos-15
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash native-wheel/build_framework.sh
+      - name: Retain verified framework
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          from zipfile import ZipFile, ZIP_DEFLATED
+          root = 'AGWheel.framework/'
+          with ZipFile('native-wheel/build/AGWheel-framework.zip') as src, \
+               ZipFile('native-wheel/build/framework-280.zip','w',ZIP_DEFLATED) as dst:
+              for name in ('AGWheel','Info.plist','_CodeSignature/CodeResources'):
+                  dst.writestr(root+name,src.read(root+name))
+          PY
+          python3 native-wheel/retain_build.py B280_FRAMEWORK native-wheel/build/framework-280.zip
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node native-wheel/test_lobby.js

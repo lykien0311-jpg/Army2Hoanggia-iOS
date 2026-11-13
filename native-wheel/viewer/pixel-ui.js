@@ -1,7 +1,7 @@
 'use strict';
 // Coordinates, bitmap fonts, sprite rectangles and gear layers follow the JAR painters.
 const PixelUI=(()=>{
- const canvas=document.getElementById('game'),g=canvas.getContext('2d',{alpha:false}),images=new Map(),fonts=new Map();
+ const canvas=document.getElementById('game'),g=canvas.getContext('2d',{alpha:document.body.dataset.transparent==='true'}),images=new Map(),fonts=new Map();
  const nativeScale=450/320;let height=480,frame=0,hits=[],raf;
  function image(name){const cached=images.get(name);if(cached){images.delete(name);images.set(name,cached);return cached;}const i=new Image();i.src='art/'+name+'.png';images.set(name,i);if(/^[kv][1-4]-/.test(name)){const auraKeys=[...images.keys()].filter(k=>/^[kv][1-4]-/.test(k));if(auraKeys.length>24)images.delete(auraKeys[0]);}return i;}
  for(const k of ['body','title','b','a','cl1','cl2','cl3','miniballoon'])image(k);
@@ -35,8 +35,14 @@ const PixelUI=(()=>{
   if(im.complete&&im.naturalWidth)g.drawImage(im,cell%8*96,Math.floor(cell/8)*80,96,80,Math.round(x-48),Math.round(y-64),96,80);
  }
  function piece(hero,slot,id,pose,x,y){const r=ArmyArt.gear[hero+':'+slot+':'+id]??ArmyArt.gear[hero+':'+slot+':0'];if(!r||!r[2]||!r[3])return;const im=image('hero'+hero);if(!im.complete||!im.naturalWidth)return;const width=hero===3?30:hero===6?29:hero===7?32:24,h=hero===3||hero===7?32:24;g.drawImage(im,r[0],r[1],r[2],r[3],Math.round(x-Math.floor(width/2)+r[4]+18),Math.round(y-h+r[5]+40),r[2],r[3]);}
- function avatar(row,x,y){const hero=row.character??row.hero??0,parts=row.parts??[0,0,0,0,0];g.save();g.translate(x,y);g.scale(.72,.72);aura(row.aura??0,0,0,0);for(const k of [0,4])piece(hero,k,parts[k],0,0,0);const body=image('base'+hero);if(body.complete&&body.naturalWidth)g.drawImage(body,-Math.floor(body.width/2),-body.height);for(const k of [1,2,3])piece(hero,k,parts[k],0,0,0);aura(row.aura??0,0,0,1);g.restore();}
- function gearIcon(hero,slot,id,x,y,size=16){
+ function avatar(row,x,y,scale=.72){const hero=row.character??row.hero??0,parts=row.parts??[0,0,0,0,0];g.save();g.translate(x,y);g.scale(scale,scale);aura(row.aura??0,0,0,0);for(const k of [0,4])piece(hero,k,parts[k],0,0,0);const body=image('base'+hero);if(body.complete&&body.naturalWidth)g.drawImage(body,-Math.floor(body.width/2),-body.height);for(const k of [1,2,3])piece(hero,k,parts[k],0,0,0);aura(row.aura??0,0,0,1);g.restore();}
+ function gearIcon(hero,slot,id,x,y,size=16,png=null){
+  if(png?.length){
+   const key='icon:'+hero+':'+slot+':'+id+':'+Array.from(png).join(',');
+   let im=images.get(key);
+   if(!im){im=new Image();im.src='data:image/png;base64,'+btoa(Array.from(png,b=>String.fromCharCode(b)).join(''));images.set(key,im);}
+   if(im.complete&&im.naturalWidth){const k=Math.min(size/im.width,size/im.height);const w=Math.round(im.width*k),h=Math.round(im.height*k);g.drawImage(im,Math.round(x-w/2),Math.round(y-h/2),w,h);return true;}
+  }
   const r=ArmyArt.gear[hero+':'+slot+':'+id];
   if(!r||!r[2]||!r[3])return false;
   const im=image('hero'+hero);
@@ -46,9 +52,9 @@ const PixelUI=(()=>{
   g.drawImage(im,r[0],r[1],r[2],r[3],x-Math.floor(w/2),y-Math.floor(h/2),w,h);
   return true;
  }
- function gear(hero,slot,id,x,y,upgrade=0){
+ function gear(hero,slot,id,x,y,upgrade=0,png=null){
   if(upgrade>0){const color=upgrade<=4?'#0048ff':upgrade<=8?'#00b300':upgrade<=11?'#ff7f00':upgrade<=14?'#ce00ff':'#ff0019';g.strokeStyle=color;g.strokeRect(x-9,y-9,18,18);if(upgrade>=12)for(let i=0;i<4;i++){const t=frame*.15+i*Math.PI/2;rect(x+Math.cos(t)*10,y+Math.sin(t)*10,2,2,color);}text('+'+upgrade,x-8,y-14,{color,scale:.6,max:23,shadow:true});}
-  gearIcon(hero,slot,id,x,y);
+  gearIcon(hero,slot,id,x,y,16,png);
  }
  function statsIcon(index,x,y){const im=image('ability');if(im.complete&&im.naturalWidth)g.drawImage(im,0,index*16,16,16,x,y,16,16);}
  const digits=['0111110/1100011/1100111/1101011/1110011/1100011/1100011/1100011/0111110','0011000/0111000/0011000/0011000/0011000/0011000/0011000/0011000/0111100','0111110/1100011/0000011/0000011/0001110/0110000/1100000/1100000/1111111','1111110/0000011/0000011/0000011/0011110/0000011/0000011/0000011/1111110','0000110/0001110/0011110/0110110/1100110/1111111/0000110/0000110/0000110','1111111/1100000/1100000/1111110/0000011/0000011/0000011/1100011/0111110','0011110/0110000/1100000/1100000/1111110/1100011/1100011/1100011/0111110','1111111/0000011/0000110/0001100/0011000/0011000/0011000/0011000/0011000','0111110/1100011/1100011/1100011/0111110/1100011/1100011/1100011/0111110','0111110/1100011/1100011/1100011/0111111/0000011/0000011/0000110/0111100'];
@@ -65,6 +71,42 @@ const PixelUI=(()=>{
   g.save();g.setTransform(1,0,0,1,0,0);g.drawImage(number,Math.round(right*nativeScale)-width,Math.round(y*nativeScale));g.restore();
  }
  function heading(title){rect(0,18,320,34,'#224768');rect(0,50,320,1,'#e1b84e');rect(0,51,320,1,'#87b5d5');text(title,160,25,{title:true,align:'center',color:'#ffdf39',shadow:true,max:305});}
+ function textWidth(str){
+  const f=ArmyArt.body;
+  return [...String(str).normalize('NFC')].reduce((w,c)=>w+f.widths[Math.max(0,f.chars.indexOf(c))],0)/nativeScale;
+ }
+ function wrapText(str,width){
+  const lines=[];
+  for(const part of str.split('\n')){
+   let line='';
+   for(const word of part.split(/\s+/).filter(Boolean)){
+    if(line&&textWidth(line+' '+word)>width){lines.push(line);line='';}
+    line+=(line?' ':'')+word;
+   }
+   if(line)lines.push(line);
+  }
+  return lines;
+ }
+ function stripedBox(x,y,w,h){
+  rect(x+2,y,w-4,h,'#2c475e');
+  rect(x,y+2,w,h-4,'#2c475e');
+  rect(x+2,y+2,w-4,h-4,'#c5d5ef');
+  g.save();g.beginPath();g.rect(x+2,y+2,w-4,17);g.clip();
+  rect(x,y,w,19,'#244866');
+  for(let offset=-5;offset<w+14;offset+=27){
+   g.fillStyle='#ffdc54';g.beginPath();g.moveTo(x+offset,y+2);
+   g.lineTo(x+offset+13,y+2);g.lineTo(x+offset+5,y+19);
+   g.lineTo(x+offset-8,y+19);g.fill();
+  }
+  g.restore();
+ }
+ function bottomDialog(lines,offset=0){
+  const count=Math.min(Math.max(1,Math.floor((height-57)/12)),4,lines.length);
+  const start=Math.min(offset,Math.max(0,lines.length-count));
+  const h=Math.max(50,22+count*12),y=height-31-h;
+  frameBox(6,y,308,h);
+  lines.slice(start,start+count).forEach((t,i)=>text(t,160,y+(h-count*12)/2+i*12,{max:293,align:'center'}));
+ }
  function frameBox(x,y,w,h){
   rect(x+3,y,w-6,h,'#3c6381');rect(x,y+3,w,h-6,'#3c6381');
   rect(x+3,y+3,w-6,h-6,'#c7d5ed');
@@ -97,7 +139,7 @@ const PixelUI=(()=>{
    text(label,6,y+5+i*row,{max:w-12});zone(4,y+3+i*row,w-8,row,fn);
   });
  }
- function start(paint){cancelAnimationFrame(raf);let last=-1;function tick(now){const f=Math.floor(now/42);if(f!==last){last=f;frame=f;hits=[];sky();paint();}raf=requestAnimationFrame(tick);}raf=requestAnimationFrame(tick);}
+ function start(paint,{transparent=false}={}){cancelAnimationFrame(raf);let last=-1;function tick(now){const f=Math.floor(now/42);if(f!==last){last=f;frame=f;hits=[];if(transparent)g.clearRect(0,0,320,height);else sky();paint();}raf=requestAnimationFrame(tick);}raf=requestAnimationFrame(tick);}
  canvas.addEventListener('pointerup',e=>{const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*320/r.width,y=(e.clientY-r.top)*height/r.height;for(let i=hits.length-1;i>=0;i--){const h=hits[i];if(x>=h.x&&x<h.x+h.w&&y>=h.y&&y<h.y+h.h){h.run?.();break;}}});
- return {g,text,rect,sprite,avatar,aura,gear,gearIcon,statsIcon,rank,heading,panel,frameBox,footer,menu,zone,start,get height(){return height;},get frame(){return frame;},canvas};
+ return {g,text,textWidth,wrapText,rect,sprite,avatar,aura,gear,gearIcon,statsIcon,rank,heading,panel,frameBox,stripedBox,bottomDialog,footer,menu,zone,start,get height(){return height;},get frame(){return frame;},canvas};
 })();

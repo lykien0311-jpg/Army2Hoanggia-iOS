@@ -70,14 +70,17 @@ function readArmyShot(r) {
         paths.push(points);
         if (bullet === 48) r.take(r.u8() * 4);
     }
+    const impacts=[];
     const effect = r.u8();
     if (effect === 1 || effect === 2) r.take(4);
     if (r.pos < r.bytes.length) {
         if (r.i32() !== 1112552752) throw Error('Phần mở rộng đạn chưa hỗ trợ');
-        r.take(r.u16() * 12);
+        const count=r.u16();
+        if(count>128)throw Error('Quá nhiều điểm sát thương');
+        for(let i=0;i<count;i++)impacts.push({projectile:r.u8(),sample:r.u16(),slot:r.u8(),delta:r.i32(),max:r.i32()});
     }
     r.end();
-    return {player,bullet,pow,x,y,angle,paths};
+    return {player,bullet,pow,x,y,angle,paths,impacts};
 }
 
 class ArmySpectator {
@@ -98,13 +101,14 @@ class ArmySpectator {
         if (cmd === 8 && this.phase === 'terrain') {
             r.take(10);
             for (let i = 0; i < 8; i++) {
-                if (r.i32() === -1) continue;
-                r.take(2);
+                const id=r.i32();if (id === -1) continue;
+                const clan=r.i16();
                 const name = r.utf();
                 r.take(16);
                 const character = r.u8();
-                r.take(12);
-                this.players[i] = {name, character};
+                const parts=Array.from({length:5},()=>r.i16());
+                r.take(2);
+                this.players[i] = {id,clan,name,character,parts};
             }
             r.end();
         } else if (cmd === 89) {
@@ -124,9 +128,18 @@ class ArmySpectator {
         } else if (cmd === 51) {
             const actor = this.players[r.u8()], hp = r.hp();
             r.i8(); r.end();
-            if (actor) actor.hp = hp;
+            if (actor) {
+                const before=actor.hp;actor.hp=hp;
+                if(before!==undefined&&before!==hp&&this.onHealth)this.onHealth(actor,hp-before);
+            }
+        } else if (cmd === 106 || cmd === 107) {
+            const ending=r.u8(),actor=this.players[r.u8()];r.end();
+            if(actor)actor[cmd===106?'blind':'frozen']=!ending;
+        } else if (cmd === 108) {
+            const actor=this.players[r.u8()];if(actor)actor.poison=true;
         } else if (cmd === 24) {
             this.turn = r.u8();
+            this.seconds = r.pos<r.bytes.length?r.u8():40;
         } else if (cmd === 25) {
             this.wind = [r.i8(),r.i8()];
         } else if ((cmd === 22 || cmd === 84) && this.phase === 'live') {

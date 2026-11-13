@@ -3,6 +3,7 @@ const field=new ArmyBattlefield(),market=new ArmyMarket(),ui=PixelUI;
 const names=['Gunner','Miss 6','Electrician','King Kong','Rocketer','Granos','Chicky','Tarzan','Apache','Magenta'];
 let tab='',view='board',reply=null,focus=0,scroll=0,waiting=false,timeout,notice='',menuItems=null,menuFocus=0,eventRequest=0,filter=-1,modal=null,editSubmit=null,profileFocus=0,ownId=0,ownRank=0,character=-1,closed=false;
 let balance='',fieldResult=null;
+let rankSelection=null;
 const icons=new Map();
 function bytes64(bytes){return btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));}
 function status(message){notice=String(message);document.getElementById('status').textContent=notice;}
@@ -31,7 +32,12 @@ function openTab(name,selected=-1,serial=0,outcome=null){
     else if(name==='event')eventRank();
     else browse();
 }
-function profile(){const r=field.board[focus];if(r)send(-120,()=>field.request(2,r));}
+function profile(){
+    const r=field.board[focus];
+    if(!r)return;
+    send(-120,()=>field.request(2,r));
+    rankSelection={focus,scroll};
+}
 function challenge(){
     if(waiting)return;
     if(!ownRank){board();return;}
@@ -131,6 +137,7 @@ function messagePlayer(){
     });
 }
 window.lobbyMessageSent=()=>{unlock();status('Đã gửi yêu cầu nhắn tin.');};
+window.lobbyRequestFailed=()=>{unlock();status('Chưa gửi được yêu cầu. Bấm cập nhật để thử lại.');};
 window.lobbyBalance=(xu,luong)=>{
     balance=/^\d+$/.test(xu)&&/^\d+$/.test(luong)?'Tiền: '+xu+' xu - '+luong+' lượng':'';
 };
@@ -142,7 +149,11 @@ function currentItems(){
 function wrap(f,d,n,cols){if(n<=1)return 0;if(Math.abs(d)===1){const first=Math.floor(f/cols)*cols,last=Math.min(n-1,first+cols-1);return d<0?(f===first?last:f-1):(f===last?first:f+1);}const first=f%cols,last=first+Math.floor((n-1-first)/cols)*cols;return d<0?(f===first?last:f-cols):(f===last?first:f+cols);}
 function move(delta){if(menuItems){menuFocus=(menuFocus+delta+menuItems.length)%menuItems.length;return;}const n=tab==='field'&&view==='board'?field.board.length:tab==='market'?currentItems().length:reply?.rows?.length||0;if(n)focus=(focus+delta+n)%n;}
 const gameKeys={[-22]:-7,[-11]:-7,27:-7,35:-7,82:-7,114:-7,[-21]:-6,76:-6,108:-6,10:-5,13:-5,53:-5,70:-5,102:-5,50:-1,56:-2,52:-3,54:-4};
-function fieldBack(){view='board';focus=scroll=0;}
+function fieldBack(){
+    view='board';
+    ({focus,scroll}=rankSelection??{focus:0,scroll:0});
+    rankSelection=null;
+}
 function key(code){
  if(closed||!tab)return;
  if(editSubmit){
@@ -155,7 +166,7 @@ function key(code){
  if(modal){if(code===-1){modal.offset=Math.max(0,(modal.offset||0)-1);return;}if(code===-2){modal.offset=Math.min(modal.lines.length-1,(modal.offset||0)+1);return;}if(code===-7)modal=null;else if(code===-5||code===-6)guard(modal.confirm??(()=>{modal=null;}));return;}
  if(menuItems){if(code===-1||code===-3)move(-1);else if(code===-2||code===-4)move(1);else if(code===-5||code===-6)menuItems[menuFocus][1]();else if(code===-7)menuItems=null;return;}
  if(code===-7){if(tab==='field'&&view!=='board')fieldBack();else close();return;}
- if(code===-6){if(tab==='market')marketMenu();else if(tab==='event')guard(()=>eventRank(eventRequest));else if(view==='board'||view==='profile')fieldMenu();else refreshFieldList();return;}
+ if(code===-6){if(tab==='market')marketMenu();else if(tab==='event')guard(()=>eventRank(eventRequest));else if(view==='board')fieldMenu();else if(view==='profile')profileDetails();else refreshFieldList();return;}
  if(tab==='field'&&view==='profile'){if([-1,-2,-3,-4].includes(code)){const n=reply.items.length+(reply.display?.outfit?1:0);profileFocus=(profileFocus+(code===-1?-2:code===-2?2:code===-3?-1:1)+n)%n;return;}if(code===-5||code===13){profileDetails();return;}}
  if(code===-5||code===13){guard(()=>tab==='market'?marketSelect():tab==='field'?(view==='board'?challenge():view==='matches'?watch():profile()):messagePlayer());return;}
  if(tab==='market'){
@@ -181,7 +192,7 @@ function watch(){
     }};
 }
 function row(r,y,selected,top=false){ui.rect(1,y,318,35,selected?'#ffe277':top?'#254c6d':'#d4e3ee');ui.rect(2,y+34,316,1,'#81b5d3');ui.avatar(r,21,y+32);const white=top&&!selected;ui.text(r.name,41,y+2,{max:205,color:white?'#fff':'#1c3b4e',shadow:white});ui.text('Lv '+r.level+' '+(r.percent??0)+'%',41,y+13,{max:205,scale:.8,color:white?'#fff':'#1c3b4e',shadow:white});const prize=r.rank===1?'20tr xu + 2.000 lượng/ngày':r.rank===2?'15tr xu + 1.500 lượng/ngày':r.rank===3?'10tr xu + 1.000 lượng/ngày':'';if(prize)ui.text(prize,41,y+23,{max:205,scale:.78,color:white?'#fff':'#1c3b4e',shadow:white});ui.rank(r.rank,317,y+3,28);}
-function drawField(){ui.heading(view==='board'?'Chiến trường':view==='profile'?'Trang bị':view==='matches'?'Trận đấu':'Lịch sử');
+function drawField(){if(view!=='profile')ui.heading(view==='board'?'Chiến trường':view==='matches'?'Trận đấu':'Lịch sử');
  if(view==='board'){
   ui.rect(0,53,320,16,'#1478ad');ui.text('Tên',8,55,{color:'#ffe270',scale:.75});ui.text('Hạng',314,55,{color:'#ffe270',align:'right',scale:.75});
   const boardRows=field.board,top=boardRows.filter(r=>r.rank<=3),rest=boardRows.filter(r=>r.rank>3);top.forEach((r,i)=>{const y=72+i*37,index=boardRows.indexOf(r);row(r,y,focus===index,true);ui.zone(0,y,320,36,()=>{focus=index;});});
@@ -190,7 +201,7 @@ function drawField(){ui.heading(view==='board'?'Chiến trường':view==='profi
   if(!boardRows.length&&!waiting)ui.text('Chưa có người chơi.',160,95,{align:'center'});
   if(field.self){const self=field.self,y=ui.height-62;ui.rect(0,y,320,38,'#9be0ef');ui.avatar(self,21,y+34);ui.text(self.name+' (Bạn)',42,y+2,{max:190});ui.text('Lv '+self.level+' '+self.percent+'%',42,y+15,{scale:.85,max:190});ui.rank(self.rank,316,y+3,28);}
   ui.footer('Menu','Thách đấu','Đóng',fieldMenu,()=>guard(challenge),close);
- }else if(view==='profile'&&reply){drawProfile();ui.footer('Menu','Chọn','Đóng',fieldMenu,profileDetails,fieldBack);}
+ }else if(view==='profile'&&reply){drawProfile();ui.footer('Chi tiết','','Đóng',profileDetails,null,fieldBack);}
  else{
     const rows=reply?.rows||[],height=28,capacity=Math.max(1,Math.floor((ui.height-81)/height));
     ui.frameBox(5,22,310,ui.height-53);
@@ -208,23 +219,38 @@ function drawField(){ui.heading(view==='board'?'Chiến trường':view==='profi
     ui.footer('Cập nhật',view==='matches'?'Xem':'','Đóng',refreshFieldList,()=>guard(watch),fieldBack);
  }
 }
-function profileDetails(){const r=reply,p=r.items.concat(r.display?.outfit||[])[profileFocus],d=r.details?.[profileFocus];if(!p)return;const lines=[p.name+' +'+p.upgrade];if(d){lines.push('Chỉ số: '+d.flat.join(' / '),'Phần trăm: '+d.percent.join(' / '),'Hạn: '+d.days+' ngày · '+d.slots+' ô ngọc');}for(const gem of r.gems?.[profileFocus]||[])lines.push(gem.name,gem.detail);modal={title:'Thông tin trang bị',lines};}
+function profileDetails(){
+ const r=reply,p=r?.items?.concat(r.display?.outfit||[])[profileFocus],d=r?.details?.[profileFocus];
+ if(!p||p.id<0)return;
+ const stats=['Sinh lực','Sức mạnh','Phòng thủ','May mắn','Đồng đội'];
+ const format=(values,unit)=>stats.flatMap((name,i)=>values[i]?[name+' '+(values[i]>0?'+':'')+values[i]+unit]:[]);
+ const info=d?[...format(d.flat,''),...format(d.percent,'%'),'Ngày hết hạn: '+d.days,'Slot trống '+d.slots].join('. ')+'.':p.name+(p.upgrade?' +'+p.upgrade:'');
+ const gems=(r.gems?.[profileFocus]||[]).flatMap(gem=>[gem.name,gem.detail]).filter(Boolean);
+ modal={equipment:true,lines:ui.wrapText([info,...gems].join('\n'),292)};
+}
 function drawProfile(){const r=reply,gear=r.items.concat(r.display?.outfit||[]),x=68,y=Math.max(30,Math.floor((ui.height-24-170)/2));
- ui.rect(x,y,184,170,'#304860');ui.rect(x+2,y+2,180,166,'#c5d5ef');ui.rect(x+3,y+2,178,15,'#244866');for(let n=0;n<178;n+=24){ui.g.fillStyle='#ffdc54';ui.g.beginPath();ui.g.moveTo(x+3+n,y+2);ui.g.lineTo(x+15+n,y+2);ui.g.lineTo(x+7+n,y+17);ui.g.lineTo(x-5+n,y+17);ui.g.fill();}ui.rect(x+61,y+2,62,15,'#c5d5ef');ui.text('Trang bị',x+92,y+3,{align:'center',max:60});
- ui.avatar({...r.avatar,aura:r.display?.aura??0},x+40,y+71);const sx=[40,15,65,55,25],sy=[33,55,55,83,83];for(let i=0;i<5;i++){if(gear[i])ui.gear(r.avatar.character,i,gear[i].id,x+sx[i],y+sy[i],gear[i].upgrade);ui.zone(x+sx[i]-10,y+sy[i]-10,20,20,()=>{profileFocus=i;});}
- ui.rect(x+6,y+96,72,67,'#3d6d9d');const start=Math.floor(profileFocus/4)*4;for(let i=0;i<4&&start+i<gear.length;i++){const slot=start+i,gx=x+27+i%2*30,gy=y+115+Math.floor(i/2)*30;ui.gear(r.avatar.character,slot,gear[slot].id,gx,gy,gear[slot].upgrade);if(slot===profileFocus){ui.g.strokeStyle='#ffd34e';ui.g.strokeRect(gx-9,gy-9,18,18);}ui.zone(gx-10,gy-10,20,20,()=>{if(profileFocus===slot)profileDetails();else profileFocus=slot;});}
+ ui.stripedBox(x,y,184,170);ui.rect(x+61,y+2,62,15,'#c5d5ef');ui.text('Trang bị',x+92,y+3,{align:'center',shadow:true,color:'#fff',max:60});
+ ui.avatar({...r.avatar,aura:r.display?.aura??0},x+40,y+71);const sx=[40,15,65,55,25],sy=[33,55,55,83,83];for(let i=0;i<5;i++){if(gear[i])ui.gear(r.avatar.character,i,gear[i].id,x+sx[i],y+sy[i],gear[i].upgrade,r.icons?.[i]);ui.zone(x+sx[i]-10,y+sy[i]-10,20,20,()=>{profileFocus=i;});}
+ ui.rect(x+6,y+96,72,67,'#3d6d9d');const start=Math.floor(profileFocus/4)*4;for(let i=0;i<4&&start+i<gear.length;i++){const slot=start+i,gx=x+27+i%2*30,gy=y+115+Math.floor(i/2)*30;ui.gear(r.avatar.character,slot,gear[slot].id,gx,gy,gear[slot].upgrade,r.icons?.[slot]);if(slot===profileFocus){ui.g.strokeStyle='#ffd34e';ui.g.strokeRect(gx-9,gy-9,18,18);}ui.zone(gx-10,gy-10,20,20,()=>{if(profileFocus===slot)profileDetails();else profileFocus=slot;});}
  ui.text(start===0?'>':'<',x+71,y+151,{align:'center',color:'#ffff30'});ui.zone(x+65,y+150,13,13,()=>{profileFocus=start===0?4:0;});ui.text('Level: '+r.level,x+88,y+22,{max:66,scale:.85});ui.text((r.display?.percent??0)+'%',x+177,y+22,{align:'right',max:24,scale:.85});
  for(let i=0;i<5;i++){const yy=y+38+18*i;ui.statsIcon(i,x+83,yy);ui.rect(x+101,yy,35,16,'#24486d');ui.rect(x+138,yy,18,16,'#24486d');ui.rect(x+158,yy,19,16,'#24486d');ui.text(r.abilities[i]??0,x+119,yy+1,{align:'center',max:34,color:'#ffff30',scale:.8});ui.text('0',x+147,yy+1,{align:'center',color:'#ffff30'});ui.text('0',x+168,yy+1,{align:'center',color:'#ffff30'});}
- ui.rect(x+83,y+130,95,16,'#17313e');ui.rect(x+83,y+148,95,16,'#17313e');ui.text(r.display?r.display.xu+'xu-'+r.display.luong+'lg':'--',x+84,y+131,{max:93,color:'#ffff30',scale:.8});ui.text(gear[profileFocus]?.name||'',x+84,y+149,{max:93,color:'#00bc28',scale:.8});
+ ui.rect(x+83,y+130,95,16,'#17313e');ui.rect(x+83,y+148,95,16,'#17313e');
+ const money=r.display?r.display.xu+'xu-'+r.display.luong+'lượng':'';
+ ui.g.save();ui.g.beginPath();ui.g.rect(x+84,y+130,93,16);ui.g.clip();
+ const span=ui.textWidth(money)+16;
+ const offset=span>109?Math.floor(ui.frame*.6)%span:0;
+ ui.text(money,x+84-offset,y+131,{color:'#ffff30'});
+ if(offset)ui.text(money,x+84-offset+span,y+131,{color:'#ffff30'});
+ ui.g.restore();ui.text(gear[profileFocus]?.name||'',x+84,y+149,{max:93,color:'#00bc28',scale:.8});
 }
 function itemImage(item,x,y,side){if(item.icon.length&&!icons.has(item.key)){const im=new Image();im.src='data:image/png;base64,'+bytes64(item.icon);icons.set(item.key,im);}const im=icons.get(item.key);if(im?.complete&&im.naturalWidth){const size=Math.min(15,side-8),scale=Math.min(size/im.width,size/im.height);ui.g.drawImage(im,Math.round(x+(side-im.width*scale)/2),Math.round(y+(side-im.height*scale)/2),im.width*scale,im.height*scale);}else ui.text(item.name,x+side/2,y+10,{align:'center',max:side-4});
  const up=item.enhancement||0;if(up){const rgb=up<=4?'#164dff':up<=8?'#00b300':up<=11?'#ff7f00':up<=14?'#ce00ff':'#ff0019';ui.text('+'+up,x+2,y+1,{color:rgb,scale:.75,shadow:true});if(up>=12){for(let i=0;i<4;i++){const a=ui.frame*.15+i*Math.PI/2,xx=x+side/2+Math.cos(a)*(side/2-3),yy=y+side/2+Math.sin(a)*(side/2-3);ui.rect(xx-2,yy,5,1,rgb);ui.rect(xx,yy-2,1,5,'#fff');}}}if(item.quantity>1)ui.text(item.quantity,x+side-2,y+side-10,{align:'right',color:'#fff27a',shadow:true,max:side-4,scale:.65});}
 function inventoryIcon(item,x,y,side){
     const cx=x+Math.floor(side/2),cy=y+Math.floor(side/2);
     const up=item.enhancement;
-    if(up>=15)ui.rect(cx-7,cy-6,14,14,'#750919');
-    let w=13,h=13;
-    const drawn=item.sprite&&ui.gearIcon(...item.sprite,cx,cy,13);
+    if(up>=15)ui.rect(cx-6,cy-5,12,12,'#750919');
+    let w=11,h=11;
+    const drawn=!item.icon.length&&item.sprite&&ui.gearIcon(...item.sprite,cx,cy,11);
     if(!drawn){
         if(item.icon.length&&!icons.has(item.key)){
             const icon=new Image();
@@ -233,7 +259,7 @@ function inventoryIcon(item,x,y,side){
         }
         const im=icons.get(item.key);
         if(im?.complete&&im.naturalWidth){
-            const scale=Math.min(1,13/Math.max(im.width,im.height));
+            const scale=Math.min(1,11/Math.max(im.width,im.height));
             w=Math.max(1,Math.round(im.width*scale));
             h=Math.max(1,Math.round(im.height*scale));
             ui.g.drawImage(im,cx-Math.floor(w/2),cy-Math.floor(h/2),w,h);
@@ -316,6 +342,11 @@ function paint(){
         ui.menu(menuItems,menuFocus);
     }else if(modal){
         ui.zone(0,0,320,ui.height,()=>{});
+        if(modal.equipment){
+            ui.bottomDialog(modal.lines,modal.offset||0);
+            ui.footer('','OK','',null,()=>{modal=null;},null);
+            return;
+        }
         const cap=Math.max(1,Math.floor((ui.height-90)/15)),start=modal.offset||0;
         const lines=modal.lines.slice(start,start+cap),h=38+lines.length*15,y=(ui.height-h)/2;
         ui.frameBox(24,y,272,h);

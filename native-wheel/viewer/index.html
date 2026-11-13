@@ -1,10 +1,7 @@
 <!doctype html><html lang="vi"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' blob:">
-<style>
-html,body{height:100%;margin:0;background:#80c8eb;color:#162e44;font:600 15px -apple-system,sans-serif}
-body{display:flex;flex-direction:column}header{background:#e6eff8;padding:10px;display:flex;justify-content:space-between;align-items:center}
-canvas{display:block;width:100%;height:100%;image-rendering:pixelated}main{flex:1;min-height:0}p{margin:0;padding:8px;background:#e6eff8}
-</style></head><body><header><span id="room">Xem trận</span><span id="turn"></span></header>
-<main><canvas></canvas></main><p id="state">Đang nhận bản đồ…</p>
-<script src="protocol.js"></script><script src="screen.js"></script></body></html>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' blob: data:; form-action 'none'">
+<title>Army2 — Xem trận</title><style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;touch-action:none}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style></head><body data-transparent="true"><canvas id="game" tabindex="0" aria-label="Xem trận Army2"></canvas><p id="state" class="sr" role="status"></p>
+<script src="protocol.js"></script><script src="art.js"></script><script src="pixel-ui.js"></script><script src="screen.js"></script></body></html>

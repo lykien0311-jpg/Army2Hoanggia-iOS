@@ -97,6 +97,28 @@ int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uin
     NJob job={.variant=variant,.command=command,.expected=connection,.length=length,.payload=bytes};
     return NRun(env,NNative,&job)>0;
 }
+
+/* Rương đồ invokes this only for the read-only Chi tiết action. The
+   inventory refresh can replace the item, so read its current data at tap. */
+static int NForgeItem(void *env,void *opaque){
+    uint8_t *item=opaque;
+    const int id=item[128];
+    if((id>=69&&id<=73)||(id>=120&&id<=129)||(id>=238&&id<=242))return 1;
+    void *detail=*(void **)(item+104);
+    if(!detail)return 0;
+    static const uint16_t prefix[]={0x43,0xf4,0x6e,0x67,0x20,0x74,0x68,0x1ee9,0x63,0x20,0x63,0x68,0x1ebf,0x20,0x74,0x1ea1,0x6f};
+    void **jni=*(void ***)env;
+    int length=((int (*)(void *,void *))jni[164])(env,detail);
+    if(length<(int)(sizeof prefix/sizeof *prefix))return 0;
+    const uint16_t *chars=((const uint16_t *(*)(void *,void *,void *))jni[165])(env,detail,NULL);
+    if(!chars)return 0;
+    int match=!memcmp(chars,prefix,sizeof prefix);
+    ((void (*)(void *,void *,const uint16_t *))jni[166])(env,detail,chars);
+    return match;
+}
+__attribute__((visibility("default"))) int AGRecipeDetail(void *env,void *item){
+    return env&&item&&NRun(env,NForgeItem,item)>0;
+}
 typedef struct {int variant;AGLobbyAccount *account;} NLobbyAccountJob;
 static int NLobbyAccount(void *env,void *context){
     NLobbyAccountJob *job=context;
@@ -230,6 +252,7 @@ __attribute__((visibility("default"))) int AGNotesReceive(void *env,void *messag
 // Native input guards close the short interval before UIKit presents its modal.
 __attribute__((visibility("default"))) int AGNotesInput(int variant,int kind,int a,int b){
     if(variant<0||variant>=6)return 0;
+    if(AGViewerInput(variant,kind,a)){NClear(variant);return 1;}
     if(AGLobbyInput(variant,kind,a,b)){NClear(variant);return 1;}
     if(!atomic_load(&NInitialized)){int wheel=AGWheelInput(variant,kind,a,b);if(wheel)NClear(variant);return wheel;}
     int room=NRoom(variant),consumed=0,inbox=0;pthread_mutex_lock(&NMutex);NModel *m=&NModels[variant];
