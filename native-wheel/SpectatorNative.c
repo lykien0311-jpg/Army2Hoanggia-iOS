@@ -13,6 +13,8 @@ void AGNativeWatchCamera(int v,int k,int c){}
 void AGNativeWatchTick(void *e,int v){}
 #else
 #include <mach-o/dyld.h>
+#include <pthread.h>
+static pthread_mutex_t watchLock=PTHREAD_MUTEX_INITIALIZER;
 #include "SpectatorNativeMap.h"
 #include "TurnMap.h"
 #include "NotesMap.h"
@@ -109,7 +111,7 @@ static int restore(void *e,void *opaque){
 }
 static int guard(void *e,int (*fn)(void *,void *),void *j){return AGWheelGuard(e,fn,j,(void *)(base()+0x1300d54));}
 int AGNativeWatchAvailable(void){return 1;}
-void AGNativeWatchEnd(void *e,int v){
+static void endNative(void *e,int v){
     if(v<0||v>=6)return;Watch *w=&watches[v];
     if(w->prepared)guard(e,restore,w);
     unpin(e,w->back);unpin(e,w->oldMap);unpin(e,w->oldTiles);free(w->bytes);memset(w,0,sizeof *w);
@@ -124,7 +126,7 @@ static int resetClock(void *e,void *opaque){
     ((void (*)(void *,void *))(base()+m->clockReset))(e,clock);
     return 1;
 }
-int AGNativeWatchPacket(void *e,int v,const uint8_t *p,size_t n){
+static int packetNative(void *e,int v,const uint8_t *p,size_t n){
     if(v<0||v>=6||n<4)return 0;Watch *w=&watches[v];
     if(p[3]==3){
         if(n!=21||w->active||!u16(p+15)||!u16(p+17)||u16(p+19)>4096)return 0;
@@ -159,7 +161,7 @@ void AGNativeWatchCamera(int v,int kind,int code){
     if(kind==0&&bit)atomic_fetch_or(&cameraKeys[v],bit);else if(kind==1&&bit)atomic_fetch_and(&cameraKeys[v],~bit);
     if(kind==0&&(code==-7||code=='R'||code=='r')){atomic_fetch_xor(&freeCamera[v],1);atomic_store(&cameraChanged[v],1);atomic_store(&cameraKeys[v],0);}
 }
-void AGNativeWatchTick(void *e,int v){
+static void tickNative(void *e,int v){
     if(v<0||v>=6||!watches[v].started)return;Watch *w=&watches[v];
     uint8_t *g=global(AGSpectatorMaps[v].cameraClass);if(!g)return;
     if(atomic_exchange(&cameraChanged[v],0)&&!atomic_load(&freeCamera[v]))g[0xbc]=1;
@@ -172,4 +174,7 @@ void AGNativeWatchTick(void *e,int v){
     x=x<0?0:x>maxX?(maxX>0?maxX:0):x;y=y<0?0:y>maxY?(maxY>0?maxY:0):y;
     *(int *)(g+0xa4)=*(int *)(g+0xac)=x;*(int *)(g+0xa8)=*(int *)(g+0xb0)=y;
 }
+void AGNativeWatchEnd(void *e,int v){pthread_mutex_lock(&watchLock);endNative(e,v);pthread_mutex_unlock(&watchLock);}
+int AGNativeWatchPacket(void *e,int v,const uint8_t *p,size_t n){pthread_mutex_lock(&watchLock);int ok=packetNative(e,v,p,n);pthread_mutex_unlock(&watchLock);return ok;}
+void AGNativeWatchTick(void *e,int v){if(pthread_mutex_trylock(&watchLock))return;tickNative(e,v);pthread_mutex_unlock(&watchLock);}
 #endif

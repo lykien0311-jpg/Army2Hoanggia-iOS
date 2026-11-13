@@ -4,6 +4,7 @@
 int AGViewerReceive(void *env,void *message,int variant);
 void AGViewerTick(void *env,int variant);
 int AGViewerInput(int variant,int kind,int code);
+int AGViewerActive(int variant);
 void AGViewerExpectBattlefield(int variant,uintptr_t connection);
 uintptr_t AGViewerConnection(void *env,int variant);
 uintptr_t AGViewerWaitToken(int variant);

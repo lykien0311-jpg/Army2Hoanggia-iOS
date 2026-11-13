@@ -33,6 +33,8 @@ jobs:
           PY
           python3 native-wheel/retain_build.py B281_FRAMEWORK native-wheel/build/framework-281.zip
   visual:
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
@@ -44,3 +46,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: node native-wheel/test_lobby.js
       - run: node native-wheel/test_watch_render.js
+      - name: Retain interface checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 native-wheel/retain_build.py B281_UI native-wheel/build/ui-281.zip native-wheel/build/lobby-profile.png native-wheel/build/lobby-battlefield.png

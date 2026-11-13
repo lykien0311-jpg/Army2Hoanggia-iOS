@@ -36,8 +36,9 @@ typedef NS_ENUM(int, WatchAction) { NoAction, Accept, Leave, Refresh };
 
 static ArmyWatch *current;
 static atomic_bool active;
+static atomic_int activeVariant;
 static atomic_bool nativeCleanup[6];
-int AGViewerActive(int v){return v>=0&&v<6&&atomic_load(&active)&&current&&current.variant==v;}
+int AGViewerActive(int v){return v>=0&&v<6&&atomic_load(&active)&&atomic_load(&activeVariant)==v;}
 static bool heldKeys[6][256];
 static atomic_uintptr_t nativeWait[6];
 static uintptr_t battlefieldSession[6];
@@ -129,7 +130,7 @@ static BOOL combatPacket(int cmd) {
         default:return NO;
     }
 }
-int AGViewerReceive(void *env,void *message,int variant) {
+static int receiveState(void *env,void *message,int variant,NSData **nativePacket,ArmyWatch **owner) {
     if(!env||!message||variant<0||variant>=6)return 0;
     int cmd=*(const int8_t *)((const uint8_t *)message+0x30);
     if(cmd!=-102 && !atomic_load(&active))return 0;
@@ -157,7 +158,7 @@ int AGViewerReceive(void *env,void *message,int variant) {
                     w.ticket=[body subdataWithRange:NSMakeRange(6,8)];
                     w.question=[[NSString alloc] initWithBytes:p+16 length:n-16 encoding:NSUTF8StringEncoding]?:@"Bạn muốn xem trận đang diễn ra?";
                     w.pending=[NSMutableArray array];w.phase=Offered;w.deadline=now()+60;
-                    current=w;atomic_store(&active,true);screen(w);return 1;
+                    current=w;atomic_store(&activeVariant,variant);atomic_store(&active,true);screen(w);return 1;
                 }
                 if(!w && p[3]==3 && n==21 && p[4]==0 && p[5]==0 &&
                    battlefieldUntil[variant]>now() && battlefieldSession[variant]==AGViewerConnection(env,variant)){
@@ -165,7 +166,7 @@ int AGViewerReceive(void *env,void *message,int variant) {
                     w.room=p[4];w.area=p[5];w.ticket=[body subdataWithRange:NSMakeRange(6,8)];
                     w.pending=[NSMutableArray array];w.phase=WaitingForMatch;
                     w.deadline=now()+15;
-                    current=w;atomic_store(&active,true);battlefieldUntil[variant]=0;
+                    current=w;atomic_store(&activeVariant,variant);atomic_store(&active,true);battlefieldUntil[variant]=0;
                 }
                 if(!w || w.variant!=variant)return 1;
                 if(p[3]==6){
@@ -177,7 +178,6 @@ int AGViewerReceive(void *env,void *message,int variant) {
                     if(n!=21||p[4]!=w.room||p[5]!=w.area||memcmp(p+6,w.ticket.bytes,8))return 1;
                     if(w.phase==Leaving){w.action=Leave;return 1;}
                     if(w.phase!=WaitingForMatch)return 1;
-                    if(AGNativeWatchAvailable()&&atomic_exchange(&nativeCleanup[variant],false))AGNativeWatchEnd(env,variant);
                     w.phase=InMatch;w.deadline=now()+20;screen(w);
                 }else if(p[3]!=4&&p[3]!=5&&p[3]!=7)return 1;
                 if(w.phase!=InMatch)return 1;
@@ -186,11 +186,8 @@ int AGViewerReceive(void *env,void *message,int variant) {
             }
             if(AGNativeWatchAvailable()){
                 if(cmd==-102){
-                    if(p[3]==6){AGNativeWatchEnd(env,variant);finish(w);return 1;}
-                    if(w.phase==Leaving)return 1;
-                    if(!AGNativeWatchPacket(env,variant,p,n)){leave(w);return 1;}
-                    if(p[3]==7){w.deadline=0;screen(w);}
-                    return 1;
+                    if(w.phase==Leaving&&p[3]!=6)return 1;
+                    *nativePacket=body;*owner=w;return p[3]==6?3:2;
                 }
                 // SP3 has already saved the previous screen. The unmodified
                 // cmd8 parser creates the same native player roster as APK.
@@ -205,6 +202,27 @@ int AGViewerReceive(void *env,void *message,int variant) {
             if(w.pending.count==1)dispatch_async(dispatch_get_main_queue(),^{[w flush];});
             return 1;
         }
+    }
+}
+int AGViewerReceive(void *env,void *message,int variant){
+    @autoreleasepool {
+        NSData *packet=nil;ArmyWatch *owner=nil;
+        int result=receiveState(env,message,variant,&packet,&owner);
+        if(result<2)return result;
+        const uint8_t *p=packet.bytes;
+        // Texture creation may hand off to the GDX render thread. Never hold
+        // the UI/state monitor while waiting for the original game routines.
+        if(result==3){
+            AGNativeWatchEnd(env,variant);
+            @synchronized(ArmyWatch.class){if(current==owner)finish(owner);}
+        }else{
+            if(p[3]==3&&atomic_exchange(&nativeCleanup[variant],false))AGNativeWatchEnd(env,variant);
+            int ok=AGNativeWatchPacket(env,variant,p,packet.length);
+            @synchronized(ArmyWatch.class){
+                if(current==owner){if(!ok)leave(owner);else if(p[3]==7){owner.deadline=0;screen(owner);}}
+            }
+        }
+        return 1;
     }
 }
 void AGViewerTick(void *env,int variant) {

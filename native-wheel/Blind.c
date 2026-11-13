@@ -1,4 +1,5 @@
 #include "Blind.h"
+#include "Spectator.h"
 #include "BossNative.h"
 #include "BlindState.h"
 #include "NotesMap.h"
@@ -27,7 +28,7 @@ void AGBlindTick(int v){
     pthread_mutex_lock(&blindLock);AGBlindContext(&states[v],c.arena,c.local);pthread_mutex_unlock(&blindLock);
 }
 __attribute__((visibility("default"))) int AGBlindActive(int v){
-    if(v<0||v>=6)return 0;pthread_mutex_lock(&blindLock);int active=states[v].active;pthread_mutex_unlock(&blindLock);return active;
+    if(v<0||v>=6||AGViewerActive(v))return 0;pthread_mutex_lock(&blindLock);int active=states[v].active;pthread_mutex_unlock(&blindLock);return active;
 }
 __attribute__((visibility("default"))) void AGBlindReceive(void *env,void *message,int v){
     if(!env||!message||v<0||v>=6)return;
@@ -54,7 +55,7 @@ static int drawWhite(void *env,void *opaque){
     color(env,g,0xffffff);fill(env,g,0,0,j->width,j->height);return 1;
 }
 __attribute__((visibility("default"))) int AGBlindPaint(void *env,void *graphics,int v){
-    if(!env||!graphics||v<0||v>=6)return 0;
+    if(!env||!graphics||v<0||v>=6||AGViewerActive(v))return 0;
     int bossBlind=AGBossBlind(v);
     if(!bossBlind&&!AGBlindActive(v))return 0;
     BlindContext c=context(v);
@@ -71,3 +72,4 @@ __attribute__((visibility("default"))) int AGBlindPaint(void *env,void *graphics
     int viewport[6]={0,0,c.width,c.height,0,0};memcpy(g+0x38,viewport,sizeof viewport);
     g[0x50]=0;g[0x51]=1;return 1;
 }
+
