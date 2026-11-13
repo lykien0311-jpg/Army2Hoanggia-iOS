@@ -126,12 +126,15 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await soft(-5);
  await enter('7');
  assert.equal(await page.evaluate(()=>editState.label),'Trang bị 0 × 7');
+ await page.waitForTimeout(150);
  await page.screenshot({path:path.join(root,'market-price-282.png')});
  await soft(-5);
  const cancelled=await page.evaluate(()=>sent.at(-1)[1].serial);
  await page.evaluate(s=>lobbyInputResult(s,null),cancelled);
  assert.equal(await page.evaluate(()=>editState.title),'Giá cả lô (xu)');
- await enter('900');await page.screenshot({path:path.join(root,'market-password-282.png')});
+ await enter('900');
+ await page.waitForTimeout(150);
+ await page.screenshot({path:path.join(root,'market-password-282.png')});
  await enter('qa-password');
  assert.equal(await page.evaluate(()=>market.pending),true);
  assert.equal(await page.evaluate(()=>editState),null,'Submission clears the password');
