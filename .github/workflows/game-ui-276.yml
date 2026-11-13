@@ -32,21 +32,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          test "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" = true
-          python3 - <<'PY'
-          import base64,json,os,subprocess,hashlib
-          from pathlib import Path
-          data=Path('native-wheel/build/AGWheel-framework.zip').read_bytes()
-          chunks=[]
-          for offset in range(0,len(data),48000):
-              encoded=base64.b64encode(data[offset:offset+48000]).decode()
-              body=json.dumps({'encoding':'utf-8','content':encoded})
-              sha=subprocess.check_output(['gh','api','--method','POST',f'repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs','--input','-','--jq','.sha'],input=body,text=True).strip()
-              chunks.append(sha)
-          print('B276_FRAMEWORK_CHUNKS='+json.dumps(chunks))
-          print('B276_FRAMEWORK_SHA256='+hashlib.sha256(data).hexdigest())
-          PY
+          python3 native-wheel/retain_build.py B276_FRAMEWORK native-wheel/build/AGWheel-framework.zip
   visual:
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
@@ -58,8 +47,15 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: node native-wheel/test_lobby.js
       - uses: actions/upload-artifact@v4
+        id: visual_artifact
+        continue-on-error: true
         if: always()
         with:
           name: Army2Hoanggia-B276-UI-check
           path: native-wheel/build/lobby-*.png
           retention-days: 7
+      - name: Retain private UI screenshots
+        if: steps.visual_artifact.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 native-wheel/retain_build.py B276_VISUAL "$RUNNER_TEMP/visual.zip" 'native-wheel/build/lobby-*.png'

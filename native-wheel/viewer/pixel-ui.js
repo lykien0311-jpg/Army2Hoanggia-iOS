@@ -21,7 +21,8 @@ const PixelUI=(()=>{
  function aura(code,x,y,layer){const tier=code>>>5,level=code&31;if(tier<1||tier>7||level>16)return;
   if(tier>=5){const pal=level<1?0:level<=3?1:level===4?6:level<=7?2:level===8?7:level<=11?3:level<=14?4:5;
    const im=image('k'+(tier-4)+'-p'+pal),n=(((frame>>1)&31)*2+layer)*6,r=ArmyArt.geometry[tier-5];if(im.complete&&im.naturalWidth&&r[n+2]>0)g.drawImage(im,r[n],r[n+1],r[n+2],r[n+3],Math.round(x+r[n+4]),Math.round(y+r[n+5]),r[n+2],r[n+3]);return;}
-  const c=level<=4?'#0048ff':level<=8?'#00b300':level<=11?'#ff7f00':level<=14?'#ce00ff':'#ff0019';g.strokeStyle=c;g.lineWidth=1;g.beginPath();for(let i=0;i<=24;i++){const a=i*Math.PI/12,z=Math.sin(a);if((z>=0)!==!!layer)continue;const px=x+Math.cos(a)*(12+tier*2),py=y+z*(3+tier/2);if(i===0||i===13)g.moveTo(px,py);else g.lineTo(px,py);}g.stroke();
+  const im=image('v'+tier+'-l'+level),cell=(frame&63)*2+layer;
+  if(im.complete&&im.naturalWidth)g.drawImage(im,cell%8*96,Math.floor(cell/8)*80,96,80,Math.round(x-48),Math.round(y-64),96,80);
  }
  function piece(hero,slot,id,pose,x,y){const r=ArmyArt.gear[hero+':'+slot+':'+id]??ArmyArt.gear[hero+':'+slot+':0'];if(!r||!r[2]||!r[3])return;const im=image('hero'+hero);if(!im.complete||!im.naturalWidth)return;const width=hero===3?30:hero===6?29:hero===7?32:24,h=hero===3||hero===7?32:24;g.drawImage(im,r[0],r[1],r[2],r[3],Math.round(x-Math.floor(width/2)+r[4]+18),Math.round(y-h+r[5]+40),r[2],r[3]);}
  function avatar(row,x,y){const hero=row.character??row.hero??0,parts=row.parts??[0,0,0,0,0];aura(row.aura??0,x,y,0);for(const k of [0,4,1,2,3])piece(hero,k,parts[k],0,x,y);aura(row.aura??0,x,y,1);}

@@ -14,7 +14,7 @@ MIMIC_ART = ("background.png", "boss.png")
 def boss_assets(client: Path, server: Path):
     if sha256(client.read_bytes()).hexdigest() not in (CLIENT_SHA, "a74947b824dfc95fc91fc6be499abcf0647f6bbfb5af675825b690bc0cd4d5e0"):
         raise ValueError("Unexpected reference client JAR")
-    if sha256(server.read_bytes()).hexdigest() != SERVER_SHA:
+    if sha256(server.read_bytes()).hexdigest() not in (SERVER_SHA, "7c75645d6754f1071ea67fa5dec48f5dda97fbb08f983ca7b94fda02bd85f5cf"):
         raise ValueError("Unexpected reference server JAR")
     result = {}
     with ZipFile(client) as c, ZipFile(server) as s:
