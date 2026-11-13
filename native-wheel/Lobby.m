@@ -272,8 +272,8 @@ int AGLobbyReceive(void *env,void *message,int v){
     NSString *tab=self.tab==AGLobbyField?@"field":self.tab==AGLobbyMarket?@"market":@"event";
     AGLobbyAccount account=self.account;
     NSString *outcome=self.fieldResult==NoFieldResult?@"null":[NSString stringWithFormat:@"%d",self.fieldResult];
-    NSString *start=[NSString stringWithFormat:@"lobbyViewport(%d);openTab('%@',%d,%u,%@);lobbyBalance('%lld','%lld')",
-                     account.canvasWidth,tab,account.character,self.firstSerial,outcome,(long long)account.xu,(long long)account.luong];
+    NSString *start=[NSString stringWithFormat:@"lobbyViewport(%d,[%d,%d,%d,%d,%d,%d,%d]);openTab('%@',%d,%u,%@);lobbyBalance('%lld','%lld')",
+                     account.canvasWidth,account.inventoryGeometry[0],account.inventoryGeometry[1],account.inventoryGeometry[2],account.inventoryGeometry[3],account.inventoryGeometry[4],account.inventoryGeometry[5],account.inventoryGeometry[6],tab,account.character,self.firstSerial,outcome,(long long)account.xu,(long long)account.luong];
     self.loaded=YES;
     [web evaluateJavaScript:start completionHandler:^(id value,NSError *error){if(error)[self close];}];
 }
@@ -306,12 +306,13 @@ int AGLobbyReceive(void *env,void *message,int v){
             field.keyboardType=[input[@"numeric"] isEqual:@YES]?UIKeyboardTypeNumberPad:UIKeyboardTypeDefault;
             field.returnKeyType=UIReturnKeyDone;
         }];
+        __weak UIAlertController *weakAlert=alert;
         [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
-            NSString *text=alert.textFields.firstObject.text?:@"";
+            NSString *text=weakAlert.textFields.firstObject.text?:@"";
             if(text.length>limit.unsignedIntegerValue)text=[text substringToIndex:limit.unsignedIntegerValue];
-            alert.textFields.firstObject.text=@"";result(text);
+            weakAlert.textFields.firstObject.text=@"";result(text);
         }]];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action){alert.textFields.firstObject.text=@"";result(nil);}]];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action){weakAlert.textFields.firstObject.text=@"";result(nil);}]];
         [self presentViewController:alert animated:YES completion:nil];return;
     }
     if(args.count!=2||![args[0] isKindOfClass:NSNumber.class]||![args[1] isKindOfClass:NSString.class]||[args[1] length]>1400)return;

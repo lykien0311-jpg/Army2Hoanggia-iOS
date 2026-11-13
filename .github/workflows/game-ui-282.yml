@@ -17,6 +17,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compile and verify iPhone framework
         run: bash native-wheel/build_282.sh
+      - name: Execute compiled inventory bridge
+        run: |
+          python3 -m venv native-wheel/build/inventory-qa
+          native-wheel/build/inventory-qa/bin/pip install --quiet lief unicorn
+          native-wheel/build/inventory-qa/bin/python native-wheel/test_inventory_device282.py native-wheel/build/QA/AGWheel.framework/AGWheel
+      - name: Check native iOS input dialog
+        run: bash native-wheel/test_input282.sh
       - name: Retain verified framework
         env:
           GH_TOKEN: ${{ github.token }}

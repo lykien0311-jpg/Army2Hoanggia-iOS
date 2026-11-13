@@ -5,6 +5,7 @@ enum { AGLobbyField = 1, AGLobbyMarket, AGLobbyEvent };
 typedef struct {
     int character;
     int canvasWidth;
+    int inventoryGeometry[7];
     int64_t xu, luong;
 } AGLobbyAccount;
 int AGLobbyOpened(int variant);

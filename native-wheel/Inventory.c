@@ -50,6 +50,7 @@ static void remember(InventoryState *state,Entry *rows,int n){
 #ifdef AG_WHEEL_PREVIEW
 void AGInventoryOrder(void *e,int v,uint8_t *c,uint8_t *s,int active){(void)e;(void)v;(void)c;(void)s;(void)active;}
 void *AGInventoryResolve(void *e,void *p){(void)e;return p;}
+int AGInventoryGeometry(int v,int *out){(void)v;(void)out;return 0;}
 #else
 #include <mach-o/dyld.h>
 #include "NotesMap.h"
@@ -112,5 +113,14 @@ void *AGInventoryResolve(void *env,void *opaque){
         for(int i=0;i<n;i++)if(rows[i]&&key(rows[i])==wanted){*(void **)(screen+0x70)=vec;*(int *)(screen+0xc8)=i;*(void **)(screen+0x90)=rows[i];return rows[i];}
     }
     return opaque;
+}
+int AGInventoryGeometry(int v,int *out){
+    if(v<0||v>=6||!out)return 0;
+    uint8_t *canvas=*(uint8_t **)(base()+AGNotesMaps[v].canvas),*clazz=*(uint8_t **)(base()+inventoryMaps[v][2]);
+    uint8_t *screen=clazz?*(uint8_t **)(clazz+0xa0):NULL;
+    if(!canvas||!screen||*(void **)screen!=clazz)return 0;
+    int width=*(int *)(canvas+0x130),x=*(int *)(screen+0x50)-7,y=*(int *)(screen+0x54),w=*(int *)(screen+0x58),h=*(int *)(screen+0x5c),cols=*(int *)(screen+0xc0),cell=*(int *)(screen+0xb8);
+    if(width<160||width>4096||x<0||y<0||w<120||w>width||x+w>width||h<120||h>4096||cols<3||cols>7||cell<16||cell*cols>w)return 0;
+    int values[]={width,x,y,w,h,cols,cell};memcpy(out,values,sizeof values);return 1;
 }
 #endif

@@ -4,7 +4,7 @@ const names=['Gunner','Miss 6','Electrician','King Kong','Rocketer','Granos','Ch
 let tab='',view='board',reply=null,focus=0,scroll=0,waiting=false,timeout,notice='',menuItems=null,menuFocus=0,eventRequest=0,filter=-1,modal=null,editSubmit=null,profileFocus=0,ownId=0,ownRank=0,character=-1,closed=false;
 let balance='',fieldResult=null;
 let rankSelection=null;
-let editSerial=0,editState=null,inputPending=false;
+let editSerial=0,editState=null,inputPending=false,marketColumns=7,marketGeometry=null;
 const icons=new Map();
 function bytes64(bytes){return btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));}
 function status(message){notice=String(message);document.getElementById('status').textContent=notice;}
@@ -72,7 +72,7 @@ window.lobbyInputResult=(serial,value)=>{
  const input=document.getElementById('lobby-input');
  input.value=String(value).slice(0,input.maxLength);editState.accepted=true;status('');
 };
-window.lobbyViewport=(width)=>ui.classicSize(width);
+window.lobbyViewport=(width,geometry)=>{ui.classicSize(width);marketGeometry=Array.isArray(geometry)&&geometry.length===7&&geometry.every(Number.isInteger)&&geometry[0]===width&&geometry[3]>120?geometry:null;};
 function edit(title,[field],submit){
  hideEdit();status('');
  const form=document.getElementById('edit'),heading=document.createElement('label'),input=document.createElement('input');
@@ -185,10 +185,10 @@ function key(code){
     if(code===49){guard(()=>browse());return;}
     if(code===51){guard(stock);return;}
     if(code===55){guard(()=>browse(0,filter,true));return;}
-    const items=currentItems(),d=code===-1?-7:code===-2?7:code===-3?-1:code===-4?1:0;
+    const items=currentItems(),d=code===-1?-marketColumns:code===-2?marketColumns:code===-3?-1:code===-4?1:0;
     if(!d||waiting)return;
     if(view!=='stock'&&((d===1&&focus===items.length-1&&market.more)||(d===-1&&focus===0&&market.page>0))){page(d);return;}
-    focus=wrap(focus,d,items.length,7);
+    focus=wrap(focus,d,items.length,marketColumns);
     return;
  }
  if(code===-1)move(-1);else if(code===-2)move(1);else if(code===-3||code===-4)page(code===-3?-1:1);
@@ -265,7 +265,7 @@ function itemImage(item,x,y,side){if(item.icon.length&&!icons.has(item.key)){con
  const up=item.enhancement||0;if(up){const rgb=up<=4?'#164dff':up<=8?'#00b300':up<=11?'#ff7f00':up<=14?'#ce00ff':'#ff0019';ui.text('+'+up,x+2,y+1,{color:rgb,scale:.75,shadow:true});if(up>=12){for(let i=0;i<4;i++){const a=ui.frame*.15+i*Math.PI/2,xx=x+side/2+Math.cos(a)*(side/2-3),yy=y+side/2+Math.sin(a)*(side/2-3);ui.rect(xx-2,yy,5,1,rgb);ui.rect(xx,yy-2,1,5,'#fff');}}}if(item.quantity>1)ui.text(item.quantity,x+side-2,y+side-10,{align:'right',color:'#fff27a',shadow:true,max:side-4,scale:.65});}
 function inventoryIcon(item,x,y,cell){
  const ox=x+Math.floor(cell/2)-10,oy=y+Math.floor(cell/2)-14,cx=ox+8,cy=oy+8,up=item.enhancement||0;
- if(item.sprite){ui.equipmentItem(...item.sprite,cx,cy,up,null);}
+ if(item.sprite){ui.equipmentItem(...item.sprite,cx,cy,up,item.icon.length?item.icon:null);}
  else{
   if(item.icon.length&&!icons.has(item.key)){const im=new Image();im.src='data:image/png;base64,'+bytes64(item.icon);icons.set(item.key,im);}
   const im=icons.get(item.key);
@@ -274,10 +274,12 @@ function inventoryIcon(item,x,y,cell){
  if(item.quantity>1)ui.text(item.quantity,ox+11,oy+11,{color:'#f5d452',outline:true,max:100});
 }
 function drawMarket(){ui.classicPixels((width,height)=>{
- const decor=Math.max(3,Math.floor((width-80)/32)),w=decor*32+56,h=Math.max(136,height-44),x=Math.floor((width-w)/2),y=8;
- const cols=Math.min(7,Math.max(3,Math.floor((w-24)/40))),cell=Math.floor((w-24)/cols),items=currentItems(),capacity=Math.max(1,Math.floor((h-75)/cell));
+ let decor=Math.max(3,Math.floor((width-80)/32)),w=decor*32+56,h=Math.max(136,height-44),x=Math.floor((width-w)/2),y=8;
+ let cols=Math.min(7,Math.max(3,Math.floor((w-24)/40))),cell=Math.floor((w-24)/cols);
+ if(marketGeometry&&marketGeometry[1]>=0&&marketGeometry[2]>=0&&marketGeometry[1]+marketGeometry[3]<=width&&marketGeometry[2]+marketGeometry[4]<=height-34){[,x,y,w,h,cols,cell]=marketGeometry;decor=Math.max(3,Math.round((w-56)/32));}
+ const items=currentItems(),capacity=Math.max(1,Math.floor((h-75)/cell));
  ui.inventoryFrame(view==='stock'?'Rương gian hàng':market.own?'Đồ của tôi':'Gian hàng',x,y,w,h,decor);
- focus=Math.max(0,Math.min(items.length-1,focus));
+ marketColumns=cols;focus=Math.max(0,Math.min(items.length-1,focus));
  const selectedRow=Math.floor(focus/cols);if(selectedRow<scroll)scroll=selectedRow;if(selectedRow>=scroll+capacity)scroll=selectedRow-capacity+1;
  items.slice(scroll*cols,(scroll+capacity)*cols).forEach((item,i)=>{
   const gx=x+11+i%cols*cell,gy=y+28+Math.floor(i/cols)*cell,index=scroll*cols+i;
