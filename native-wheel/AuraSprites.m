@@ -32,7 +32,6 @@ static int sprite(void *env,void *opaque) {
         void *volatile image=((void *(*)(void *,void *,int,int))(base+0xc46e04))(env,bytes,0,(int)data.length);
         if(image)atlases[key]=((void *(*)(void *,void *))jni[21])(env,image);
         ((void (*)(void *,void *))jni[23])(env,bytes);
-        if(image)((void (*)(void *,void *))jni[23])(env,image);
     }
     if(!atlases[key])return 0;
     touched[key]=++clockTick;
