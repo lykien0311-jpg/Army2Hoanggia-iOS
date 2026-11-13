@@ -57,7 +57,7 @@ const PixelUI=(()=>{
   gearIcon(hero,slot,id,x,y,16,png);
  }
  function nativePixels(draw){g.save();const old=fontUnit;g.scale(1/nativeScale,1/nativeScale);fontUnit=1;try{return draw(450,canvas.height);}finally{fontUnit=old;g.restore();}}
- function roundRect(x,y,w,h,color,r=3){g.fillStyle=color;g.beginPath();g.roundRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h),r);g.fill();}
+ function roundRect(x,y,w,h,color,r=3){x=Math.round(x);y=Math.round(y);w=Math.round(w);h=Math.round(h);r=Math.min(r,w/2,h/2);g.fillStyle=color;g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.quadraticCurveTo(x+w,y,x+w,y+r);g.lineTo(x+w,y+h-r);g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);g.lineTo(x+r,y+h);g.quadraticCurveTo(x,y+h,x,y+h-r);g.lineTo(x,y+r);g.quadraticCurveTo(x,y,x+r,y);g.fill();}
  function line(x1,y1,x2,y2,color){rect(x1,y1,x2-x1+1,y2-y1+1,color);}
  function equipmentFrame(x,y){
   rect(x,y+20,183,145,'#c5d5ee');

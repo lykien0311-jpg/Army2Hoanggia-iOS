@@ -30,6 +30,7 @@ for b in m.dyld_info.bindings:
     put(LIB+b.address,'<Q',names[name])
 def reg(i):return u.reg_read(UC_ARM64_REG_X0+i)
 def ret(v=0):u.reg_write(UC_ARM64_REG_X0,v&((1<<64)-1));u.reg_write(UC_ARM64_REG_PC,u.reg_read(UC_ARM64_REG_LR))
+now=100.0
 cursor=HEAP+0x10000
 def alloc(n):
     global cursor
@@ -61,6 +62,7 @@ def hook(uc,pc,size,_):
     if pc in imports:
         name=imports[pc]
         if name=='__dyld_get_image_header':ret(MAIN)
+        elif name=='_clock_gettime':put(reg(1),'<qq',int(now),round((now-int(now))*1000000000));ret()
         elif name in ('_pthread_mutex_lock','_pthread_mutex_trylock'):lock+=1;assert lock==1;ret()
         elif name=='_pthread_mutex_unlock':lock-=1;assert lock==0;ret()
         elif name=='_malloc':ret(alloc(reg(0)))
@@ -126,7 +128,8 @@ for v in range(6):
     # Camera can move left and right, then restore follow mode.
     call('_AGNativeWatchCamera',v,0,-7);call('_AGNativeWatchCamera',v,0,-4);call('_AGNativeWatchTick',ENV,v)
     x=get(cam+0xa4,'<i');assert x>0
-    call('_AGNativeWatchCamera',v,1,-4);call('_AGNativeWatchCamera',v,0,-3);call('_AGNativeWatchTick',ENV,v);assert get(cam+0xa4,'<i')<x
+    now+=.001;call('_AGNativeWatchTick',ENV,v);assert get(cam+0xa4,'<i')==x,'No camera burst before 15ms'
+    now+=.02;call('_AGNativeWatchCamera',v,1,-4);call('_AGNativeWatchCamera',v,0,-3);call('_AGNativeWatchTick',ENV,v);assert get(cam+0xa4,'<i')<x
     call('_AGNativeWatchCamera',v,0,-7);call('_AGNativeWatchTick',ENV,v);assert get(cam+0xbc,'<B')==1
     call('_AGNativeWatchEnd',ENV,v);call('_AGNativeWatchEnd',ENV,v)
     assert get(c+0xb8,'<Q')==back and get(a+0xc8,'<Q')==oldMap and get(g+0xb8,'<Q')==oldTiles and get(a+0x266,'<B')==7

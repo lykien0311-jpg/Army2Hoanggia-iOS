@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdatomic.h>
+#include <time.h>
 #include "SpectatorNative.h"
 #ifdef AG_WHEEL_PREVIEW
 int AGNativeWatchAvailable(void){return 0;}
@@ -26,6 +27,7 @@ typedef struct {
     uint8_t *bytes,*back,*oldMap,*oldTiles;
     int oldWidth,oldHeight;
     uint8_t oldLocal;
+    uint64_t moveAt;
 } Watch;
 static Watch watches[6];
 static atomic_int cameraKeys[6],freeCamera[6],cameraChanged[6];
@@ -170,9 +172,14 @@ static void tickNative(void *e,int v){
     if(!atomic_load(&freeCamera[v]))return;
     g[0xbc]=0;*(int *)(g+0xb4)=0;*(int *)(g+0xb8)=0;
     int keys=atomic_load(&cameraKeys[v]),dx=((keys&2)!=0)-((keys&1)!=0),dy=((keys&8)!=0)-((keys&4)!=0);
+    if(!dx&&!dy){w->moveAt=0;return;}
+    struct timespec clock;clock_gettime(CLOCK_MONOTONIC,&clock);
+    uint64_t now=(uint64_t)clock.tv_sec*1000000000+(uint64_t)clock.tv_nsec;
+    if(w->moveAt&&now-w->moveAt<15000000)return;
+    w->moveAt=now;
     uint8_t *canvas=global(AGNotesMaps[v].canvas);
     int maxX=w->width-*(int *)(canvas+0x130),maxY=w->height-*(int *)(canvas+0x128);
-    int x=*(int *)(g+0xa4)+dx*6,y=*(int *)(g+0xa8)+dy*6;
+    int x=*(int *)(g+0xa4)+dx*8,y=*(int *)(g+0xa8)+dy*8;
     x=x<0?0:x>maxX?(maxX>0?maxX:0):x;y=y<0?0:y>maxY?(maxY>0?maxY:0):y;
     *(int *)(g+0xa4)=*(int *)(g+0xac)=x;*(int *)(g+0xa8)=*(int *)(g+0xb0)=y;
 }
