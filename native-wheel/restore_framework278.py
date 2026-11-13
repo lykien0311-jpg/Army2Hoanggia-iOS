@@ -6,7 +6,6 @@ from hashlib import sha1, sha256
 import json
 from pathlib import Path
 import subprocess
-from tempfile import TemporaryDirectory
 
 
 def restore(output):
@@ -21,18 +20,18 @@ def restore(output):
         if sha1(b'blob ' + str(len(stored)).encode() + b'\0' + stored).hexdigest() != key:
             raise ValueError('Retained blob checksum differs')
         return base64.b64decode(stored, validate=True)
-    # Release storage keeps the checkpoint reachable if unreferenced Git blobs
-    # are eventually collected. Fall back to the original retained build.
-    with TemporaryDirectory() as temp:
-        downloaded = Path(temp) / 'framework.zip'
-        attempt = subprocess.run(['gh', 'release', 'download', record['releaseTag'],
-                                  '--repo', record['repository'], '--pattern', record['releaseAsset'],
-                                  '--output', str(downloaded)], capture_output=True)
-        if attempt.returncode == 0:
-            data = downloaded.read_bytes()
-        else:
-            with ThreadPoolExecutor(max_workers=4) as pool:
-                data = b''.join(pool.map(chunk, record['chunks']))
+    # A tracked artifact keeps the checkpoint reachable if unreferenced Git
+    # blobs are collected. Fall back to the original retained build.
+    endpoint = f"repos/{record['repository']}/contents/{record['artifactPath']}?ref={record['artifactRef']}"
+    attempt = subprocess.run(['gh', 'api', endpoint], capture_output=True)
+    if attempt.returncode == 0:
+        value = json.loads(attempt.stdout)
+        if value['encoding'] != 'base64':
+            raise ValueError('Unexpected tracked artifact encoding')
+        data = base64.b64decode(value['content'])
+    else:
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            data = b''.join(pool.map(chunk, record['chunks']))
     if sha256(data).hexdigest() != record['sha256']:
         raise ValueError('Retained Apple build checksum differs')
     with output.open('xb') as target:

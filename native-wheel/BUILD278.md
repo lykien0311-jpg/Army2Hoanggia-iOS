@@ -2,7 +2,9 @@
 
 Completes the four requested menu, aura, market-chest and room-18/19 changes already committed in `44cd85deb66b48a16d85c430ae30523c7f16497e`.
 
-The Apple framework job succeeded, but Actions artifact storage was full. Its signed delta was retained as private Git blobs. `restore_framework278.py` retrieves those exact bytes from the private QA release, falling back to the original Git blobs with Git-ID checks, and verifies the archived SHA256. The packager verifies all 137 framework members against the Apple manifest. It preserves the device binary and its Apple-generated signature bytes. No Linux-built iOS library is used.
+The Apple framework job succeeded, but Actions artifact storage was full. Its signed delta was retained as private Git blobs. `restore_framework278.py` retrieves those exact bytes from the private `qa/ios-278-artifacts` branch, falling back to the original Git blobs with Git-ID checks, and verifies the archived SHA256. The packager verifies all 137 framework members against the Apple manifest. It preserves the device binary and its Apple-generated signature bytes. No Linux-built iOS library is used.
+
+The finished IPA, framework checkpoint, checksums, notes and UI screenshots are retained on `qa/ios-278-artifacts`. This uses the same private repository audience. Release-asset upload returned HTTP 401 at `uploads.github.com`, so no release-upload link is claimed.
 
 The original packager required an unpublished build-277 IPA. The new `--from-269` path uses the existing private `qa-input-269` release. It applies the guarded 275 and 277 native patches, verifies the resulting executable against the original 277 SHA256, then applies the existing 278 scene patch. The original 277 packaging path and its input checks remain available.
 
