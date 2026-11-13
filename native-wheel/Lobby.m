@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #import <WebKit/WebKit.h>
 #include <stdatomic.h>
+#include <stdbool.h>
 #include <string.h>
 #include "Lobby.h"
 #include "Spectator.h"
@@ -14,18 +15,23 @@
 @property(nonatomic) uintptr_t connection;
 @property(nonatomic) int variant;
 @property(nonatomic) int startTab;
+@property(nonatomic) int character;
+@property(nonatomic) uint32_t firstSerial;
 @property(nonatomic) int command;
 @property(nonatomic) uint32_t watchSerial;
 @property(nonatomic) uint32_t challengeSerial;
+@property(nonatomic) BOOL closing;
 @property(nonatomic,strong) NSData *outgoing;
 - (void)open;
 - (void)close;
 @end
 
 static atomic_bool opened[6];
-static atomic_bool inputOpen[6];
+static unsigned char held[6][256],pointer[6];
+static BOOL opening;
 static uintptr_t connections[6];
 static uintptr_t battlefield[6];
+static uint32_t nextFieldSerial;
 static AGLobby *activePanel;
 
 static NSString *eventAuras(NSData *body,int variant,uintptr_t connection){
@@ -50,25 +56,49 @@ static NSString *eventAuras(NSData *body,int variant,uintptr_t connection){
 int AGLobbyOpened(int variant){return variant>=0&&variant<6?atomic_load(&opened[variant]):0;}
 int AGLobbyInput(int variant,int kind,int code,int b){
     (void)b;
-    if(variant<0||variant>=6||!atomic_load(&inputOpen[variant]))return 0;
-    if(kind==0)dispatch_async(dispatch_get_main_queue(),^{
-        AGLobby *active=activePanel;
-        if(active&&active.variant==variant&&active.web)
-            [active.web evaluateJavaScript:[NSString stringWithFormat:@"lobbyKey(%d)",code] completionHandler:nil];
+    if(variant<0||variant>=6)return 0;
+    AGLobby *active;
+    BOOL consumed;
+    unsigned index=(unsigned)code+128;
+    @synchronized(AGLobby.class){
+        active=activePanel;
+        consumed=atomic_load(&opened[variant]);
+        if(kind==1&&index<256&&held[variant][index]){held[variant][index]=0;consumed=YES;}
+        if(kind==4&&pointer[variant]){pointer[variant]=0;consumed=YES;}
+        if(consumed&&kind==0&&index<256)held[variant][index]=1;
+        if(consumed&&kind==2)pointer[variant]=1;
+    }
+    if(consumed&&kind==0)dispatch_async(dispatch_get_main_queue(),^{
+        if(!active||active.variant!=variant||!active.web)return;
+        BOOL back=code==-7||code==-22||code==-11||code==27||code==35||code=='R'||code=='r';
+        NSString *script=[NSString stringWithFormat:@"typeof lobbyKey === 'function' && (lobbyKey(%d),true)",code];
+        [active.web evaluateJavaScript:script completionHandler:^(id value,NSError *error){
+            if(back&&(error||![value isEqual:@YES]))[active close];
+        }];
     });
-    return 1;
+    return consumed;
 }
 
 __attribute__((visibility("default"))) void AGLobbyOpenNative(void *env,int variant,int tab){
-    if(!env||variant<0||variant>=6||(tab!=1&&tab!=2))return;
+    if(!env||variant<0||variant>=6||tab<AGLobbyField||tab>AGLobbyEvent)return;
     uintptr_t connection=AGViewerConnection(env,variant);
     if(!connection)return;
-    @synchronized(AGLobby.class){connections[variant]=connection;}
-    atomic_store(&opened[variant],1);
-    atomic_store(&inputOpen[variant],1);
+    uint32_t serial=0;
+    @synchronized(AGLobby.class){
+        if(opening||activePanel)return;
+        opening=YES;
+        connections[variant]=connection;
+        atomic_store(&opened[variant],1);
+        if(tab==AGLobbyField){
+            serial=nextFieldSerial;
+            nextFieldSerial=(nextFieldSerial+100000)%2100000000;
+        }
+    }
+    int character=tab==AGLobbyMarket?AGLobbyCharacter(env,variant):-1;
     dispatch_async(dispatch_get_main_queue(),^{
         AGLobby *lobby=[AGLobby new];
         lobby.variant=variant;lobby.connection=connection;lobby.startTab=tab;
+        lobby.character=character;lobby.firstSerial=serial;
         [lobby open];
     });
 }
@@ -80,9 +110,9 @@ void AGLobbyTick(void *env,int v,uintptr_t connection){
         connections[v]=connection;
         if(battlefield[v]!=connection)battlefield[v]=0;
         active=activePanel;
-        if(!active || active.variant!=v)return;
+        if(!active||active.variant!=v||active.closing)return;
         if(active.connection!=connection){
-            activePanel=nil;
+            active.closing=YES;
             dispatch_async(dispatch_get_main_queue(),^{[active close];});
             return;
         }
@@ -96,6 +126,7 @@ void AGLobbyTick(void *env,int v,uintptr_t connection){
 }
 
 int AGLobbyReceive(void *env,void *message,int v){
+    if(!env||!message||v<0||v>=6)return 0;
     int cmd=*(int8_t *)((uint8_t *)message+0x30);
     if(cmd!=-120&&cmd!=-121&&cmd!=-14)return 0;
     AGLobby *active;
@@ -128,13 +159,16 @@ int AGLobbyReceive(void *env,void *message,int v){
         }
         return 1;
     }
-    if(!active || active.variant!=v || active.connection!=connection)return 0;
+    if(!active||active.variant!=v||active.connection!=connection)return 0;
     if(cmd==-120 && body.length==9 && !memcmp(p,"CT46",4) && p[4]==6){
         uint32_t serial;memcpy(&serial,p+5,4);
         @synchronized(AGLobby.class){
-            if(serial!=0 && active.watchSerial==serial)AGViewerExpectBattlefield(v,active.connection);
-            if(serial!=0 && active.challengeSerial==serial)battlefield[v]=connection;
-            active.watchSerial=0;
+            if(activePanel!=active||active.closing||!serial)return 1;
+            if(active.watchSerial==serial)AGViewerExpectBattlefield(v,connection);
+            else if(active.challengeSerial==serial)battlefield[v]=connection;
+            else return 1;
+            active.closing=YES;
+            active.watchSerial=active.challengeSerial=0;
         }
         dispatch_async(dispatch_get_main_queue(),^{[active close];});return 1;
     }
@@ -151,7 +185,8 @@ int AGLobbyReceive(void *env,void *message,int v){
 @implementation AGLobby
 - (void)open{
     @synchronized(AGLobby.class){
-        if(activePanel||connections[self.variant]!=self.connection)return;
+        opening=NO;
+        if(connections[self.variant]!=self.connection){atomic_store(&opened[self.variant],0);return;}
         activePanel=self;
     }
     self.host=UIApplication.sharedApplication.keyWindow;
@@ -179,20 +214,31 @@ int AGLobbyReceive(void *env,void *message,int v){
     ((AGGameWindow *)self.overlay).gameBottom=CGRectGetMaxY(game);
 }
 - (void)close{
-    @synchronized(AGLobby.class){if(activePanel==self)activePanel=nil;self.outgoing=nil;self.watchSerial=0;}
-    atomic_store(&inputOpen[self.variant],0);
-    AGViewportWheelVisible(0);
+    @synchronized(AGLobby.class){
+        if(activePanel!=self)return;
+        self.closing=YES;
+        self.outgoing=nil;
+        self.watchSerial=self.challengeSerial=0;
+    }
+    if(self.overlay)AGViewportWheelVisible(0);
     BOOL restore=self.overlay.isKeyWindow;
     [self.web.configuration.userContentController removeScriptMessageHandlerForName:@"lobby"];
     [self.web stopLoading];self.web.navigationDelegate=nil;[self.web removeFromSuperview];self.web=nil;
     self.overlay.hidden=YES;self.overlay.rootViewController=nil;self.overlay=nil;
     if(self.isViewLoaded)self.view=nil;
     if(restore && !self.host.hidden)[self.host makeKeyWindow];
+    @synchronized(AGLobby.class){
+        activePanel=nil;
+        atomic_store(&opened[self.variant],0);
+    }
 }
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView{[self close];}
+- (void)webView:(WKWebView *)web didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error{[self close];}
+- (void)webView:(WKWebView *)web didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error{[self close];}
 - (void)webView:(WKWebView *)web didFinishNavigation:(WKNavigation *)navigation{
     if(web!=self.web||!self.startTab)return;
-    NSString *start=self.startTab==1?@"openTab('field')":@"openTab('market')";
+    NSString *tab=self.startTab==AGLobbyField?@"field":self.startTab==AGLobbyMarket?@"market":@"event";
+    NSString *start=[NSString stringWithFormat:@"openTab('%@',%d,%u)",tab,self.character,self.firstSerial];
     self.startTab=0;
     [web evaluateJavaScript:start completionHandler:^(id value,NSError *error){if(error)[self close];}];
 }
@@ -207,12 +253,8 @@ int AGLobbyReceive(void *env,void *message,int v){
     if(args.count!=2||![args[0] isKindOfClass:NSNumber.class]||![args[1] isKindOfClass:NSString.class]||[args[1] length]>1400)return;
     int cmd=[args[0] intValue];NSData *data=[[NSData alloc]initWithBase64EncodedString:args[1] options:0];
     if(!data.length||(cmd!=-120&&cmd!=-121&&cmd!=-14&&cmd!=5))return;
-    if(cmd==5){
-        const uint8_t *p=data.bytes;
-        if(data.length<7||data.length>370||p[0]&128||!(p[0]|p[1]|p[2]|p[3])||(((unsigned)p[4]<<8)|p[5])!=data.length-6)return;
-    }
     @synchronized(AGLobby.class){
-        if(activePanel!=self||self.outgoing)return;
+        if(activePanel!=self||self.closing||self.outgoing)return;
         self.watchSerial=0;self.challengeSerial=0;
         if(cmd==-120 && (data.length==17||data.length==18)){
             const uint8_t *p=data.bytes;

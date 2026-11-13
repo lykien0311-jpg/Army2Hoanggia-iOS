@@ -31,11 +31,13 @@ function marketItem(r) {
     const seller=r.utf(),description=r.utf(),size=r.u16(),start=r.take(size);
     const icon=r.bytes.slice(start,start+size);
     const meta=description.split('\u001e119,')[1]?.split(',').map(Number);
-    const enhancement=meta&&meta.length>=5&&Number.isInteger(meta[4])&&meta[4]>=0&&meta[4]<=16?meta[4]:0;
-    return {key,name,category,nv,quantity,price,seller,enhancement,detail:description.split('\u001e')[0],icon};
+    const enhancement=meta&&Number.isInteger(meta[4])&&meta[4]>=0&&meta[4]<=16?meta[4]:0;
+    const equipment=meta?.[0]===1||nv>=0;
+    const expiresAt=meta&&Number.isSafeInteger(meta[5])&&meta[5]>=0?Date.now()+meta[5]:0;
+    return {key,name,category,nv,quantity,price,seller,equipment,enhancement,expiresAt,detail:description.split('\u001e')[0],icon};
 }
 class ArmyMarket {
-    constructor(){this.list=[];this.stock=[];this.token='';this.staging=null;this.pending=false;}
+    constructor(){this.list=[];this.stock=[];this.token='';this.staging=null;this.pending=false;this.own=false;}
     browse(page=0,character=-1,own=false){
         if(!Number.isInteger(page)||page<0||page>1000000||!Number.isInteger(character)||character< -1||character>9)
             throw Error('Trang hoặc nhân vật không hợp lệ');

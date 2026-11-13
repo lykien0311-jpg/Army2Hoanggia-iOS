@@ -19,6 +19,7 @@ static void save(NSString *result) {
     [result writeToURL:[dir URLByAppendingPathComponent:@"viewer-result.txt"] atomically:YES encoding:NSUTF8StringEncoding error:nil];
 }
 uintptr_t AGViewerConnection(void *env,int v) { return 44; }
+int AGLobbyCharacter(void *env,int v) { return 6; }
 int AGAuraRank(int v,uintptr_t connection,uint32_t id,unsigned hero){return id==7&&hero==6?240:0;}
 uintptr_t AGViewerWaitToken(int v){return AGSpectatorWaitToken(canvas);}
 void AGViewerDismissWait(int v,uintptr_t token){AGSpectatorClearWait(canvas,token);}
@@ -60,12 +61,13 @@ static void testLobby(int step,int tries){
             deliver(-121,[NSData dataWithBytes:empty length:sizeof empty]);step++;
         }
     }else if(step==2 && web){
-        [web evaluateJavaScript:@"tab==='market' && view==='market' && market.list.length===0 && !!document.getElementById('game')" completionHandler:^(id v,NSError *err){
+        [web evaluateJavaScript:@"tab==='market' && !waiting && character===6 && (marketMenu(), menuItems.map(x=>x[0]).join('|')==='Lọc|Gian hàng|Rương gian hàng|Đồ của tôi')" completionHandler:^(id v,NSError *err){
             BOOL done=[v isEqual:@YES];
-            if(done)[web evaluateJavaScript:@"close()" completionHandler:nil];
+            if(done){AGLobbyInput(0,0,-22,0);AGLobbyInput(0,0,-22,0);}
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby(done?3:2,tries-1);});
         }];return;
     }else if(step==3 && window==host){
+        NSCAssert(!AGLobbyOpened(0)&&AGLobbyInput(0,1,-22,0),@"close restores the host and consumes the trailing key release");
         AGLobbyOpenNative((void *)1,0,1);step++;
     }else if(step==4){
         AGLobbyTick((void *)1,0,44);
@@ -75,9 +77,14 @@ static void testLobby(int step,int tries){
             deliver(-120,[NSData dataWithBytes:reply length:sizeof reply]);step++;
         }
     }else if(step==5 && web){
-        [web evaluateJavaScript:@"tab==='field' && view==='board' && (openTab('event'),true)"
-            completionHandler:^(id v,NSError *err){dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?6:5,tries-1);});}];return;
-    }else if(step==6){
+        [web evaluateJavaScript:@"tab==='field' && view==='board' && !waiting"
+            completionHandler:^(id v,NSError *err){
+                if([v isEqual:@YES])AGLobbyInput(0,0,-7,0);
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?6:5,tries-1);});
+            }];return;
+    }else if(step==6 && window==host){
+        AGLobbyOpenNative((void *)1,0,3);step++;
+    }else if(step==7){
         AGLobbyTick((void *)1,0,44);
         const uint8_t expected[]={3,0};
         if(lobbyCommand==-14 && [lobbyPayload isEqual:[NSData dataWithBytes:expected length:sizeof expected]]){
@@ -86,15 +93,15 @@ static void testLobby(int step,int tries){
             NSMutableData *reply=[NSMutableData dataWithBytes:head length:sizeof head];
             [reply appendBytes:row length:sizeof row];deliver(-14,reply);step++;
         }
-    }else if(step==7 && web){
-        [web evaluateJavaScript:@"reply.rows[0].name==='QA1' && reply.rows[0].score==='42' && reply.rows[0].aura===240 && ArmyArt.geometry[2].length===384" completionHandler:^(id v,NSError *err){
+    }else if(step==8 && web){
+        [web evaluateJavaScript:@"tab==='event' && reply?.rows[0]?.name==='QA1' && reply.rows[0].score==='42' && reply.rows[0].aura===240 && ArmyArt.geometry[2].length===384" completionHandler:^(id v,NSError *err){
             if([v isEqual:@YES]){
                 [web evaluateJavaScript:@"close()" completionHandler:nil];
                 AGLobbyTick((void *)1,0,44);
             }
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?8:7,tries-1);});
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?9:8,tries-1);});
         }];return;
-    }else if(step==8 && window==host && !find(host,UIButton.class,@"Chiến trường · Gian hàng")){
+    }else if(step==9 && window==host && !AGLobbyOpened(0)){
         save(@"PASS spectator lifecycle, native marketplace and battlefield menu callbacks, event leaderboard, return to host");return;
     }
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby(step,tries-1);});
@@ -193,4 +200,3 @@ static void runStep(int step,int tries) {
 }
 @end
 int main(int argc,char **argv){@autoreleasepool{return UIApplicationMain(argc,argv,nil,NSStringFromClass(Demo.class));}}
-

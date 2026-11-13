@@ -13,6 +13,7 @@
 #include "Lobby.h"
 #include "NotesMap.h"
 #include "NativeMap.h"
+#include "StatsNativeMap.h"
 #include "Blind.h"
 #include "Aura.h"
 #include "Stats.h"
@@ -87,9 +88,24 @@ int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uin
     if(command==-121){if(length>1024||bytes[0]>4)return 0;}
     else if(command==-120){if(length<9||length>18||memcmp(bytes,"CT46",4)||bytes[4]<1||bytes[4]>6)return 0;}
     else if(command==-14){if(length!=2||bytes[0]!=3||bytes[1]>9)return 0;}
+    else if(command==5){
+        if(length<7||length>366||bytes[0]&128||!(bytes[0]|bytes[1]|bytes[2]|bytes[3])||
+           (size_t)((bytes[4]<<8)|bytes[5])!=length-6)return 0;
+    }
     else return 0;
     NJob job={.variant=variant,.command=command,.expected=connection,.length=length,.payload=bytes};
     return NRun(env,NNative,&job)>0;
+}
+static int NLobbyCharacter(void *env,void *context){
+    int v=*(int *)context;
+    uint8_t *(*get)(void *)=(void *)(NBase()+AGStatsMaps[v].player);
+    uint8_t *player=get(env);
+    return player&&player[0xd9]<10 ? player[0xd9]+1 : 0;
+}
+int AGLobbyCharacter(void *env,int variant){
+    if(!env||variant<0||variant>=6)return -1;
+    int character=NRun(env,NLobbyCharacter,&variant);
+    return character>0 ? character-1 : -1;
 }
 int AGAuraHello(void *env,int variant,uintptr_t connection){
     static const uint8_t hello[]={'C','T','4','6',11,0,0,0,1};
