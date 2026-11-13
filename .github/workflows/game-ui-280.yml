@@ -1,7 +1,7 @@
 name: Build Army2 iOS 280
 on:
   push:
-    branches: [qa/ios-280-profile-watch]
+    branches: [qa/ios-280-profile-watch, qa/ios-280-watch-render]
 permissions:
   contents: read
 concurrency:
@@ -40,3 +40,4 @@ jobs:
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
       - run: node native-wheel/test_lobby.js
+      - run: node native-wheel/test_watch_render.js

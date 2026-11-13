@@ -34,7 +34,7 @@ function openTab(name,selected=-1,serial=0,outcome=null){
 }
 function profile(){
     const r=field.board[focus];
-    if(!r)return;
+    if(!r){status('Chọn một người để xem trang bị.');return;}
     send(-120,()=>field.request(2,r));
     rankSelection={focus,scroll};
 }
@@ -53,6 +53,7 @@ function challenge(){
 }
 function menu(items){menuItems=items.map(([label,fn])=>[label,()=>{menuItems=null;guard(fn);}]);menuFocus=0;}
 function fieldMenu(){menu([['Thông tin',profile],['Trận đấu',()=>send(-120,()=>field.request(5,null,0))],['Lịch sử',()=>send(-120,()=>field.request(4,null,0))],['Cập nhật',board]]);}
+function profileMenu(){menu([['Chi tiết',profileDetails]]);}
 function filterMenu(){menu([['Tất cả',()=>applyFilter(-1)],...names.map((n,i)=>[n,()=>applyFilter(i)])]);}
 function applyFilter(n){filter=n;focus=scroll=0;if(view==='stock')return;browse(0,filter,market.own);}
 function marketMenu(){menu([['Lọc',filterMenu],['Gian hàng',()=>browse()],['Rương gian hàng',stock],['Đồ của tôi',()=>browse(0,filter,true)]]);}
@@ -166,7 +167,7 @@ function key(code){
  if(modal){if(code===-1){modal.offset=Math.max(0,(modal.offset||0)-1);return;}if(code===-2){modal.offset=Math.min(modal.lines.length-1,(modal.offset||0)+1);return;}if(code===-7)modal=null;else if(code===-5||code===-6)guard(modal.confirm??(()=>{modal=null;}));return;}
  if(menuItems){if(code===-1||code===-3)move(-1);else if(code===-2||code===-4)move(1);else if(code===-5||code===-6)menuItems[menuFocus][1]();else if(code===-7)menuItems=null;return;}
  if(code===-7){if(tab==='field'&&view!=='board')fieldBack();else close();return;}
- if(code===-6){if(tab==='market')marketMenu();else if(tab==='event')guard(()=>eventRank(eventRequest));else if(view==='board')fieldMenu();else if(view==='profile')profileDetails();else refreshFieldList();return;}
+ if(code===-6){if(tab==='market')marketMenu();else if(tab==='event')guard(()=>eventRank(eventRequest));else if(view==='board')fieldMenu();else if(view==='profile')profileMenu();else refreshFieldList();return;}
  if(tab==='field'&&view==='profile'){if([-1,-2,-3,-4].includes(code)){const n=reply.items.length+(reply.display?.outfit?1:0);profileFocus=(profileFocus+(code===-1?-2:code===-2?2:code===-3?-1:1)+n)%n;return;}if(code===-5||code===13){profileDetails();return;}}
  if(code===-5||code===13){guard(()=>tab==='market'?marketSelect():tab==='field'?(view==='board'?challenge():view==='matches'?watch():profile()):messagePlayer());return;}
  if(tab==='market'){
@@ -201,7 +202,7 @@ function drawField(){if(view!=='profile')ui.heading(view==='board'?'Chiến trư
   if(!boardRows.length&&!waiting)ui.text('Chưa có người chơi.',160,95,{align:'center'});
   if(field.self){const self=field.self,y=ui.height-62;ui.rect(0,y,320,38,'#9be0ef');ui.avatar(self,21,y+34);ui.text(self.name+' (Bạn)',42,y+2,{max:190});ui.text('Lv '+self.level+' '+self.percent+'%',42,y+15,{scale:.85,max:190});ui.rank(self.rank,316,y+3,28);}
   ui.footer('Menu','Thách đấu','Đóng',fieldMenu,()=>guard(challenge),close);
- }else if(view==='profile'&&reply){drawProfile();ui.footer('Chi tiết','','Đóng',profileDetails,null,fieldBack);}
+ }else if(view==='profile'&&reply){drawProfile();ui.footer('Menu','Chọn','Đóng',profileMenu,profileDetails,fieldBack);}
  else{
     const rows=reply?.rows||[],height=28,capacity=Math.max(1,Math.floor((ui.height-81)/height));
     ui.frameBox(5,22,310,ui.height-53);
@@ -230,7 +231,8 @@ function profileDetails(){
 }
 function drawProfile(){const r=reply,gear=r.items.concat(r.display?.outfit||[]),x=68,y=Math.max(30,Math.floor((ui.height-24-170)/2));
  ui.stripedBox(x,y,184,170);ui.rect(x+61,y+2,62,15,'#c5d5ef');ui.text('Trang bị',x+92,y+3,{align:'center',shadow:true,color:'#fff',max:60});
- ui.avatar({...r.avatar,aura:r.display?.aura??0},x+40,y+71);const sx=[40,15,65,55,25],sy=[33,55,55,83,83];for(let i=0;i<5;i++){if(gear[i])ui.gear(r.avatar.character,i,gear[i].id,x+sx[i],y+sy[i],gear[i].upgrade,r.icons?.[i]);ui.zone(x+sx[i]-10,y+sy[i]-10,20,20,()=>{profileFocus=i;});}
+ const sx=[40,15,65,55,25],sy=[33,55,55,83,83];for(let i=0;i<5;i++){ui.rect(x+sx[i]-10,y+sy[i]-10,20,20,'#3f6c9b');if(gear[i])ui.gearIcon(r.avatar.character,i,gear[i].id,x+sx[i],y+sy[i],16,r.icons?.[i]);ui.zone(x+sx[i]-10,y+sy[i]-10,20,20,()=>{profileFocus=i;});}
+ ui.avatar({...r.avatar,aura:r.display?.aura??0},x+40,y+71);
  ui.rect(x+6,y+96,72,67,'#3d6d9d');const start=Math.floor(profileFocus/4)*4;for(let i=0;i<4&&start+i<gear.length;i++){const slot=start+i,gx=x+27+i%2*30,gy=y+115+Math.floor(i/2)*30;ui.gear(r.avatar.character,slot,gear[slot].id,gx,gy,gear[slot].upgrade,r.icons?.[slot]);if(slot===profileFocus){ui.g.strokeStyle='#ffd34e';ui.g.strokeRect(gx-9,gy-9,18,18);}ui.zone(gx-10,gy-10,20,20,()=>{if(profileFocus===slot)profileDetails();else profileFocus=slot;});}
  ui.text(start===0?'>':'<',x+71,y+151,{align:'center',color:'#ffff30'});ui.zone(x+65,y+150,13,13,()=>{profileFocus=start===0?4:0;});ui.text('Level: '+r.level,x+88,y+22,{max:66,scale:.85});ui.text((r.display?.percent??0)+'%',x+177,y+22,{align:'right',max:24,scale:.85});
  for(let i=0;i<5;i++){const yy=y+38+18*i;ui.statsIcon(i,x+83,yy);ui.rect(x+101,yy,35,16,'#24486d');ui.rect(x+138,yy,18,16,'#24486d');ui.rect(x+158,yy,19,16,'#24486d');ui.text(r.abilities[i]??0,x+119,yy+1,{align:'center',max:34,color:'#ffff30',scale:.8});ui.text('0',x+147,yy+1,{align:'center',color:'#ffff30'});ui.text('0',x+168,yy+1,{align:'center',color:'#ffff30'});}

@@ -24,7 +24,7 @@ typedef NS_ENUM(int, WatchAction) { NoAction, Accept, Leave, Refresh };
 @property(nonatomic,strong) WKWebView *web;
 @property(nonatomic,strong) NSMutableArray *pending;
 @property(nonatomic) NSUInteger pendingBytes;
-@property(nonatomic) BOOL webReady, delivering, retryScheduled, snapshotReceived;
+@property(nonatomic) BOOL webReady, delivering, retryScheduled, snapshotReceived, endReceived;
 - (void)show;
 - (void)close;
 - (void)flush;
@@ -57,7 +57,7 @@ int AGViewerInput(int variant,int kind,int code) {
     if(kind==0)dispatch_async(dispatch_get_main_queue(),^{
         if(watch.webReady){
             [watch.web evaluateJavaScript:[NSString stringWithFormat:@"watchKey(%d)",code] completionHandler:nil];
-        }else if(code==-6||code==-5||code==-21||code=='L'||code=='l'||code==13||code==10||code=='5'){
+        }else if(code==-6||code==-5||code==-21||code=='L'||code=='l'||code==13||code==10||code=='5'||code=='F'||code=='f'){
             [watch accept];
         }else if(code==-7||code==-22||code==-11||code=='R'||code=='r'||code==27){
             [watch cancel];
@@ -92,6 +92,7 @@ static void finish(ArmyWatch *w) {
 }
 static void leave(ArmyWatch *w) {
     if(w.phase==Leaving)return;
+    if(w.endReceived){finish(w);return;}
     w.action = w.phase==Offered ? NoAction : (w.phase==WaitingForMatch && w.action==Accept) ? Refresh : Leave;
     if(w.action==NoAction){finish(w);return;}
     w.phase=Leaving;w.deadline=now()+5;
@@ -157,10 +158,11 @@ int AGViewerReceive(void *env,void *message,int variant) {
                 }
                 if(!w || w.variant!=variant)return 1;
                 if(p[3]==6){
-                    if(n==12&&!memcmp(p+4,w.ticket.bytes,8))finish(w);
-                    return 1;
-                }
-                if(p[3]==3){
+                    if(n!=12||memcmp(p+4,w.ticket.bytes,8)||w.endReceived)return 1;
+                    if(w.phase!=InMatch||!w.snapshotReceived){finish(w);return 1;}
+                    // Keep the last shot and its HP update in the same queue as earlier frames.
+                    w.endReceived=YES;w.deadline=now()+10;
+                }else if(p[3]==3){
                     if(n!=21||p[4]!=w.room||p[5]!=w.area||memcmp(p+6,w.ticket.bytes,8))return 1;
                     if(w.phase==Leaving){w.action=Leave;return 1;}
                     if(w.phase!=WaitingForMatch)return 1;
@@ -192,6 +194,7 @@ void AGViewerTick(void *env,int variant) {
             if(current!=w)return;
             if(connection!=w.connection){finish(w);return;}
             if(w.deadline&&now()>w.deadline){
+                if(w.endReceived){finish(w);return;}
                 if(w.phase==Leaving)w.action=Refresh;
                 else {
                     w.problem=w.phase==Offered?@"Lời mời xem đã hết hạn.":@"Chưa tải được trận. Đang trở lại danh sách khu vực…";
@@ -295,7 +298,9 @@ void AGViewerTick(void *env,int variant) {
     if(message.webView!=self.web||!message.frameInfo.isMainFrame)return;
     if([message.body isEqual:@"ready"]){self.webReady=YES;[self updatePhase];[self flush];}
     else if([message.body isEqual:@"live"]){
-        @synchronized(ArmyWatch.class){if(current==self&&self.phase==InMatch&&self.snapshotReceived)self.deadline=0;}
+        @synchronized(ArmyWatch.class){if(current==self&&self.phase==InMatch&&self.snapshotReceived&&!self.endReceived)self.deadline=0;}
+    }else if([message.body isEqual:@"ended"]){
+        @synchronized(ArmyWatch.class){if(current==self&&self.endReceived)finish(self);}
     }
     else if([message.body isEqual:@"accept"])[self accept];
     else if([message.body isEqual:@"decline"]||[message.body isEqual:@"leave"]||[message.body isEqual:@"failed"])[self cancel];

@@ -2,40 +2,59 @@
 // Read-only spectator: native keypad, bitmap fonts, real gear and world camera.
 const ui=PixelUI,ctx=ui.g,state=document.getElementById('state');
 const tiles=[],queue=[],images=new Map(),numbers=[],explosions=[];
-const WORLD_SCALE=320/400,FRAME_MS=30,IMPACT_MS=360;
+const WORLD_SCALE=320/400,FRAME_MS=30;
 let shot=null,failed=false,liveReported=false,lastTime=0,menuOpen=false,menuFocus=0;
 let freeCamera=false,cameraX=0,cameraY=0,cameraReady=false,drag=null,clockAt=0,angle=0;
 let phase=-1,question='',awaiting=false,showTeam=true,forceMax=false,watchNotice='';
 function asset(name){let im=images.get(name);if(!im){im=new Image();im.src='art/'+name+'.png';images.set(name,im);}return im;}
-for(const name of ['main-ar','main-no','main-wicon','main-bpa','main-cooldown','projectile-dan','projectile-grenade','projectile-cannon','projectile-rocket2','projectile-laser','projectile-bomb','gui-bar','pb1'])asset(name);
+for(const name of ['main-bar','main-no','projectile-dan','projectile-grenade','projectile-cannon','projectile-rocket2','projectile-laser'])asset(name);
 const holeNames=['h32x26','smallhole','smallhole','h36x30','rocket','rangehole','hrangcua','hgrenade','h14x12','h55x50'];
 const holeMap={0:3,1:1,2:0,3:9,6:6,7:7,9:5,10:4,11:2,12:6,15:7,17:2,18:2,19:2,20:0,21:2,22:7,24:3,25:8,27:1,30:0,31:7,32:3,35:3,37:7,40:2,41:2,42:7,43:7,44:2,45:7,47:8,48:3,52:3,57:7};
-const holes=holeNames.map(name=>{
- const im=asset('hole-'+name),entry={image:im};
- im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');g.drawImage(im,0,0);entry.pixels=g.getImageData(0,0,c.width,c.height).data;};return entry;
-});
+const holes=new Map();
+for(const name of new Set(holeNames)){
+ const im=new Image(),entry={image:im};holes.set(name,entry);
+ im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');g.drawImage(im,0,0);entry.pixels=g.getImageData(0,0,c.width,c.height).data;if(reportLive())pump();};
+ im.onerror=()=>fail('Không tải được mặt nạ phá đất.');im.src='art/hole-'+name+'.png';
+}
 const game=new ArmySpectator(tile=>{
  const image=new Image(),url=URL.createObjectURL(new Blob([tile.bytes],{type:'image/png'}));
  const entry={x:tile.x,y:tile.y,solid:!!tile.solid,ready:false,id:tile.id};tiles.push(entry);
- image.onload=()=>{URL.revokeObjectURL(url);const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0);Object.assign(entry,{canvas:c,ctx:g,ready:true});reportLive();};
+ image.onload=()=>{URL.revokeObjectURL(url);const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0);Object.assign(entry,{canvas:c,ctx:g,ready:true});if(reportLive())pump();};
  image.onerror=()=>{URL.revokeObjectURL(url);fail('Không đọc được ảnh bản đồ.');};image.src=url;
 });
 game.onHealth=(actor,delta)=>numbers.push({x:actor.x,y:actor.y-38,delta,at:performance.now()});
 function post(message){window.webkit.messageHandlers.viewer.postMessage(message);}
-function reportLive(){if(failed||liveReported||game.phase!=='live'||tiles.some(t=>!t.ready))return;liveReported=true;clockAt=performance.now();state.textContent='Đang xem trận';post('live');}
+function reportLive(){
+ if(failed||liveReported||game.phase!=='live'||tiles.some(t=>!t.ready)||[...holes.values()].some(mask=>!mask.pixels))return false;
+ liveReported=true;clockAt=performance.now();state.textContent='Đang xem trận';post('live');return true;
+}
 function fail(message){if(failed)return;failed=true;queue.length=0;state.textContent=message;post('failed');}
 function apply(frame){
- const bytes=Uint8Array.from(atob(frame[1]),c=>c.charCodeAt(0)),previousTurn=game.turn,result=game.receive(frame[0],bytes);
+ const bytes=Uint8Array.from(atob(frame[1]),c=>c.charCodeAt(0));
+ if(frame[0]===-102&&bytes[3]===6){setTimeout(()=>post('ended'),550);return;}
+ const previousTurn=game.turn,result=game.receive(frame[0],bytes);
  if(frame[0]===24||game.turn!==previousTurn)clockAt=performance.now();
  if(result?.paths){angle=result.angle;const actor=game.players[result.player];if(actor)actor.facing=result.angle>90&&result.angle<270?-1:1;}
  reportLive();return result;
 }
-function pump(){try{let count=0;while(queue.length&&!shot&&!failed){const next=apply(queue.shift());if(next?.paths.some(p=>p.length))shot={...next,samples:Math.max(...next.paths.map(p=>p.length)),elapsed:0,landed:new Set()};if(++count>=256){setTimeout(pump,0);break;}}}catch(e){fail(e.message);}}
+function pump(){
+ try{
+  let count=0;
+  while(queue.length&&!shot&&!failed&&(game.phase!=='live'||liveReported)){
+   const next=apply(queue.shift());
+   if(next?.paths.some(p=>p.length)){
+    const impacts=next.impacts.filter(event=>event.sample<next.paths[event.projectile]?.length).sort((a,b)=>a.sample-b.sample);
+    shot={...next,impacts,elapsed:0,sample:-1,impactIndex:0,samples:Math.max(...next.paths.map(p=>p.length))};
+   }
+   if(++count>=256){setTimeout(pump,0);break;}
+  }
+ }catch(e){fail(e.message);}
+}
 window.receiveArmyFrames=frames=>{if(failed)return;if(!Array.isArray(frames)||frames.length+queue.length>4096){fail('Phiên xem bị gián đoạn.');return;}for(const frame of frames)queue.push(frame);pump();};
 function impact(x,y,bullet){
  explosions.push({x,y,at:performance.now()});
- if([14,16,27,28,29,30,33,34,36,39,44,45,47,49].includes(bullet))return;
- const mask=holes[holeMap[bullet]??0];if(!mask.pixels)return;const w=mask.image.width,h=mask.image.height;
+ if([4,5,13,14,16,23,26,28,34,36,51,57].includes(bullet))return;
+ const mask=holes.get(holeNames[holeMap[bullet]??0]),w=mask.image.width,h=mask.image.height;
  for(const tile of tiles){
   if(!tile.ready||!tile.solid)continue;
   const ox=Math.trunc(x-tile.x-Math.floor(w/2)),oy=Math.trunc(y-tile.y-Math.floor(h/2));
@@ -52,9 +71,19 @@ function impact(x,y,bullet){
  }
 }
 function updateShot(delta){
- if(!shot)return;shot.elapsed+=delta*(forceMax?2:1);const sample=Math.floor(shot.elapsed/FRAME_MS);
- for(let i=0;i<shot.paths.length;i++){const p=shot.paths[i];if(p.length&&sample>=p.length&&!shot.landed.has(i)){shot.landed.add(i);impact(...p[p.length-1],shot.bullet);}}
- if(shot.elapsed>=shot.samples*FRAME_MS+IMPACT_MS){shot=null;pump();}
+ if(!shot)return;
+ shot.elapsed+=delta*(forceMax?2:1);
+ const sample=Math.min(shot.samples-1,Math.floor(shot.elapsed/FRAME_MS));
+ for(const path of shot.paths){
+  const last=path.length-1;
+  if(last>shot.sample&&last<=sample)impact(...path[last],shot.bullet);
+ }
+ while(shot.impactIndex<shot.impacts.length&&shot.impacts[shot.impactIndex].sample<=sample){
+  const e=shot.impacts[shot.impactIndex++],actor=game.players[e.slot];
+  if(actor&&actor.hp!==undefined)game.setHealth(e.slot,actor.hp+e.delta,e.max);
+ }
+ shot.sample=sample;
+ if(sample===shot.samples-1){shot=null;pump();}
 }
 function camera(delta){
  const width=320/WORLD_SCALE,height=ui.height/WORLD_SCALE,actor=game.players[game.turn]??game.players.find(p=>p&&p.hp>0);
@@ -110,18 +139,18 @@ function key(code){
  if([76,108,-21].includes(code))code=-6;
  if([82,114,-22,-11,27].includes(code))code=-7;
  if(phase===0){
-  if([-6,-5,13,10,53].includes(code))answer(true);
+  if([-6,-5,13,10,53,70,102].includes(code))answer(true);
   else if(code===-7)answer(false);
   return;
  }
  if(phase!==2)return;
- if(watchNotice){if([-7,-6,-5,13,10,53].includes(code))watchNotice='';return;}
+ if(watchNotice){if([-7,-6,-5,13,10,53,70,102].includes(code))watchNotice='';return;}
  if(code===-6){if(menuOpen)options()[menuFocus]?.[1]();else{menuOpen=true;menuFocus=0;}return;}
  if(code===-7){if(menuOpen)menuOpen=false;else toggleCamera();return;}
  if(menuOpen){
   const list=options(),direction=([-1,50].includes(code)?-1:[-2,56].includes(code)?1:0);
   if(direction)menuFocus=(menuFocus+direction+list.length)%list.length;
-  else if([-5,13,10,53].includes(code))list[menuFocus]?.[1]();
+  else if([-5,13,10,53,70,102].includes(code))list[menuFocus]?.[1]();
   return;
  }
  if(!freeCamera)return;if([-3,52].includes(code))cameraX-=20;if([-4,54].includes(code))cameraX+=20;if([-1,50].includes(code))cameraY-=20;if([-2,56].includes(code))cameraY+=20;
@@ -162,7 +191,7 @@ ui.start(()=>{
  }
  if(phase!==2)return;
  const now=performance.now(),delta=lastTime?Math.min(250,Math.max(0,now-lastTime)):0;lastTime=now;updateShot(delta);camera(delta);
- if(game.width){
+ if(liveReported){
   ui.rect(0,0,320,ui.height,game.map===0?'#58e1e7':'#60cdf7');ctx.save();ctx.beginPath();ctx.rect(0,0,320,ui.height);ctx.clip();ctx.scale(WORLD_SCALE,WORLD_SCALE);ctx.translate(-Math.round(cameraX),-Math.round(cameraY));
   for(const t of tiles)if(t.ready)ctx.drawImage(t.canvas,t.x,t.y);
   game.players.forEach((p,i)=>{if(p)paintActor(p,i);});paintProjectiles();

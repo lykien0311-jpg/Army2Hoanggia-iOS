@@ -41,15 +41,28 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  assert.deepEqual(await page.evaluate(()=>[modal.yes,modal.no]),['Đồng ý','Hủy']);
  assert.equal(await page.evaluate(()=>sent.length),1,'Opening confirmation must not send a challenge');
  await back();
- await page.evaluate(()=>profile());
- const profileWire=w().int(1129591862).byte(2).int(2).int(1).utf('striker').int(999).utf('Gunner').byte(5);for(const v of [50000,1000,900,80,100])profileWire.int(v);
+ await soft(-6);await soft(-5);
+ const firstProfile=[-120,Buffer.from([67,84,52,54,2,0,0,0,2,0,0,0,1,0,0,0,1,49]).toString('base64')];
+ assert.deepEqual(await page.evaluate(()=>sent.at(-1)),firstProfile,'The profile uses the same opcode as APK');
+ await page.evaluate(()=>lobbyRequestFailed());
+ assert.deepEqual(await page.evaluate(()=>[closed,view,waiting]),[false,'board',false]);
+ await soft(-6);await soft(-5);
+ await page.evaluate(b=>receiveFrame(-120,b),Buffer.from([67,84,52,54,2,0,0,0,3]).toString('base64'));
+ assert.deepEqual(await page.evaluate(()=>[closed,view,waiting]),[false,'board',false]);
+ await soft(-6);await soft(-5);
+ assert.equal(await page.evaluate(()=>waiting),true);
+ const profileWire=w().int(1129591862).byte(2).int(4).int(1).utf('striker').int(999).utf('Gunner').byte(5);for(const v of [50000,1000,900,80,100])profileWire.int(v);
  for(let i=0;i<5;i++)profileWire.short(rows[0].parts[i]).utf('Trang bị '+i).byte(16).byte(7).byte(0);
  profileWire.byte(0);rows[0].parts.forEach(v=>profileWire.short(v));profileWire.byte(1).byte(48).long(20000000).long(2000).int(240).byte(0).int(1145394248).byte(6);
  for(let i=0;i<6;i++){profileWire.byte(i<5?1:0);if(i<5){profileWire.byte(5);for(let j=0;j<5;j++)profileWire.int(j+1);profileWire.byte(5);for(let j=0;j<5;j++)profileWire.int(j);profileWire.int(7).byte(3);}}
  profileWire.int(1195724105).byte(6);for(let i=0;i<6;i++){profileWire.byte(i<5?1:0);if(i<5)profileWire.utf('Ngọc 11').utf('Tăng chỉ số tổng 2%');}
  await page.evaluate(b=>receiveFrame(-120,b),Buffer.from(profileWire.bytes).toString('base64'));
  await page.waitForTimeout(150);await page.screenshot({path:path.join(root,'lobby-profile.png')});
- await page.evaluate(()=>lobbyKey(-5));assert.equal(await page.evaluate(()=>modal.lines.includes('Ngọc 11')),true,'Equipment details preserve inserted gems');await page.evaluate(()=>{lobbyKey(-7);lobbyKey(-7);});
+ assert.deepEqual(await page.evaluate(()=>[view,reply.name]),['profile','striker']);
+ await soft(-6);assert.deepEqual(await labels(),['Chi tiết']);await soft(-5);
+ assert.equal(await page.evaluate(()=>modal.lines.includes('Ngọc 11')),true,'Equipment details preserve inserted gems');
+ await page.evaluate(()=>{lobbyKey(-7);lobbyKey(-7);});
+ assert.deepEqual(await page.evaluate(()=>[view,focus,closed]),['board',0,false]);
  await page.evaluate(()=>{lobbyKey(-6);lobbyKey(-2);lobbyKey(-5);});
  assert.equal(await page.evaluate(()=>new ArmyReader(Uint8Array.from(atob(sent.at(-1)[1]),c=>c.charCodeAt(0))).bytes[4]),5,'Native keypad menu opens match list');
  await back();

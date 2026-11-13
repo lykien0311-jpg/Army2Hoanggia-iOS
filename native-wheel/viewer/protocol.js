@@ -94,6 +94,15 @@ class ArmySpectator {
         this.turn = -1;
         this.wind = [0,0];
     }
+    setHealth(slot, hp, max) {
+        const actor=this.players[slot];
+        if(!actor)return;
+        const before=actor.hp;
+        if(max>0)actor.max=max;
+        actor.hp=Math.max(0,hp);
+        if(this.phase==='live'&&before!==undefined&&before!==actor.hp)
+            this.onHealth?.(actor,actor.hp-before);
+    }
     receive(cmd, bytes) {
         const r = new ArmyReader(bytes);
         if (cmd === -102) return this.control(r);
@@ -126,12 +135,9 @@ class ArmySpectator {
             const actor = this.players[r.u8()], x = r.i16(), y = r.i16();
             if (actor) Object.assign(actor,{x,y});
         } else if (cmd === 51) {
-            const actor = this.players[r.u8()], hp = r.hp();
+            const slot = r.u8(), hp = r.hp();
             r.i8(); r.end();
-            if (actor) {
-                const before=actor.hp;actor.hp=hp;
-                if(before!==undefined&&before!==hp&&this.onHealth)this.onHealth(actor,hp-before);
-            }
+            this.setHealth(slot,hp);
         } else if (cmd === 106 || cmd === 107) {
             const ending=r.u8(),actor=this.players[r.u8()];r.end();
             if(actor)actor[cmd===106?'blind':'frozen']=!ending;
