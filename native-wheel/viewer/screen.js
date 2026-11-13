@@ -10,17 +10,42 @@ function asset(name){let im=images.get(name);if(!im){im=new Image();im.src='art/
 for(const name of ['main-bar','main-no','projectile-dan','projectile-grenade','projectile-cannon','projectile-rocket2','projectile-laser'])asset(name);
 const holeNames=['h32x26','smallhole','smallhole','h36x30','rocket','rangehole','hrangcua','hgrenade','h14x12','h55x50'];
 const holeMap={0:3,1:1,2:0,3:9,6:6,7:7,9:5,10:4,11:2,12:6,15:7,17:2,18:2,19:2,20:0,21:2,22:7,24:3,25:8,27:1,30:0,31:7,32:3,35:3,37:7,40:2,41:2,42:7,43:7,44:2,45:7,47:8,48:3,52:3,57:7};
+// Original game mask PNGs. Use data URLs so WKWebView can read their pixels
+// from a file-backed bundle without a cross-origin canvas restriction.
+const maskImages=[
+ ['h32x26','iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAMAAADhRa4NAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAJUExURQAAAP8AAP///2cZZB4AAAADdFJOU///ANfKDUEAAABfSURBVHja1JMxDgAhCAQH///oi2JUjLi2t6UzjbBQlljP+sYOd4nAaQkGAxMyFM58GjjnEDdIeTfIuRtVgNwo2F0wbrwafxHEN+Wg9KjlsvS6dWF05XRpH2qfHs4nwAB4VwIRfCtHIgAAAABJRU5ErkJggg=='],
+ ['smallhole','iVBORw0KGgoAAAANSUhEUgAAABYAAAAVCAMAAAB1/u6nAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAJUExURQAAAP8AAP///2cZZB4AAAADdFJOU///ANfKDUEAAABPSURBVHjatNE5FgAgCEPBj/c/tIq4PCWl6RwaDJSIeeaLE/eAhbSsAaFEwnHliDu3Du8MtxcsY+PV7p853UTsrX4pOlENqr7Vdd5bVgEGADskAU1yMKs0AAAAAElFTkSuQmCC'],
+ ['h36x30','iVBORw0KGgoAAAANSUhEUgAAACQAAAAeCAMAAABzP0xhAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAJUExURQAAAP8AAP///2cZZB4AAAADdFJOU///ANfKDUEAAABwSURBVHja1NRBCsAgDETRH+9/6KKxoqbG2XaW8kCIGSlLrGc9JYII2QgtG2MiLJkYwxAyFN3wma7IzKscwVk5shxZRalxRclNuxC7I+NmqvozEkYgDVN7FumBtVXRlk5aX60IWqW0coo1zz6MR4ABAKzVAp0MmsLsAAAAAElFTkSuQmCC'],
+ ['rocket','iVBORw0KGgoAAAANSUhEUgAAABkAAAAhCAMAAAAbHvCRAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAJUExURQAAAP8AAP///2cZZB4AAAADdFJOU///ANfKDUEAAACZSURBVHjavJNBEsUgCEMT7n/oVgIWqv93pou6wDFPGMUIuwbJskJoAjE3ci5JeOwEQwA0BVEB1xBRJeHJLgIR6eU9n1JzhCR4J5KzUEF4JpvxIbEtOhvzjuzQ6PJfsiJ/syTsTcvXHtcqREaYhPXy3TvlQbvfJul+M+YBx57qUXlOKd29lrfijtg81UKMWP/C71+SqC4OAQYAGFwC3+F/s6QAAAAASUVORK5CYII='],
+ ['rangehole','iVBORw0KGgoAAAANSUhEUgAAACAAAAARCAMAAACLgl7OAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAJUExURQAAAP8AAP///2cZZB4AAAADdFJOU///ANfKDUEAAABmSURBVHjazJIxAoAwDALP/P/RSkJjHHTqIAslpUMhROEQkocQSFkj8xQyWAJFQ8iBh8CiIXRp+YKfGOLLoW9uMISDY2RlrqjT4XyfnIXhKqOfrIMLxWWPjn1w4USjd+BehgunAAMAaaQBcT4WR5IAAAAASUVORK5CYII='],
+ ['hrangcua','iVBORw0KGgoAAAANSUhEUgAAACgAAAAjCAMAAADR57icAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAJUExURf8AAAAAAP///8qSw5kAAAADdFJOU///ANfKDUEAAADNSURBVHjanJRJFsQgCEQL7n/ofokixWBih40RfxBkgGbBJVrVmQAmmX4AU0NEhHYJZEJ8JRTGyRD7MM0iDZQCuqYFBXmdJkEOduCKyN7BTQa5D8ZrqcXXc4bfYLgygh7Q/tbkwRHnqTqj3kicmfvPyVOb367uecr4YwrFy9hS+AjObB+A2SKKfwuMZYYYAfs4CneBoL4KGqtwwRb0CqdeaEHvGVXwmeSNd+Fq1waUblIggVNXZ08BeUrlaTaBwinqELUZuR2kRvrC8hNgABXjBPQDIf5eAAAAAElFTkSuQmCC'],
+ ['hgrenade','iVBORw0KGgoAAAANSUhEUgAAADcAAAAyCAMAAADPyLPHAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAJUExURf8AAAAAAP///8qSw5kAAAADdFJOU///ANfKDUEAAAEGSURBVHjavJZREsMgCER3vf+hO1EkGsEI7ZSfzLR5AVbURXEDV7h/mu8r5oIws6A+Seon3rgLYmNZOdiJV05er0/2TyygkY9T9B9crhWzcDdvc+hBj8OoD6b6fKx3ioXjW4g+Vj4ewEt//+O2QvpcABu5phNPORn1487GZdR8UTLD1SaRwCibknEuhQmYxDKyiC7hddA5C6r5FRevMzOf2l9eTzI3n1kuV2fJbCNZB4TOiWFezo8lOWAQOq5T98N0mUW5XD7+kGv3ZrTO0l2Dr/9kKh6+wAH18rd8iNgkd8dNjsLzL1Nqw6VZ/uwu7KnGzg/enVTQMYXY+U74XhJlF74B/QgwAAKDDBfY5U0XAAAAAElFTkSuQmCC'],
+ ['h14x12','iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAMAAABlXnzoAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAlQTFRFAAAA/wAAAAAAZ6dCDAAAAAN0Uk5T//8A18oNQQAAADJJREFUeNpiYGJiYoQCIJMBwQPxGUA8BjAA8RngPDCfAcED8UnlohiFZhG6M1AcCRBgACxMAH18M4R6AAAAAElFTkSuQmCC'],
+ ['h55x50','iVBORw0KGgoAAAANSUhEUgAAADcAAAAyCAMAAADPyLPHAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAJUExURQAAAP////8AAM1et5wAAACsSURBVHja7NZLDsIwDEXRS/a/aAT9JASH2neAGOBxjp6iNra5hdV6xQf4aNaWheKohSRQzBVIrlUomRirmiA59SZJs1dIZ1xXh1TYAE8HSTi6VnCtuzw7IUV2QCqXG65INW4PpBy3BVKO2wKpxz0DtWvKNQR7wL/7Gee++7f/T/2O7LvVfcL2Jd0Hbd/VfV7PFT3H7NzUc1rvBXoP8XuP3rP8Xuf3yOTeehdgAKYlBQ2+B2QRAAAAAElFTkSuQmCC'],
+];
 const holes=new Map();
-for(const name of new Set(holeNames)){
+for(const [name,png] of maskImages){
  const im=new Image(),entry={image:im};holes.set(name,entry);
- im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');g.drawImage(im,0,0);entry.pixels=g.getImageData(0,0,c.width,c.height).data;if(reportLive())pump();};
- im.onerror=()=>fail('Không tải được mặt nạ phá đất.');im.src='art/hole-'+name+'.png';
+ im.onload=()=>{
+  try{
+   const c=document.createElement('canvas');c.width=im.width;c.height=im.height;
+   const g=c.getContext('2d');g.drawImage(im,0,0);
+   entry.pixels=g.getImageData(0,0,c.width,c.height).data;
+   if(reportLive())pump();
+  }catch(e){fail('Không đọc được mặt nạ phá đất.');}
+ };
+ im.onerror=()=>fail('Không tải được mặt nạ phá đất.');im.src='data:image/png;base64,'+png;
+}
+function terrainURL(bytes){
+ let binary='';
+ for(let i=0;i<bytes.length;i+=16384)binary+=String.fromCharCode(...bytes.subarray(i,i+16384));
+ return 'data:image/png;base64,'+btoa(binary);
 }
 const game=new ArmySpectator(tile=>{
- const image=new Image(),url=URL.createObjectURL(new Blob([tile.bytes],{type:'image/png'}));
+ const image=new Image();
  const entry={x:tile.x,y:tile.y,solid:!!tile.solid,ready:false,id:tile.id};tiles.push(entry);
- image.onload=()=>{URL.revokeObjectURL(url);const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0);Object.assign(entry,{canvas:c,ctx:g,ready:true});if(reportLive())pump();};
- image.onerror=()=>{URL.revokeObjectURL(url);fail('Không đọc được ảnh bản đồ.');};image.src=url;
+ image.onload=()=>{const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0);Object.assign(entry,{canvas:c,ctx:g,ready:true});if(reportLive())pump();};
+ image.onerror=()=>fail('Không đọc được ảnh bản đồ.');image.src=terrainURL(tile.bytes);
 });
 game.onHealth=(actor,delta)=>numbers.push({x:actor.x,y:actor.y-38,delta,at:performance.now()});
 function post(message){window.webkit.messageHandlers.viewer.postMessage(message);}

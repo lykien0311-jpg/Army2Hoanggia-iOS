@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {pathToFileURL}=require('node:url');
+const http=require('node:http');
 const {chromium}=require('playwright');
 const trace=require('./testdata/watch-pvp.json');
 
@@ -27,13 +27,22 @@ function shot(bullet,points,events=[]){
 }
 
 (async()=>{
+ const viewer=path.join(__dirname,'viewer');
+ const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png'};
+ const server=http.createServer((request,response)=>{
+  const name=path.resolve(viewer,'.'+new URL(request.url,'http://localhost').pathname);
+  if(!name.startsWith(viewer+path.sep)||!fs.existsSync(name)){response.writeHead(404);response.end();return;}
+  response.setHeader('Content-Type',types[path.extname(name)]||'application/octet-stream');
+  fs.createReadStream(name).pipe(response);
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const browser=await chromium.launch({args:['--no-sandbox'],executablePath:process.env.ARMY2_CHROMIUM});
  const page=await browser.newPage({viewport:{width:390,height:548}});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.addInitScript(()=>{
   window.reports=[];window.webkit={messageHandlers:{viewer:{postMessage:x=>reports.push(x)}}};
  });
- await page.goto(pathToFileURL(path.join(__dirname,'viewer/index.html')).href);
+ await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);
  const confirmation='Khu vực đang chiến đấu bạn có muốn xem';
  await page.evaluate(text=>setWatchPhase(0,text),confirmation);
  await page.waitForFunction(()=>PixelUI.frame>1);
@@ -42,7 +51,8 @@ function shot(bullet,points,events=[]){
  await page.evaluate(()=>setWatchPhase(2,''));
  const snapshot=trace.filter(([cmd,payload])=>cmd!==22&&(cmd!==-102||[3,4,5,7].includes(Buffer.from(payload,'base64')[3])));
  await page.evaluate(frames=>receiveArmyFrames(frames),snapshot);
- await page.waitForFunction(()=>reports.includes('live'));
+ await page.waitForFunction(()=>reports.some(report=>report==='live'||report==='failed'));
+ assert.equal(await page.locator('#state').textContent(),'Đang xem trận');
  const impactPoints=[[465,385],[493,448],[510,514]];
  const result=await page.evaluate(([projectile,hp])=>{
   const target=tiles.find(t=>t.x===501&&t.y===507&&t.solid);
@@ -70,6 +80,6 @@ function shot(bullet,points,events=[]){
  const root=path.join(__dirname,'build');fs.mkdirSync(root,{recursive:true});
  await page.screenshot({path:path.join(root,'watch-impact.png')});
  assert.deepEqual(errors,[]);
- await browser.close();
+ await browser.close();server.close();
  console.log('PASS spectator browser rendering: crater, black rim, real HP bar update and damage text, timed hits without duplication, laser preserves ground');
 })().catch(error=>{console.error(error);process.exit(1);});

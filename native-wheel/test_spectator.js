@@ -36,16 +36,16 @@ const screen = vm.createContext({
     PixelUI:{start(){},g:{},canvas:{addEventListener(){}}},
     addEventListener:()=>{},performance:{now:()=>0},
     setTimeout:fn=>timers.push(fn),
-    URL:{createObjectURL:()=> 'blob:test',revokeObjectURL:()=>{}},
     Image:class { constructor(){this.width=1;this.height=1;images.push(this);} },
-    Blob,atob,
+    atob,btoa,
 });
 for(const file of ['protocol.js','screen.js']) {
     vm.runInContext(fs.readFileSync(__dirname+'/viewer/'+file,'utf8'),screen,{filename:file});
 }
+const masks=images.filter(image=>image.src.startsWith('data:'));
+const startingImages=images.length;
 screen.window.receiveArmyFrames(packets.map(([command,bytes])=>[command,bytes.toString('base64')]));
-const terrain=images.filter(image=>image.src==='blob:test');
-const masks=images.filter(image=>image.src?.startsWith('art/hole-'));
+const terrain=images.slice(startingImages);
 assert.equal(terrain.length,52);
 assert.equal(masks.length,9);
 assert.deepEqual(reports,['ready']);
