@@ -1,0 +1,20 @@
+{
+  "server-B276-FixHienThi-KiemTraHP.jar": {
+    "size": 5511530,
+    "sha256": "6f61b0ada41eaa05c316e18bbe0c1474fcf25e2292ab6ba8245bff5a9656b717"
+  },
+  "Army2HoangGia-2.4.1-B276.ipa": {
+    "size": 27616552,
+    "sha256": "0ce03b2b2e1fd6aeced4e70ee63004fa53f7824e1e1ff6042242007554a10edb"
+  },
+  "HUONG_DAN_B276.txt": {
+    "size": 2965,
+    "sha256": "49a92fb93f04006b95d533a9912d6268f39efaf0ceea768d66545071ac34bada"
+  },
+  "inputs": {
+    "Army2HoangGia-2.4.1-ditme.ipa": "01d8669bcae44d2438963eb96f8bb792126786395dcbd18588328964a520bbc1",
+    "server-B275-BossNhanh-PvP05s.jar": "5e2cb7ef4ee92135315a116c55ee9fdfdfa6940c54b7a92bcc007260b1d4f949",
+    "gs5kl1.apk": "823586872a0076b6aad4b8f5ca4c4faa3a72e8c0d597d8a444251538fc9efd9d",
+    "res.zip": "a22420bac954674cc69d328986418e283ac0110195be6c20ef5f98f4c0327e31"
+  }
+}

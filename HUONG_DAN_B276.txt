@@ -1,0 +1,31 @@
+BẢN CHỈNH B276 — IPA 2.4.1, build 279
+
+CÁCH DÙNG
+1. Sao lưu JAR đang chạy. Thay server-B276-FixHienThi-KiemTraHP.jar và khởi động lại server.
+2. Ký lại Army2HoangGia-2.4.1-B276.ipa bằng công cụ ký IPA bạn đang dùng, rồi cài thử.
+3. Cần dùng cả JAR và IPA mới để màn thông tin chiến trường nhận đúng icon trang bị.
+
+ĐÃ CHỈNH
+- Thông tin chiến trường: lấy icon 16x16 từ item_special.png theo frame trang bị, giống nguồn icon của rương đồ gốc; hiển thị khung và mức cường hóa ở các ô trang bị.
+- Rương gian hàng: ưu tiên icon rương gốc, giảm kích thước icon và đặt số lượng sát góc icon.
+- Xem trận IPA: bỏ cách thu nhỏ toàn bản đồ, dùng tỷ lệ thế giới và camera theo người chơi/đạn; vẽ nhân vật bằng sprite game và phông bitmap; giữ vùng bàn phím gốc, hỗ trợ Camera/Menu/Rời trận bằng phím.
+
+GIỚI HẠN PHẦN XEM TRẬN
+Màn xem trận vẫn là bộ hiển thị riêng của IPA, chưa phải chuyển nguyên engine/màn chiến đấu Android sang iOS. Đã chỉnh bố cục, sprite và camera theo APK; toàn bộ hoạt ảnh, hiệu ứng đặc biệt và đổi PB trong lúc xem chưa được xác nhận tương đương APK. Chưa chạy thử trực tiếp trên iPhone.
+
+KIỂM TRA HP
+- Với mã server thật và res.zip, đã thử map Bóng bóng 1 (24) và Bóng bóng 2 (25).
+- HP 48.937 bị trừ 8.744 còn 40.193: nhân vật vẫn sống nếu còn đứng trên địa hình.
+- Khi phá hết phần đỡ bên dưới trên map 25, nhân vật rơi qua đáy map, server đưa HP về 0 dù trước đó vẫn còn HP. Tái hiện được cơ chế này trên cả JAR gốc và JAR mới.
+- Đây là một nguyên nhân khả dĩ; không đủ dữ liệu để kết luận đúng trận trong video. Chưa coi lỗi đó là đã sửa.
+- JAR mới thêm dòng [Battle138] trong log: cause=lethal-damage (sát thương chí tử), cause=map-fall (rơi map), cause=leave-or-disconnect (rời trận/mất kết nối). Dùng dòng này để xác nhận nếu xảy ra lại.
+
+KIỂM TRA ĐÃ CHẠY
+- 274 kiểm tra nguồn/pixel icon và định dạng phản hồi, bao gồm tương thích với phản hồi APK cũ.
+- 33 kiểm tra map/HP bằng các lớp server thật và res.zip.
+- 193 kiểm tra cầu nối ARM64 bằng mô phỏng lệnh, gồm giữ vùng bàn phím và chuyển phím.
+- 176 kiểm tra hồi quy thời gian boss/PvP có sẵn trong JAR gốc.
+- Kiểm tra trình duyệt với dữ liệu map thật: nạp trận, nhân vật/HP, camera, rời trận, icon chiến trường và rương gian hàng.
+- Những kiểm tra trên không thay thế kiểm thử cài IPA trên iPhone và chơi với server thật.
+
+APK được dùng làm bản tham chiếu, không chỉnh sửa. Không cần thay res.zip.
