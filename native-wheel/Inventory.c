@@ -5,7 +5,7 @@
 #include "Inventory.h"
 #define INV_LIMIT 4096
 typedef struct { uint64_t key;int64_t quantity;uint8_t *item;int group,id,rank,fresh; } Entry;
-typedef struct { int count,open;uint64_t hash;uintptr_t vector;Entry *previous; } InventoryState;
+typedef struct { int count,open;uint64_t hash;uintptr_t vector,screen;Entry *previous; } InventoryState;
 static InventoryState inventories[6];
 static uint64_t key(const uint8_t *p){return p[0xbd]?(UINT64_C(1)<<63)|(uint64_t)*(const int64_t *)(p+0x80):(uint32_t)*(const int *)(p+0xb0);}
 static int group(const uint8_t *p){
@@ -63,7 +63,12 @@ static int refresh(void *e,void *opaque){Refresh *j=opaque;((void (*)(void *,voi
 void AGInventoryOrder(void *env,int v,uint8_t *canvas,uint8_t *screen,int active){
     if(v<0||v>=6)return;
     InventoryState *state=&inventories[v];
-    if(!active){state->open=0;return;}
+    if(!active){
+        /* Z5.i(env,screen,parent) stores the parent at +0x10. A recipe
+           child is still the same chest session, not an explicit close. */
+        if(state->open&&screen&&state->screen&&*(uintptr_t *)(screen+0x10)==state->screen)return;
+        state->open=0;state->screen=0;return;
+    }
     /* Menus, amount entry, craft progress and result dialogs keep their target. */
     if(!env||!screen||*(void **)(canvas+0x108)||screen[0xd4]||screen[0xd5])return;
     uint8_t *vec=pool(v);if(!vec)return;
@@ -94,7 +99,7 @@ void AGInventoryOrder(void *env,int v,uint8_t *canvas,uint8_t *screen,int active
             if(clazz&&(promoted||reopening)){*(int *)(clazz+0xa8)=0;*(int *)(clazz+0xac)=0;}
             remember(state,rows,n);
         }
-        state->open=1;state->vector=(uintptr_t)vec;
+        state->open=1;state->vector=(uintptr_t)vec;state->screen=(uintptr_t)screen;
     }
     free(rows);leave(env,vec);
     if(valid&&n&&(changed||rebound)){Refresh j={v,screen};AGWheelGuard(env,refresh,&j,(void *)(base()+0x1300d54));}

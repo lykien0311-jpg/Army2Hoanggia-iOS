@@ -88,7 +88,8 @@ for v in range(6):
  rows=[item(104,5),item(70001,equipment=True),item(7,99),item(120,1)];vec=vector(rows);put(pool+0xa8,'<Q',vec);put(screen+0x70,'<Q',vec);put(screen+0x90,'<Q',rows[0])
  call('_AGInventoryOrder',E,v,canvas,screen,1);assert ids(vec)==[70001,7,104,120]
  assert get(screen+0x90,'<Q')==rows[1]
- fresh=[item(70001,equipment=True),item(7,99),item(105,1),item(120,1)];nextvec=vector(fresh);put(pool+0xa8,'<Q',nextvec)
+ child=alloc(0x80);put(child+0x10,'<Q',screen);put(canvas+0xb8,'<Q',child);call('_AGInventoryOrder',E,v,canvas,child,0)
+ fresh=[item(70001,equipment=True),item(7,99),item(105,1),item(120,1)];nextvec=vector(fresh);put(pool+0xa8,'<Q',nextvec);put(canvas+0xb8,'<Q',screen)
  put(canvas+0x108,'<Q',123);call('_AGInventoryOrder',E,v,canvas,screen,1);assert get(screen+0x70,'<Q')==vec
  put(canvas+0x108,'<Q',0);call('_AGInventoryOrder',E,v,canvas,screen,1);assert get(screen+0x70,'<Q')==nextvec and ids(nextvec)==[105,70001,7,120]
  assert get(screen+0x90,'<Q')==fresh[2]and get(fresh[2]+0x90,'<q')==1
@@ -101,4 +102,4 @@ for v in range(6):
  # Simulate 100 refreshes while keeping template IDs and handles unchanged.
  for turn in range(100):
   put(fresh[1]+0x90,'<q',100+turn);call('_AGInventoryOrder',E,v,canvas,screen,1);assert ids(replacement)[0]==7
-print('PASS compiled ARM64 bridge: all six variants, 600 updates, vector replacement, dialog deferral, recipe re-resolution, reopen sorting and selected-item refresh')
+print('PASS compiled ARM64 bridge: all six variants, 600 updates, vector replacement, dialog deferral, return from crafting, recipe re-resolution, reopen sorting and selected-item refresh')
