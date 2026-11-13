@@ -268,11 +268,96 @@ def assemble(base, framework, art, target):
     print(digest(target), target)
 
 
+def retained_framework(framework):
+    """Recover every byte of the Apple build, including its original signature."""
+    root = Path(__file__).parent
+    expected = json.loads((root / 'framework-278-sha256.json').read_text())
+    with ZipFile(framework) as archive:
+        if 'framework-sha256.json' not in archive.namelist():
+            files = framework_files(archive)
+        else:
+            if digest(framework) != '5b8750b6cbcfcb2eb0694a4b764127d48d372416306dae682bd04f43e625cf2b':
+                raise ValueError('Unexpected retained Apple framework')
+            if json.loads(archive.read('framework-sha256.json')) != expected:
+                raise ValueError('Unexpected Apple framework manifest')
+            files = {}
+            for name in expected:
+                if name in archive.namelist():
+                    files[name] = archive.read(name)
+                elif name.startswith(FW + 'viewer/'):
+                    files[name] = (root / name.removeprefix(FW)).read_bytes()
+                else:
+                    raise ValueError(f'Missing Apple framework file: {name}')
+    if set(files) != set(expected):
+        raise ValueError('Incomplete Apple framework')
+    for name, data in files.items():
+        if sha256(data).hexdigest() != expected[name]:
+            raise ValueError(f'Apple framework content differs: {name}')
+    return files
+
+
+def assemble_from_269(base, framework, art, target):
+    """Rebuild 278 without depending on an unpublished intermediate IPA."""
+    from package_269 import BASE_SHA
+    from package_277 import patch_menu_return
+    from patch_boss_maps import patch_boss_maps
+    from patch_menu_269 import patch_menu
+    from zipfile import ZipInfo
+
+    if target.exists() or digest(base) != BASE_SHA:
+        raise ValueError('Use the exact private build 269 and a new output path')
+    root = Path(__file__).parent
+    expected_art = json.loads((root / 'boss-art-278.json').read_text())['bossEntries']
+    resources = {}
+    for name, expected in expected_art.items():
+        data = (art / name).read_bytes()
+        if sha256(data).hexdigest() != expected:
+            raise ValueError(f'APK boss resource differs: {name}')
+        resources[APP + 'BossMaps/' + name] = data
+    replacement = retained_framework(framework)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with ZipFile(base) as original, TemporaryDirectory(dir=target.parent) as tmp:
+        info = plistlib.loads(original.read(INFO))
+        if (info['CFBundleIdentifier'], info['CFBundleVersion']) != ('vn.army2hoanggia.game', '269'):
+            raise ValueError('Unexpected application identity')
+        info['CFBundleVersion'] = '278'
+        native = patch_menu_return(patch_boss_maps(patch_menu(original.read(NATIVE))))
+        # patch_scene verifies the reconstructed build-277 executable's SHA256.
+        native = patch_scene(native)
+        if plistlib.loads(replacement[FW + 'Info.plist']) != plistlib.loads(original.read(EMBEDDED_FW + 'Info.plist')):
+            raise ValueError('Framework identity changed')
+        changed = {INFO: plistlib.dumps(info, fmt=plistlib.FMT_BINARY), NATIVE: native}
+        added = {**resources, **{APP + 'Frameworks/' + name: data for name, data in replacement.items()}}
+        staged = Path(tmp) / 'Army2.ipa'
+        with ZipFile(staged, 'w', compression=ZIP_DEFLATED, compresslevel=6) as output:
+            for entry in original.infolist():
+                name = entry.filename
+                if not name.startswith(EMBEDDED_FW):
+                    output.writestr(copy(entry), changed.get(name, original.read(name)))
+            for name, data in sorted(added.items()):
+                entry = ZipInfo(name, (2026, 11, 13, 0, 0, 0))
+                entry.compress_type = ZIP_DEFLATED
+                entry.external_attr = (0o100755 if name == EMBEDDED_FW + 'AGWheel' else 0o100644) << 16
+                output.writestr(entry, data, compresslevel=6)
+        with ZipFile(staged) as check:
+            expected = {n for n in original.namelist() if not n.startswith(EMBEDDED_FW)} | added.keys()
+            if check.testzip() or len(check.namelist()) != len(expected) or set(check.namelist()) != expected:
+                raise ValueError('Incomplete IPA')
+            for name in expected:
+                wanted = changed[name] if name in changed else added[name] if name in added else original.read(name)
+                if check.read(name) != wanted:
+                    raise ValueError(f'Unexpected packaged content: {name}')
+        os.link(staged, target)
+    print('Unsigned QA IPA', digest(target), target)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('base', type=Path)
     parser.add_argument('framework', type=Path)
     parser.add_argument('art', type=Path)
     parser.add_argument('output', type=Path)
+    parser.add_argument('--from-269', action='store_true', help='Use the retained Apple build and published private 269 input')
     args = parser.parse_args()
-    assemble(args.base, args.framework, args.art, args.output)
+    build = assemble_from_269 if args.from_269 else assemble
+    build(args.base, args.framework, args.art, args.output)

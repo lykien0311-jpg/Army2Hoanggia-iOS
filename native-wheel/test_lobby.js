@@ -15,7 +15,7 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(()=>{window.sent=[];window.webkit={messageHandlers:{lobby:{postMessage:a=>sent.push(a)}}};});
  async function open(name, character=-1, result=null){
-  await page.goto(pathToFileURL(path.join(__dirname,'viewer/lobby.html')).href);
+  await page.goto(process.env.ARMY2_VIEWER_URL||pathToFileURL(path.join(__dirname,'viewer/lobby.html')).href);
   await page.evaluate(([tab,hero,result])=>openTab(tab,hero,0,result),[name,character,result]);
  }
  const labels=()=>page.evaluate(()=>menuItems?.map(item=>item[0]));

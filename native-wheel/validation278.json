@@ -1,0 +1,42 @@
+{
+  "sourceCommit": "44cd85deb66b48a16d85c430ae30523c7f16497e",
+  "appleWorkflowRun": 43375139644,
+  "native": {
+    "passed": true,
+    "scene_cases": 96,
+    "room_preview_cases": 24,
+    "room_boss_draw_cases": 24,
+    "native_menu_cases": 318,
+    "compiled_apple_scene": true,
+    "physical_device_tested": false,
+    "live_server_tested": false
+  },
+  "package": {
+    "passed": true,
+    "file": "Army2HoangGia-2.4.1-B278-QA.ipa",
+    "sha256": "01d8669bcae44d2438963eb96f8bb792126786395dcbd18588328964a520bbc1",
+    "sizeBytes": 27465109,
+    "bundleIdentifier": "vn.army2hoanggia.game",
+    "version": "2.4.1",
+    "build": "278",
+    "unchangedBaselineEntries": 522,
+    "verifiedAppleFrameworkFiles": 137,
+    "verifiedAPKResourceFiles": 46,
+    "machoMetadataPreserved": true,
+    "appleFrameworkBytesPreserved": true,
+    "mainAppRequiresResigning": true,
+    "physicalDeviceTested": false,
+    "liveServerTested": false
+  },
+  "browserUI": {
+    "passed": true,
+    "command": "node native-wheel/test_lobby.js",
+    "result": "PASS lobby wire protocol, aura animation, native keypad, grid wrapping, quantity cancellation, event sprites, host return and compact layout"
+  },
+  "auraStateCTest": true,
+  "bossMapsCTest": true,
+  "reproducedByteForByte": true,
+  "wrongInputGuardsChecked": true,
+  "physicalDeviceTested": false,
+  "liveServerTested": false
+}
