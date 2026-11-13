@@ -7,6 +7,7 @@ extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
 @implementation AGAuraResources @end
 static void *atlases[95];
 static int attempted[95];
+static unsigned long long touched[95],clockTick;
 typedef struct { void *graphics; int x,y,tier,level,layer,frame; } AGAuraSpriteJob;
 static int palette(int level) {
     if(level<1)return 0;if(level<=3)return 1;if(level==4)return 6;
@@ -34,6 +35,17 @@ static int sprite(void *env,void *opaque) {
         if(image)((void (*)(void *,void *))jni[23])(env,image);
     }
     if(!atlases[key])return 0;
+    touched[key]=++clockTick;
+    int count=0,victim=-1;
+    for(int i=0;i<95;i++)if(atlases[i]){
+        count++;
+        if(i!=key&&(victim<0||touched[i]<touched[victim]))victim=i;
+    }
+    // A fight has at most eight human actors. Bound GPU references across rooms.
+    if(count>10&&victim>=0){
+        ((void (*)(void *,void *))(*(void ***)env)[22])(env,atlases[victim]);
+        atlases[victim]=NULL;attempted[victim]=0;touched[victim]=0;
+    }
     int cell=((j->frame&63)*2+j->layer);
     short vector[6]={cell%8*96,cell/8*80,96,80,-48,-64};
     const short *r=j->tier>=5?AGAuraGeometry[j->tier-5]+(((j->frame>>1)&31)*2+j->layer)*6:vector;
