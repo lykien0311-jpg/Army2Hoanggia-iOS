@@ -125,7 +125,7 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await soft(-6);assert.equal(await page.evaluate(()=>editState),null,'F1 closes amount entry and restores chest');
  await soft(-5);
  await enter('7');
- assert.equal(await page.evaluate(()=>editState.label),'Trang bị 0 × 7');
+ assert.equal(await page.evaluate(()=>editState.label),'Trang bị 0 x 7');
  await page.waitForTimeout(150);
  await page.screenshot({path:path.join(root,'market-price-282.png')});
  await soft(-5);

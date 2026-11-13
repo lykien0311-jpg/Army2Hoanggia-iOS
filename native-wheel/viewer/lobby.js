@@ -131,7 +131,7 @@ function sell(item){
     edit('Nhập Số Lượng',[{max:item.quantity,value:'1'}],([qty])=>{
         const count=Number(qty);
         if(!Number.isSafeInteger(count)||count<1||count>item.quantity)throw Error('Số lượng không hợp lệ');
-        edit('Giá cả lô (xu)',[{label:item.name+' × '+count,max:999000000000}],([value])=>{
+        edit('Giá cả lô (xu)',[{label:item.name+' x '+count,max:999000000000}],([value])=>{
             const price=Number(value);
             if(!Number.isSafeInteger(price)||price<1||price>999000000000)throw Error('Giá xu không hợp lệ');
             edit('Mật khẩu cấp 2',[{type:'password'}],([password])=>send(-121,()=>market.post(item.key,price,count,password)));
