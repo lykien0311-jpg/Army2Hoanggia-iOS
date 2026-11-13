@@ -135,7 +135,7 @@ static BOOL combatPacket(int cmd) {
         default:return NO;
     }
 }
-static int receiveState(void *env,void *message,int variant,NSData **nativePacket,ArmyWatch **owner) {
+static int receiveState(void *env,void *message,int variant,NSData *__strong *nativePacket,ArmyWatch *__strong *owner) {
     if(!env||!message||variant<0||variant>=6)return 0;
     int cmd=*(const int8_t *)((const uint8_t *)message+0x30);
     if(cmd!=-102 && !atomic_load(&active))return 0;
