@@ -3,6 +3,7 @@
 #include <mach-o/dyld.h>
 #include "NotesMap.h"
 #include "GridMap.h"
+#include "Inventory.h"
 static int larger(int a,int b){return a>b?a:b;}
 static int smaller(int a,int b){return a<b?a:b;}
 typedef struct {int w,h,columns,cell,decor;} Grid;
@@ -42,11 +43,14 @@ static void layout(uintptr_t base,int v,int kind,uint8_t *screen,Grid g,int widt
         }
     }
 }
-void AGInventoryTick(int v){
+void AGInventoryTick(void *env,int v){
 #ifndef AG_WHEEL_PREVIEW
     if(v<0||v>=6)return;uintptr_t base=(uintptr_t)_dyld_get_image_header(0);
     uint8_t *canvas=*(uint8_t **)(base+AGNotesMaps[v].canvas);if(!canvas)return;
-    uint8_t *screen=*(uint8_t **)(canvas+0xb8);if(!screen)return;
+    uint8_t *screen=*(uint8_t **)(canvas+0xb8);
+    void *inventory=*(void **)(base+gridClasses[v][0]);
+    AGInventoryOrder(env,v,canvas,screen,screen&&inventory&&*(void **)screen==inventory);
+    if(!screen)return;
     for(int i=0;i<3;i++){void *clazz=*(void **)(base+gridClasses[v][i]);if(clazz&&*(void **)screen==clazz){layout(base,v,i,screen,dimensions(canvas),*(int *)(canvas+0x130));break;}}
 #endif
 }
@@ -78,4 +82,5 @@ __attribute__((visibility("default"))) void AGGridAdjust(uint64_t *r,uintptr_t p
     else if((word&0x7f000000)==0x51000000)value=(uint32_t)r[rn]-value;
     r[rd]=value;
 }
+
 

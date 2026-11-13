@@ -2,7 +2,7 @@
 // Coordinates, bitmap fonts, sprite rectangles and gear layers follow the JAR painters.
 const PixelUI=(()=>{
  const canvas=document.getElementById('game'),g=canvas.getContext('2d',{alpha:document.body.dataset.transparent==='true'}),images=new Map(),fonts=new Map();
- const nativeScale=450/320;let height=480,frame=0,hits=[],raf,fontUnit=1/nativeScale;
+ const nativeScale=450/320;let classicWidth=432;let height=480,frame=0,hits=[],raf,fontUnit=1/nativeScale;
  function image(name){const cached=images.get(name);if(cached){images.delete(name);images.set(name,cached);return cached;}const i=new Image();i.src='art/'+name+'.png';images.set(name,i);if(/^[kv][1-4]-/.test(name)){const auraKeys=[...images.keys()].filter(k=>/^[kv][1-4]-/.test(k));if(auraKeys.length>24)images.delete(auraKeys[0]);}return i;}
  for(const k of ['body','title','b','a','cl1','cl2','cl3','miniballoon'])image(k);
 
@@ -57,6 +57,16 @@ const PixelUI=(()=>{
   gearIcon(hero,slot,id,x,y,16,png);
  }
  function nativePixels(draw){g.save();const old=fontUnit;g.scale(1/nativeScale,1/nativeScale);fontUnit=1;try{return draw(450,canvas.height);}finally{fontUnit=old;g.restore();}}
+ function classicSize(width){if(Number.isInteger(width)&&width>=160&&width<=4096)classicWidth=width;}
+ function classicPixels(draw){g.save();const old=fontUnit;g.scale(320/classicWidth,320/classicWidth);fontUnit=1;try{return draw(classicWidth,Math.round(height*classicWidth/320));}finally{fontUnit=old;g.restore();}}
+ function classicFooter(width,height,left,center,right,onleft,oncenter,onright){const y=height-34;rect(0,y,width,34,'#c5d5ee');text(left,4,y+10,{max:width/3-8});text(center,width/2,y+10,{align:'center',max:width/3-8});text(right,width-4,y+10,{align:'right',max:width/3-8});zone(0,y,width/3,34,onleft);zone(width/3,y,width/3,34,oncenter);zone(width*2/3,y,width/3,34,onright);}
+ function inventoryFrame(title,x,y,w,h,decor){
+  rect(x,y+18,w,h-18,'#c5d5ee');
+  sprite('tab_1',x,y);for(let i=0;i<decor;i++)sprite('tab_2',x+23+i*32,y);sprite('tab_3',x+w-32,y);
+  rect(x,y+18,1,h-18,'#303030');rect(x+w-1,y+18,1,h-18,'#303030');rect(x,y+h-1,w,1,'#303030');
+  roundRect(x+7,y+24,w-14,h-65,'#3b76b1',5);
+  const tw=textWidth(title)+10;rect(x+(w-tw)/2,y+1,tw,18,'#c5d5ee');text(title,x+w/2,y+3,{align:'center',color:'#fff',outline:true});
+ }
  function roundRect(x,y,w,h,color,r=3){x=Math.round(x);y=Math.round(y);w=Math.round(w);h=Math.round(h);r=Math.min(r,w/2,h/2);g.fillStyle=color;g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.quadraticCurveTo(x+w,y,x+w,y+r);g.lineTo(x+w,y+h-r);g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);g.lineTo(x+r,y+h);g.quadraticCurveTo(x,y+h,x,y+h-r);g.lineTo(x,y+r);g.quadraticCurveTo(x,y,x+r,y);g.fill();}
  function line(x1,y1,x2,y2,color){rect(x1,y1,x2-x1+1,y2-y1+1,color);}
  function equipmentFrame(x,y){
@@ -166,6 +176,6 @@ const PixelUI=(()=>{
  }
  function start(paint,{transparent=false}={}){cancelAnimationFrame(raf);let last=-1;function tick(now){const f=Math.floor(now/42);if(f!==last){last=f;frame=f;hits=[];if(transparent)g.clearRect(0,0,320,height);else sky();paint();}raf=requestAnimationFrame(tick);}raf=requestAnimationFrame(tick);}
  canvas.addEventListener('pointerup',e=>{const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*320/r.width,y=(e.clientY-r.top)*height/r.height;for(let i=hits.length-1;i>=0;i--){const h=hits[i];if(x>=h.x&&x<h.x+h.w&&y>=h.y&&y<h.y+h.h){h.run?.();break;}}});
- return {g,nativePixels,roundRect,equipmentFrame,equipmentItem,marquee,text,textWidth,wrapText,rect,sprite,avatar,aura,gear,gearIcon,statsIcon,rank,heading,panel,frameBox,stripedBox,bottomDialog,footer,menu,zone,start,get height(){return height;},get frame(){return frame;},canvas};
+ return {g,classicSize,classicPixels,classicFooter,inventoryFrame,nativePixels,roundRect,equipmentFrame,equipmentItem,marquee,text,textWidth,wrapText,rect,sprite,avatar,aura,gear,gearIcon,statsIcon,rank,heading,panel,frameBox,stripedBox,bottomDialog,footer,menu,zone,start,get height(){return height;},get frame(){return frame;},canvas};
 })();
 

@@ -114,13 +114,28 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await soft(-5);
  assert.deepEqual(await labels(),['Bán','Chi tiết']);
  await soft(-5);
- assert.equal(await page.locator('#edit input').first().inputValue(),'1');
- await soft(-5);
+ assert.equal(await page.evaluate(()=>document.getElementById('lobby-input').value),'1');
+ async function enter(value){await soft(-5);const request=await page.evaluate(()=>sent.at(-1));assert.equal(request[0],'edit');await page.evaluate(([s,v])=>lobbyInputResult(s,v),[request[1].serial,value]);await soft(-5);}
+ await enter('1');
  assert.equal(await page.locator('#edit label').textContent(),'Giá cả lô (xu)');
- await page.locator('#edit input').fill('500');
- await soft(-5);
+ await enter('500');
  assert.equal(await page.locator('#edit input').getAttribute('type'),'password');
- await page.evaluate(()=>lobbyKey(-7));assert.equal(await page.locator('#edit').isVisible(),false,'Cancel quantity returns to chest');
+ await soft(-6);assert.equal(await page.evaluate(()=>editState),null,'F1 closes amount entry and restores chest');
+ await soft(-5);await soft(-5);
+ await enter('7');
+ assert.equal(await page.evaluate(()=>editState.label),'Trang bị 0 × 7');
+ await page.screenshot({path:path.join(root,'market-price-282.png')});
+ await soft(-5);
+ const cancelled=await page.evaluate(()=>sent.at(-1)[1].serial);
+ await page.evaluate(s=>lobbyInputResult(s,null),cancelled);
+ assert.equal(await page.evaluate(()=>editState.title),'Giá cả lô (xu)');
+ await enter('900');await page.screenshot({path:path.join(root,'market-password-282.png')});
+ await enter('qa-password');
+ assert.equal(await page.evaluate(()=>market.pending),true);
+ assert.equal(await page.evaluate(()=>editState),null,'Submission clears the password');
+ const messages=await page.evaluate(()=>sent.filter(a=>a[0]===-121));const bytes=Buffer.from(messages.at(-1)[1],'base64');assert.equal(bytes[0],2);
+ await soft(-5);assert.equal(await page.evaluate(()=>sent.filter(a=>a[0]===-121).length),messages.length,'Pending sale cannot submit twice');
+ await page.evaluate(s=>lobbyInputResult(s,'stale'),cancelled);assert.equal(await page.evaluate(()=>editState),null,'Late keyboard replies cannot restore a closed editor');
  await open('event');
  const event=w().byte(3).byte(0).utf('BXH Sự kiện').int(7).utf('QA1').byte(6).short(0).long(999).byte(50).byte(1);for(let i=0;i<5;i++)event.short(0);event.utf('42');
  await page.evaluate(b=>receiveFrame(-14,b,[240]),Buffer.from(event.bytes).toString('base64'));
@@ -131,11 +146,11 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await page.evaluate(b=>receiveFrame(-14,b,[240]),Buffer.from(event.bytes).toString('base64'));
  await soft(-5);
  assert.equal(await page.locator('#edit').isVisible(),true,'Message softkey opens editor');
- await page.locator('#edit input').fill('QA');
- await soft(-5);
+ await enter('QA');
  assert.equal(await page.evaluate(()=>sent.at(-1)[0]),5);
  await page.evaluate(()=>lobbyKey(-7));assert.deepEqual(await page.evaluate(()=>sent.at(-1)),['close',0]);
  await page.setViewportSize({width:320,height:240});await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>PixelUI.canvas.width),450);
  assert.deepEqual(errors,[]);
  await browser.close();console.log('PASS lobby wire protocol, aura animation, native keypad, grid wrapping, quantity cancellation, event sprites, host return and compact layout');
 })().catch(e=>{console.error(e);process.exit(1);});
+

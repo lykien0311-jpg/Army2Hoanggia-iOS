@@ -4,6 +4,7 @@ const names=['Gunner','Miss 6','Electrician','King Kong','Rocketer','Granos','Ch
 let tab='',view='board',reply=null,focus=0,scroll=0,waiting=false,timeout,notice='',menuItems=null,menuFocus=0,eventRequest=0,filter=-1,modal=null,editSubmit=null,profileFocus=0,ownId=0,ownRank=0,character=-1,closed=false;
 let balance='',fieldResult=null;
 let rankSelection=null;
+let editSerial=0,editState=null,inputPending=false;
 const icons=new Map();
 function bytes64(bytes){return btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));}
 function status(message){notice=String(message);document.getElementById('status').textContent=notice;}
@@ -57,39 +58,48 @@ function profileMenu(){menu([['Chi tiết',profileDetails]]);}
 function filterMenu(){menu([['Tất cả',()=>applyFilter(-1)],...names.map((n,i)=>[n,()=>applyFilter(i)])]);}
 function applyFilter(n){filter=n;focus=scroll=0;if(view==='stock')return;browse(0,filter,market.own);}
 function marketMenu(){menu([['Lọc',filterMenu],['Gian hàng',()=>browse()],['Rương gian hàng',stock],['Đồ của tôi',()=>browse(0,filter,true)]]);}
-function hideEdit(){const e=document.getElementById('edit');for(const n of e.querySelectorAll('input'))n.value='';e.replaceChildren();e.style.display='none';editSubmit=null;}
-function edit(title,[field],submit){
-    hideEdit();
-    const form=document.getElementById('edit');
-    const heading=document.createElement('label');
-    heading.textContent=title;
-    heading.htmlFor='lobby-input';
-    form.append(heading);
-    if(field.label){
-        const detail=document.createElement('div');
-        detail.textContent=field.label;
-        form.append(detail);
-    }
-    const input=document.createElement('input');
-    input.id='lobby-input';
-    input.type=field.type||'text';
-    input.autocomplete='off';
-    input.inputMode=field.type?'text':'numeric';
-    input.maxLength=field.max?String(field.max).length:field.type==='password'?40:100;
-    input.value=field.value??'';
-    form.append(input);
-    const complete=editSubmit=()=>guard(()=>{
-        if(waiting)return;
-        submit([input.value]);
-        if(editSubmit===complete)hideEdit();
-    });
-    input.addEventListener('keydown',e=>{
-        if(e.key==='Enter'){e.preventDefault();complete();}
-        else if(e.key==='Escape'){e.preventDefault();hideEdit();}
-    });
-    form.style.display='block';
-    if(field.type)input.focus();
+function hideEdit(){const form=document.getElementById('edit');for(const n of form.querySelectorAll('input'))n.value='';form.replaceChildren();form.style.display='none';editSubmit=null;editState=null;inputPending=false;editSerial++;}
+function openEditor(){
+ if(!editState||inputPending||waiting)return;
+ inputPending=true;
+ const input=document.getElementById('lobby-input');
+ window.webkit.messageHandlers.lobby.postMessage(['edit',{serial:editState.serial,value:input.value,type:input.type,maxLength:input.maxLength,numeric:input.inputMode==='numeric'}]);
 }
+window.lobbyInputResult=(serial,value)=>{
+ if(!editState||serial!==editState.serial)return;
+ inputPending=false;
+ if(value===null)return;
+ const input=document.getElementById('lobby-input');
+ input.value=String(value).slice(0,input.maxLength);editState.accepted=true;status('');
+};
+window.lobbyViewport=(width)=>ui.classicSize(width);
+function edit(title,[field],submit){
+ hideEdit();status('');
+ const form=document.getElementById('edit'),heading=document.createElement('label'),input=document.createElement('input');
+ heading.textContent=title;form.append(heading);
+ input.id='lobby-input';input.type=field.type||'text';input.autocomplete='off';input.inputMode=field.type?'text':'numeric';
+ input.maxLength=field.max?String(field.max).length:field.type==='password'?40:100;input.value=field.value??'';form.append(input);form.style.display='block';
+ editState={title,label:field.label||'',serial:++editSerial,accepted:false};
+ const complete=editSubmit=()=>guard(()=>{
+  if(waiting||inputPending)return;
+  if(!editState.accepted){openEditor();return;}
+  submit([input.value]);
+  if(editSubmit===complete)hideEdit();
+ });
+}
+function eraseInput(){const input=document.getElementById('lobby-input');if(input&&!inputPending){input.value=input.value.slice(0,-1);editState.accepted=true;}}
+function drawEdit(){ui.classicPixels((width,height)=>{
+ const input=document.getElementById('lobby-input'),h=editState.label?70:54,y=height-34-h;
+ ui.zone(0,0,width,height,()=>{});ui.frameBox(8,y,width-16,h);
+ ui.text(editState.title,width/2,y+5,{align:'center',max:width-34});
+ if(editState.label)ui.text(editState.label,width/2,y+21,{align:'center',max:width-34});
+ if(notice){ui.rect(8,y-22,width-16,20,'#c5d5ee');ui.text(notice,width/2,y-19,{align:'center',max:width-30});}
+ const fieldY=y+h-24;ui.rect(14,fieldY,width-28,19,'#375f8d');
+ const value=input.type==='password'?'*'.repeat(input.value.length):input.value;
+ ui.text(value+(Math.floor(ui.frame/12)%2?'|':''),18,fieldY+2,{color:'#fff',max:width-40});
+ ui.zone(14,fieldY,width-28,20,openEditor);
+ ui.classicFooter(width,height,'Đóng','OK','Xóa',hideEdit,()=>editSubmit?.(),eraseInput);
+});}
 function marketSelect(){
     if(waiting)return;
     const item=currentItems()[focus];
@@ -159,7 +169,8 @@ function key(code){
  if(closed||!tab)return;
  if(editSubmit){
     const action=gameKeys[code]??code;
-    if(action===-7)hideEdit();
+    if(action===-6)hideEdit();
+    else if(action===-7)eraseInput();
     else if(action===-5)editSubmit();
     return;
  }
@@ -252,65 +263,35 @@ function drawProfile(){ui.nativePixels((width,height)=>{
 
 function itemImage(item,x,y,side){if(item.icon.length&&!icons.has(item.key)){const im=new Image();im.src='data:image/png;base64,'+bytes64(item.icon);icons.set(item.key,im);}const im=icons.get(item.key);if(im?.complete&&im.naturalWidth){const size=Math.min(15,side-8),scale=Math.min(size/im.width,size/im.height);ui.g.drawImage(im,Math.round(x+(side-im.width*scale)/2),Math.round(y+(side-im.height*scale)/2),im.width*scale,im.height*scale);}else ui.text(item.name,x+side/2,y+10,{align:'center',max:side-4});
  const up=item.enhancement||0;if(up){const rgb=up<=4?'#164dff':up<=8?'#00b300':up<=11?'#ff7f00':up<=14?'#ce00ff':'#ff0019';ui.text('+'+up,x+2,y+1,{color:rgb,scale:.75,shadow:true});if(up>=12){for(let i=0;i<4;i++){const a=ui.frame*.15+i*Math.PI/2,xx=x+side/2+Math.cos(a)*(side/2-3),yy=y+side/2+Math.sin(a)*(side/2-3);ui.rect(xx-2,yy,5,1,rgb);ui.rect(xx,yy-2,1,5,'#fff');}}}if(item.quantity>1)ui.text(item.quantity,x+side-2,y+side-10,{align:'right',color:'#fff27a',shadow:true,max:side-4,scale:.65});}
-function inventoryIcon(item,x,y,side){
-    const cx=x+Math.floor(side/2),cy=y+Math.floor(side/2);
-    const up=item.enhancement;
-    if(up>=15)ui.rect(cx-6,cy-5,12,12,'#750919');
-    let w=11,h=11;
-    const drawn=!item.icon.length&&item.sprite&&ui.gearIcon(...item.sprite,cx,cy,11);
-    if(!drawn){
-        if(item.icon.length&&!icons.has(item.key)){
-            const icon=new Image();
-            icon.src='data:image/png;base64,'+bytes64(item.icon);
-            icons.set(item.key,icon);
-        }
-        const im=icons.get(item.key);
-        if(im?.complete&&im.naturalWidth){
-            const scale=Math.min(1,11/Math.max(im.width,im.height));
-            w=Math.max(1,Math.round(im.width*scale));
-            h=Math.max(1,Math.round(im.height*scale));
-            ui.g.drawImage(im,cx-Math.floor(w/2),cy-Math.floor(h/2),w,h);
-        }else if(!item.icon.length){
-            ui.text(item.name,cx,cy-5,{align:'center',max:side-4,scale:.65});
-        }
-    }
-    if(up)ui.text('+'+up,cx+5,cy-8,{color:'#fff',scale:.65,shadow:true});
-    if(item.quantity>1){
-        const left=cx+Math.floor(w/2)-3;
-        ui.text(String(item.quantity),left,cy+Math.floor(h/2)-2,
-            {color:'#f5d452',shadow:true,max:x+side-left-1,scale:.62});
-    }
+function inventoryIcon(item,x,y,cell){
+ const ox=x+Math.floor(cell/2)-10,oy=y+Math.floor(cell/2)-14,cx=ox+8,cy=oy+8,up=item.enhancement||0;
+ if(item.sprite){ui.equipmentItem(...item.sprite,cx,cy,up,null);}
+ else{
+  if(item.icon.length&&!icons.has(item.key)){const im=new Image();im.src='data:image/png;base64,'+bytes64(item.icon);icons.set(item.key,im);}
+  const im=icons.get(item.key);
+  if(im?.complete&&im.naturalWidth){const k=Math.min(1,16/Math.max(im.width,im.height)),w=Math.max(1,Math.round(im.width*k)),h=Math.max(1,Math.round(im.height*k));ui.g.drawImage(im,cx-Math.floor(w/2),cy-Math.floor(h/2),w,h);}
+ }
+ if(item.quantity>1)ui.text(item.quantity,ox+11,oy+11,{color:'#f5d452',outline:true,max:100});
 }
-function drawMarket(){
-    ui.panel(view==='stock'?'Rương gian hàng':market.own?'Đồ của tôi':'Gian hàng');
-    const items=currentItems(),cell=41,capacity=Math.max(1,Math.floor((ui.height-124)/cell));
-    focus=Math.max(0,Math.min(items.length-1,focus));
-    const selectedRow=Math.floor(focus/7);
-    if(selectedRow<scroll)scroll=selectedRow;
-    if(selectedRow>=scroll+capacity)scroll=selectedRow-capacity+1;
-    items.slice(scroll*7,(scroll+capacity)*7).forEach((item,i)=>{
-        const x=17+i%7*cell,y=58+Math.floor(i/7)*cell,index=scroll*7+i;
-        if(index===focus)ui.rect(x,y,cell-2,cell-2,'#ffde4d');
-        if(view==='stock')inventoryIcon(item,x,y,cell-2);
-        else itemImage(item,x,y,cell-2);
-        ui.zone(x,y,cell,cell,()=>{if(focus===index)guard(marketSelect);else focus=index;});
-    });
-    if(!items.length&&!waiting)ui.text('Chưa có vật phẩm.',160,67,{align:'center'});
-    if(filter!==-1)ui.text(names[filter],300,ui.height-41,{align:'right',max:85});
-    const item=items[focus];
-    if(item){
-        ui.text(item.name,160,ui.height-56,{align:'center',max:285});
-        const detail=view==='stock'?balance:item.price+' xu · '+item.seller;
-        ui.text(detail,160,ui.height-43,{align:'center',max:285});
-    }
-    if(view!=='stock'&&market.page>0){
-        ui.text('<',15,42,{color:'#fff0a0'});ui.zone(8,36,28,20,()=>page(-1));
-    }
-    if(view!=='stock'&&market.more){
-        ui.text('>',305,42,{align:'right',color:'#fff0a0'});ui.zone(285,36,28,20,()=>page(1));
-    }
-    ui.footer('Menu','Chọn','Trở ra',marketMenu,()=>guard(marketSelect),close);
-}
+function drawMarket(){ui.classicPixels((width,height)=>{
+ const decor=Math.max(3,Math.floor((width-80)/32)),w=decor*32+56,h=Math.max(136,height-44),x=Math.floor((width-w)/2),y=8;
+ const cols=Math.min(7,Math.max(3,Math.floor((w-24)/40))),cell=Math.floor((w-24)/cols),items=currentItems(),capacity=Math.max(1,Math.floor((h-75)/cell));
+ ui.inventoryFrame(view==='stock'?'Rương gian hàng':market.own?'Đồ của tôi':'Gian hàng',x,y,w,h,decor);
+ focus=Math.max(0,Math.min(items.length-1,focus));
+ const selectedRow=Math.floor(focus/cols);if(selectedRow<scroll)scroll=selectedRow;if(selectedRow>=scroll+capacity)scroll=selectedRow-capacity+1;
+ items.slice(scroll*cols,(scroll+capacity)*cols).forEach((item,i)=>{
+  const gx=x+11+i%cols*cell,gy=y+28+Math.floor(i/cols)*cell,index=scroll*cols+i;
+  if(index===focus)ui.rect(gx,gy,cell,cell,'#ffe43d');
+  if(view==='stock')inventoryIcon(item,gx,gy,cell);else itemImage(item,gx,gy,cell);
+  ui.zone(gx,gy,cell,cell,()=>{if(focus===index)guard(marketSelect);else focus=index;});
+ });
+ if(!items.length&&!waiting)ui.text('Chưa có vật phẩm.',width/2,y+40,{align:'center'});
+ if(filter!==-1)ui.text(names[filter],x+w-12,y+h-49,{align:'right',max:100});
+ const item=items[focus];if(item){ui.text(item.name,width/2,y+h-32,{align:'center',max:w-20});ui.text(view==='stock'?balance:item.price+' xu · '+item.seller,width/2,y+h-14,{align:'center',max:w-20});}
+ if(view!=='stock'&&market.page>0){ui.text('<',x+4,y+2,{color:'#fff0a0'});ui.zone(x,y,28,20,()=>page(-1));}
+ if(view!=='stock'&&market.more){ui.text('>',x+w-4,y+2,{align:'right',color:'#fff0a0'});ui.zone(x+w-28,y,28,20,()=>page(1));}
+ ui.classicFooter(width,height,'Menu','Chọn','Trở ra',marketMenu,()=>guard(marketSelect),close);
+});}
 function drawEvent(){
     ui.text('BXH Sự kiện',160,25,{align:'center',title:true});
     ui.rect(0,41,320,14,'#1478ad');
@@ -338,11 +319,7 @@ function paint(){
         ui.text(notice,160,ui.height-81,{align:'center',max:304});
     }
     if(editSubmit){
-        ui.zone(0,0,320,ui.height,()=>{});
-        ui.footer('Đóng','OK','Xoá',hideEdit,()=>editSubmit?.(),()=>{
-            const input=document.getElementById('lobby-input');
-            input.value=input.value.slice(0,-1);
-        });
+        drawEdit();
     }else if(menuItems){
         ui.zone(0,0,320,ui.height,()=>{menuItems=null;});
         ui.footer('Chọn','','Không',()=>menuItems?.[menuFocus][1](),null,()=>{menuItems=null;});

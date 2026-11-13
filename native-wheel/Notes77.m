@@ -17,6 +17,7 @@
 #include "Blind.h"
 #include "Aura.h"
 #include "Stats.h"
+#include "Inventory.h"
 #include "NotesProtocol.h"
 #import "GameViewport.h"
 extern int AGWheelInput(int,int,int,int);
@@ -117,12 +118,15 @@ static int NForgeItem(void *env,void *opaque){
     return match;
 }
 __attribute__((visibility("default"))) int AGRecipeDetail(void *env,void *item){
+    item=AGInventoryResolve(env,item);
     return env&&item&&NRun(env,NForgeItem,item)>0;
 }
 typedef struct {int variant;AGLobbyAccount *account;} NLobbyAccountJob;
 static int NLobbyAccount(void *env,void *context){
     NLobbyAccountJob *job=context;
     uint8_t *(*get)(void *)=(void *)(NBase()+AGStatsMaps[job->variant].player);
+    uint8_t *canvas=NCanvas(job->variant);
+    job->account->canvasWidth=canvas?*(int *)(canvas+0x130):432;
     uint8_t *player=get(env);
     if(!player||player[0xd9]>=10)return 0;
     // The login handler stores the two 64-bit balances before the selected hero.
@@ -489,6 +493,7 @@ __attribute__((visibility("default"))) void AGNotesPreviewCheck(void){
 
 
 int AGNotesBlocksAuto(int v){if(v<0||v>=6)return 1;pthread_mutex_lock(&NMutex);int blocked=NModels[v].cap.active||NModels[v].inboxVisible||AGViewerActive(v);pthread_mutex_unlock(&NMutex);return blocked;}
+
 
 
 

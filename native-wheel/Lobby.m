@@ -272,8 +272,8 @@ int AGLobbyReceive(void *env,void *message,int v){
     NSString *tab=self.tab==AGLobbyField?@"field":self.tab==AGLobbyMarket?@"market":@"event";
     AGLobbyAccount account=self.account;
     NSString *outcome=self.fieldResult==NoFieldResult?@"null":[NSString stringWithFormat:@"%d",self.fieldResult];
-    NSString *start=[NSString stringWithFormat:@"openTab('%@',%d,%u,%@);lobbyBalance('%lld','%lld')",
-                     tab,account.character,self.firstSerial,outcome,(long long)account.xu,(long long)account.luong];
+    NSString *start=[NSString stringWithFormat:@"lobbyViewport(%d);openTab('%@',%d,%u,%@);lobbyBalance('%lld','%lld')",
+                     account.canvasWidth,tab,account.character,self.firstSerial,outcome,(long long)account.xu,(long long)account.luong];
     self.loaded=YES;
     [web evaluateJavaScript:start completionHandler:^(id value,NSError *error){if(error)[self close];}];
 }
@@ -285,6 +285,35 @@ int AGLobbyReceive(void *env,void *message,int v){
     if(message.webView!=self.web||!message.frameInfo.isMainFrame||![message.body isKindOfClass:NSArray.class])return;
     NSArray *args=message.body;
     if(args.count==2&&[args[0] isKindOfClass:NSString.class]&&[args[0] isEqual:@"close"]){[self close];return;}
+    if(args.count==2&&[args[0] isEqual:@"edit"]&&[args[1] isKindOfClass:NSDictionary.class]){
+        NSDictionary *input=args[1];
+        NSNumber *serial=input[@"serial"],*limit=input[@"maxLength"];
+        NSString *value=input[@"value"],*type=input[@"type"];
+        if(![serial isKindOfClass:NSNumber.class]||serial.longLongValue<1||serial.longLongValue>INT32_MAX||
+           ![limit isKindOfClass:NSNumber.class]||limit.intValue<1||limit.intValue>100||
+           ![value isKindOfClass:NSString.class]||value.length>100||![type isKindOfClass:NSString.class]||self.presentedViewController)return;
+        __weak AGLobby *weakSelf=self;
+        void (^result)(id)=^(id text){
+            AGLobby *panel=weakSelf;if(!panel||panel.closing||!panel.web)return;
+            NSData *data=[NSJSONSerialization dataWithJSONObject:@[serial,text?:NSNull.null] options:0 error:nil];
+            NSString *json=[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
+            [panel.web evaluateJavaScript:[NSString stringWithFormat:@"lobbyInputResult(...%@)",json] completionHandler:nil];
+        };
+        UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Nhập" message:nil preferredStyle:UIAlertControllerStyleAlert];
+        [alert addTextFieldWithConfigurationHandler:^(UITextField *field){
+            field.text=value;field.secureTextEntry=[type isEqual:@"password"];
+            field.autocorrectionType=UITextAutocorrectionTypeNo;field.autocapitalizationType=UITextAutocapitalizationTypeNone;
+            field.keyboardType=[input[@"numeric"] isEqual:@YES]?UIKeyboardTypeNumberPad:UIKeyboardTypeDefault;
+            field.returnKeyType=UIReturnKeyDone;
+        }];
+        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+            NSString *text=alert.textFields.firstObject.text?:@"";
+            if(text.length>limit.unsignedIntegerValue)text=[text substringToIndex:limit.unsignedIntegerValue];
+            alert.textFields.firstObject.text=@"";result(text);
+        }]];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action){alert.textFields.firstObject.text=@"";result(nil);}]];
+        [self presentViewController:alert animated:YES completion:nil];return;
+    }
     if(args.count!=2||![args[0] isKindOfClass:NSNumber.class]||![args[1] isKindOfClass:NSString.class]||[args[1] length]>1400)return;
     int cmd=[args[0] intValue];NSData *data=[[NSData alloc]initWithBase64EncodedString:args[1] options:0];
     if(!data.length||(cmd!=-120&&cmd!=-121&&cmd!=-14&&cmd!=5))return;
@@ -301,4 +330,5 @@ int AGLobbyReceive(void *env,void *message,int v){
     }
 }
 @end
+
 

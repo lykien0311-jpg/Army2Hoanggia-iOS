@@ -1,0 +1,10 @@
+# Build282 — inventory and market
+
+User authorized all four notes on 13 November 2026; resumed 14 November.
+
+- Rebind the inventory screen to the current authoritative native inventory vector after server refresh; preserve handles and quantities. Refresh the selected item's cached details after updates.
+- Newly acquired items or increased stacks move to the first slot while the chest stays open. Reopening groups equipment/costumes, gems, stones, recipes and other materials.
+- Render the market stock with the native chest's dimensions, icon sizes, quantity position and shared equipment upgrade painter.
+- Use the in-game bottom input panel and a native iOS input dialog. Quantity, lot price and secondary password are separate steps; cancel, erase, validation, masking and pending mutation handling are retained.
+
+Status: implementation and CI verification in progress. No claim of physical iPhone or live server testing. Base: supplied Build281 IPA; game executable and server remain the supplied versions.

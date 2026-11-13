@@ -4,6 +4,7 @@
 enum { AGLobbyField = 1, AGLobbyMarket, AGLobbyEvent };
 typedef struct {
     int character;
+    int canvasWidth;
     int64_t xu, luong;
 } AGLobbyAccount;
 int AGLobbyOpened(int variant);
@@ -13,4 +14,5 @@ void AGLobbyTick(void *env,int variant,uintptr_t connection);
 int AGLobbyReceive(void *env,void *message,int variant);
 int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uint8_t *bytes,size_t length);
 int AGLobbyReadAccount(void *env,int variant,AGLobbyAccount *account);
+
 

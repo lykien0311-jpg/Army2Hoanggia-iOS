@@ -15,7 +15,7 @@
 #include "BossNative.h"
 #include "ShipTrace.h"
 #import "GameViewport.h"
-extern void AGInventoryTick(int);
+extern void AGInventoryTick(void *,int);
 
 // Exported release identity binds the Apple artifact to the native login patch.
 __attribute__((visibility("default"))) const char *AGReleaseIdentity(void) { return "2.4.1-B275-IPA"; }
@@ -94,7 +94,7 @@ __attribute__((noinline,optnone)) static int AGSendNative(void *env, void *conte
 }
 
 __attribute__((visibility("default"))) void AGWheelTick(void *env, int variant) {
-    if(env){AGViewportCapture(env,variant);AGInventoryTick(variant);AGBlindTick(variant);}
+    if(env){AGViewportCapture(env,variant);AGInventoryTick(env,variant);AGBlindTick(variant);}
     AGNotesTick(env,variant);
     AGShipTraceTick(env,variant,0);
     if(atomic_load(&AGForeground))AGTurnTick(env,variant);
@@ -334,7 +334,7 @@ int AGWheelInput(int variant,int kind,int code,int y){
 @end
 
 __attribute__((visibility("default"))) void AGWheelOpen(void *env, int variant) {
-    if(variant<0||variant>=6)return;if(env){AGViewportCapture(env,variant);AGInventoryTick(variant);}
+    if(variant<0||variant>=6)return;if(env){AGViewportCapture(env,variant);AGInventoryTick(env,variant);}
     pthread_mutex_lock(&AGMutex);
     if(AGState.variant!=variant){uint64_t generation=AGState.generation+1;memset(&AGState,0,sizeof AGState);AGState.generation=generation;AGState.variant=variant;}
     AGViewportWheelVisible(1);
@@ -438,6 +438,7 @@ __attribute__((visibility("default"))) void AGWheelPreviewCheckInterface(void){
     [json writeToFile:[directory stringByAppendingPathComponent:@"ui-check.json"] atomically:YES];
 }
 #endif
+
 
 
 
