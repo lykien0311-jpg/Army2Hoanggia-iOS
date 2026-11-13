@@ -1,0 +1,15 @@
+{
+  "repository": "lykien0311-jpg/Army2Hoanggia-iOS",
+  "sourceCommit": "44cd85deb66b48a16d85c430ae30523c7f16497e",
+  "workflowRun": 43375139644,
+  "frameworkJob": 131719752866,
+  "releaseTag": "qa-ios-278-complete",
+  "releaseAsset": "B278-Apple-framework-delta.zip",
+  "sha256": "5b8750b6cbcfcb2eb0694a4b764127d48d372416306dae682bd04f43e625cf2b",
+  "chunks": [
+    "91778f1d241bca30dc2ec034e63984ce70addac5",
+    "8e411852838e80b03b2b1437c16960bb46d1f4ce",
+    "349bf106eaca495a2a911ba1b0cba7a8b327d900",
+    "f0ae83034c34299620f21ba3f98c4cdab11561f6"
+  ]
+}
