@@ -1,6 +1,7 @@
 """Assemble the iOS 2.4.1 build 277 QA IPA from the verified build 275."""
 
 import argparse
+from copy import copy
 from hashlib import sha256
 import json
 import os
@@ -8,7 +9,7 @@ from pathlib import Path, PurePosixPath
 import plistlib
 from struct import pack, unpack_from
 from tempfile import TemporaryDirectory
-from zipfile import ZipFile
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from patch_menu_269 import RX_FILE, RX_VM, branch, near
 
@@ -135,10 +136,12 @@ def assemble(base, framework, target, retained_base=None):
         changed = {INFO: plistlib.dumps(info, fmt=plistlib.FMT_BINARY),
                    NATIVE: patch_menu_return(original.read(NATIVE))}
         staged = Path(tmp) / 'Army2.ipa'
-        with ZipFile(staged, 'w', compression=8, compresslevel=6) as output:
+        with ZipFile(staged, 'w', compression=ZIP_DEFLATED, compresslevel=6) as output:
             for entry in original.infolist():
                 if not entry.filename.startswith(EMBEDDED_FW):
-                    output.writestr(entry, changed.get(entry.filename) or original.read(entry))
+                    name = entry.filename
+                    data = changed[name] if name in changed else original.read(entry)
+                    output.writestr(copy(entry), data)
             for name, data in replacement.items():
                 output.writestr(APP + 'Frameworks/' + name, data)
         with ZipFile(staged) as check:

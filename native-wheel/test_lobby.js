@@ -85,6 +85,8 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await open('market',6);
  const stock=w().byte(1).utf('test-stock-token').byte(0).short(22);for(let i=0;i<22;i++)item(stock,i);
  await page.evaluate(b=>receiveFrame(-121,b),Buffer.from(stock.bytes).toString('base64'));
+ await page.evaluate(()=>lobbyBalance('520490301781','49618047296'));
+ assert.equal(await page.evaluate(()=>balance),'Tiền: 520490301781 xu - 49618047296 lượng');
  await page.waitForTimeout(300);await page.screenshot({path:path.join(root,'lobby-market.png')});
  await page.evaluate(()=>lobbyKey(-3));assert.equal(await page.evaluate(()=>focus),6,'Chest wraps horizontally within the row');
  await page.evaluate(()=>{focus=21;lobbyKey(-2);});assert.equal(await page.evaluate(()=>focus),0,'Chest wraps vertically to first valid cell');

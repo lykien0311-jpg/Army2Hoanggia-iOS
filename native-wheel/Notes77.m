@@ -97,16 +97,22 @@ int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uin
     NJob job={.variant=variant,.command=command,.expected=connection,.length=length,.payload=bytes};
     return NRun(env,NNative,&job)>0;
 }
-static int NLobbyCharacter(void *env,void *context){
-    int v=*(int *)context;
-    uint8_t *(*get)(void *)=(void *)(NBase()+AGStatsMaps[v].player);
+typedef struct {int variant;AGLobbyAccount *account;} NLobbyAccountJob;
+static int NLobbyAccount(void *env,void *context){
+    NLobbyAccountJob *job=context;
+    uint8_t *(*get)(void *)=(void *)(NBase()+AGStatsMaps[job->variant].player);
     uint8_t *player=get(env);
-    return player&&player[0xd9]<10 ? player[0xd9]+1 : 0;
+    if(!player||player[0xd9]>=10)return 0;
+    // The login handler stores the two 64-bit balances before the selected hero.
+    job->account->character=player[0xd9];
+    job->account->xu=*(int64_t *)(player+0xa8);
+    job->account->luong=*(int64_t *)(player+0xb0);
+    return 1;
 }
-int AGLobbyCharacter(void *env,int variant){
-    if(!env||variant<0||variant>=6)return -1;
-    int character=NRun(env,NLobbyCharacter,&variant);
-    return character>0 ? character-1 : -1;
+int AGLobbyReadAccount(void *env,int variant,AGLobbyAccount *account){
+    if(!env||!account||variant<0||variant>=6)return 0;
+    NLobbyAccountJob job={.variant=variant,.account=account};
+    return NRun(env,NLobbyAccount,&job)>0;
 }
 int AGAuraHello(void *env,int variant,uintptr_t connection){
     static const uint8_t hello[]={'C','T','4','6',11,0,0,0,1};

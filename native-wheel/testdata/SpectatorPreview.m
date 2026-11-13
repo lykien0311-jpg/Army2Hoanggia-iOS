@@ -19,7 +19,10 @@ static void save(NSString *result) {
     [result writeToURL:[dir URLByAppendingPathComponent:@"viewer-result.txt"] atomically:YES encoding:NSUTF8StringEncoding error:nil];
 }
 uintptr_t AGViewerConnection(void *env,int v) { return 44; }
-int AGLobbyCharacter(void *env,int v) { return 6; }
+int AGLobbyReadAccount(void *env,int v,AGLobbyAccount *account) {
+    *account=(AGLobbyAccount){.character=6,.xu=520490301781,.luong=49618047296};
+    return 1;
+}
 int AGAuraRank(int v,uintptr_t connection,uint32_t id,unsigned hero){return id==7&&hero==6?240:0;}
 uintptr_t AGViewerWaitToken(int v){return AGSpectatorWaitToken(canvas);}
 void AGViewerDismissWait(int v,uintptr_t token){AGSpectatorClearWait(canvas,token);}
@@ -59,9 +62,11 @@ static void testLobby(int step,int tries){
         if(lobbyCommand==-121 && [lobbyPayload isEqual:[NSData dataWithBytes:expected length:sizeof expected]]){
             const uint8_t empty[]={0,0,0,0,0,255,0,0,0,0};
             deliver(-121,[NSData dataWithBytes:empty length:sizeof empty]);step++;
+            const uint8_t money[]={0,0,0,0,0,0,0,12,0,0,0,0,0,0,0,34};
+            NSCAssert(!deliver(105,[NSData dataWithBytes:money length:sizeof money]),@"wallet packet also reaches the game");
         }
     }else if(step==2 && web){
-        [web evaluateJavaScript:@"tab==='market' && !waiting && character===6 && (marketMenu(), menuItems.map(x=>x[0]).join('|')==='Lọc|Gian hàng|Rương gian hàng|Đồ của tôi')" completionHandler:^(id v,NSError *err){
+        [web evaluateJavaScript:@"tab==='market' && !waiting && character===6 && balance==='Tiền: 12 xu - 34 lượng' && (marketMenu(), menuItems.map(x=>x[0]).join('|')==='Lọc|Gian hàng|Rương gian hàng|Đồ của tôi')" completionHandler:^(id v,NSError *err){
             BOOL done=[v isEqual:@YES];
             if(done){AGLobbyInput(0,0,-22,0);AGLobbyInput(0,0,-22,0);}
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby(done?3:2,tries-1);});

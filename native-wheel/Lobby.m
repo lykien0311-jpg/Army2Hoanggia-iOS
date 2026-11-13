@@ -14,8 +14,9 @@
 @property(nonatomic,strong) WKWebView *web;
 @property(nonatomic) uintptr_t connection;
 @property(nonatomic) int variant;
-@property(nonatomic) int startTab;
-@property(nonatomic) int character;
+@property(nonatomic) int tab;
+@property(nonatomic) BOOL loaded;
+@property(nonatomic) AGLobbyAccount account;
 @property(nonatomic) uint32_t firstSerial;
 @property(nonatomic) int command;
 @property(nonatomic) uint32_t watchSerial;
@@ -94,11 +95,12 @@ __attribute__((visibility("default"))) void AGLobbyOpenNative(void *env,int vari
             nextFieldSerial=(nextFieldSerial+100000)%2100000000;
         }
     }
-    int character=tab==AGLobbyMarket?AGLobbyCharacter(env,variant):-1;
+    AGLobbyAccount account={.character=-1,.xu=-1,.luong=-1};
+    if(tab==AGLobbyMarket)AGLobbyReadAccount(env,variant,&account);
     dispatch_async(dispatch_get_main_queue(),^{
         AGLobby *lobby=[AGLobby new];
-        lobby.variant=variant;lobby.connection=connection;lobby.startTab=tab;
-        lobby.character=character;lobby.firstSerial=serial;
+        lobby.variant=variant;lobby.connection=connection;lobby.tab=tab;
+        lobby.account=account;lobby.firstSerial=serial;
         [lobby open];
     });
 }
@@ -128,20 +130,37 @@ void AGLobbyTick(void *env,int v,uintptr_t connection){
 int AGLobbyReceive(void *env,void *message,int v){
     if(!env||!message||v<0||v>=6)return 0;
     int cmd=*(int8_t *)((uint8_t *)message+0x30);
-    if(cmd!=-120&&cmd!=-121&&cmd!=-14)return 0;
+    if(cmd!=-120&&cmd!=-121&&cmd!=-14&&cmd!=105)return 0;
     AGLobby *active;
     uintptr_t fight;
     @synchronized(AGLobby.class){active=activePanel;fight=battlefield[v];}
+    if(cmd==105&&(!active||active.variant!=v||active.tab!=AGLobbyMarket))return 0;
     uintptr_t connection=active&&active.variant==v?active.connection:fight;
     if(!connection || connection!=AGViewerConnection(env,v))return 0;
     uint8_t *in=*(uint8_t **)((uint8_t *)message+0x20);
-    if(!in)return 1;
+    if(!in)return cmd!=105;
     uint8_t *array=*(uint8_t **)(in+0x10);
-    if(!array)return 1;
+    if(!array)return cmd!=105;
     int count=*(int *)(in+0x18),pos=*(int *)(in+0x20);
-    if(pos<0||count<=pos||count>*(int *)(array+0x10)||count-pos>65535)return 1;
+    if(pos<0||count<=pos||count>*(int *)(array+0x10)||count-pos>65535)return cmd!=105;
     NSData *body=[NSData dataWithBytes:array+0x14+pos length:count-pos];
     const uint8_t *p=body.bytes;
+    if(cmd==105){
+        if(body.length!=16)return 0;
+        uint64_t xu=0,luong=0;
+        for(int i=0;i<8;i++){xu=xu<<8|p[i];luong=luong<<8|p[8+i];}
+        if(xu>INT64_MAX||luong>INT64_MAX)return 0;
+        dispatch_async(dispatch_get_main_queue(),^{
+            AGLobbyAccount next=active.account;
+            next.xu=(int64_t)xu;next.luong=(int64_t)luong;
+            active.account=next;
+            if(active.loaded){
+                NSString *js=[NSString stringWithFormat:@"lobbyBalance('%llu','%llu')",(unsigned long long)xu,(unsigned long long)luong];
+                [active.web evaluateJavaScript:js completionHandler:nil];
+            }
+        });
+        return 0;
+    }
     if(cmd==-14&&p[0]!=3)return 0;
     if(fight==connection && cmd==-120 && (body.length==9||body.length==10) && !memcmp(p,"CT46\x08\0\0\0\0",9)){
         @synchronized(AGLobby.class){battlefield[v]=0;}
@@ -236,10 +255,12 @@ int AGLobbyReceive(void *env,void *message,int v){
 - (void)webView:(WKWebView *)web didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error{[self close];}
 - (void)webView:(WKWebView *)web didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error{[self close];}
 - (void)webView:(WKWebView *)web didFinishNavigation:(WKNavigation *)navigation{
-    if(web!=self.web||!self.startTab)return;
-    NSString *tab=self.startTab==AGLobbyField?@"field":self.startTab==AGLobbyMarket?@"market":@"event";
-    NSString *start=[NSString stringWithFormat:@"openTab('%@',%d,%u)",tab,self.character,self.firstSerial];
-    self.startTab=0;
+    if(web!=self.web||self.loaded)return;
+    NSString *tab=self.tab==AGLobbyField?@"field":self.tab==AGLobbyMarket?@"market":@"event";
+    AGLobbyAccount account=self.account;
+    NSString *start=[NSString stringWithFormat:@"openTab('%@',%d,%u);lobbyBalance('%lld','%lld')",
+                     tab,account.character,self.firstSerial,(long long)account.xu,(long long)account.luong];
+    self.loaded=YES;
     [web evaluateJavaScript:start completionHandler:^(id value,NSError *error){if(error)[self close];}];
 }
 - (void)webView:(WKWebView *)web decidePolicyForNavigationAction:(WKNavigationAction *)action decisionHandler:(void (^)(WKNavigationActionPolicy))decision{
