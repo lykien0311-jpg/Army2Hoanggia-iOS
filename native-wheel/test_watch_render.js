@@ -57,7 +57,7 @@ function shot(bullet,points,events=[]){
  const result=await page.evaluate(([projectile,hp])=>{
   const target=tiles.find(t=>t.x===501&&t.y===507&&t.solid);
   const pixels=(x,y)=>Array.from(target.ctx.getImageData(x,y,1,1).data);
-  const sample=()=>[pixels(9,7),pixels(9,22),pixels(9,31),game.players[1].hp,numbers.map(v=>v.delta)];
+  const sample=()=>[pixels(9,7),pixels(9,21),pixels(9,31),game.players[1].hp,numbers.map(v=>v.delta)];
   const before=sample();receiveArmyFrames([projectile,hp]);
   updateShot(30);const mid=sample();updateShot(30);return {before,mid,after:sample()};
  },[shot(0,impactPoints),health(770)]);
@@ -77,6 +77,12 @@ function shot(bullet,points,events=[]){
   receiveArmyFrames([laser]);updateShot(60);return [original,center(),exact,final];
  },[shot(0,[[465,385],[493,448],[705,480]],[[1,-170]]),health(600),shot(14,[[495,410],[510,458],[551,514]])]);
  assert.deepEqual(traceResult,[255,255,600,[600,[-230,-170]]],'Exact hit timestamps avoid double damage and a laser preserves terrain');
+ const drill=await page.evaluate(frame=>{
+  const target=tiles.find(t=>t.x===581&&t.y===507&&t.solid);
+  const alpha=()=>target.ctx.getImageData(9,7,1,1).data[3];
+  const before=alpha();receiveArmyFrames([frame]);updateShot(30);return [before,alpha(),!!shot];
+ },shot(52,[[541,478],[590,514],[631,522]]));
+ assert.deepEqual(drill,[255,0,true],'Drilling removes terrain before the end of the trajectory');
  const root=path.join(__dirname,'build');fs.mkdirSync(root,{recursive:true});
  await page.screenshot({path:path.join(root,'watch-impact.png')});
  assert.deepEqual(errors,[]);

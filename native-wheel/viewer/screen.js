@@ -1,7 +1,7 @@
 'use strict';
 // Read-only spectator: native keypad, bitmap fonts, real gear and world camera.
 const ui=PixelUI,ctx=ui.g,state=document.getElementById('state');
-const tiles=[],queue=[],images=new Map(),numbers=[],explosions=[];
+const tiles=[],solidTiles=[],queue=[],images=new Map(),numbers=[],explosions=[];
 const WORLD_SCALE=320/400,FRAME_MS=30;
 let shot=null,failed=false,liveReported=false,lastTime=0,menuOpen=false,menuFocus=0;
 let freeCamera=false,cameraX=0,cameraY=0,cameraReady=false,drag=null,clockAt=0,angle=0;
@@ -44,7 +44,13 @@ function terrainURL(bytes){
 const game=new ArmySpectator(tile=>{
  const image=new Image();
  const entry={x:tile.x,y:tile.y,solid:!!tile.solid,ready:false,id:tile.id};tiles.push(entry);
- image.onload=()=>{const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0);Object.assign(entry,{canvas:c,ctx:g,ready:true});if(reportLive())pump();};
+ image.onload=()=>{
+  const c=document.createElement('canvas');c.width=image.width;c.height=image.height;
+  const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0);
+  Object.assign(entry,{canvas:c,ctx:g,ready:true});
+  if(entry.solid){entry.rgba=g.getImageData(0,0,c.width,c.height);solidTiles.push(entry);}
+  if(reportLive())pump();
+ };
  image.onerror=()=>fail('Không đọc được ảnh bản đồ.');image.src=terrainURL(tile.bytes);
 });
 game.onHealth=(actor,delta)=>numbers.push({x:actor.x,y:actor.y-38,delta,at:performance.now()});
@@ -76,15 +82,13 @@ function pump(){
  }catch(e){fail(e.message);}
 }
 window.receiveArmyFrames=frames=>{if(failed)return;if(!Array.isArray(frames)||frames.length+queue.length>4096){fail('Phiên xem bị gián đoạn.');return;}for(const frame of frames)queue.push(frame);pump();};
-function impact(x,y,bullet){
- explosions.push({x,y,at:performance.now()});
- if([4,5,13,14,16,23,26,28,34,36,51,57].includes(bullet))return;
+function breakGround(x,y,bullet){
  const mask=holes.get(holeNames[holeMap[bullet]??0]),w=mask.image.width,h=mask.image.height;
- for(const tile of tiles){
-  if(!tile.ready||!tile.solid)continue;
+ for(const tile of solidTiles){
+  if(game.map===42&&tile.id===102)continue;
   const ox=Math.trunc(x-tile.x-Math.floor(w/2)),oy=Math.trunc(y-tile.y-Math.floor(h/2));
   if(ox>=tile.canvas.width||oy>=tile.canvas.height||ox+w<=0||oy+h<=0)continue;
-  const data=tile.ctx.getImageData(0,0,tile.canvas.width,tile.canvas.height);
+  const data=tile.rgba;
   for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){
    const tx=ox+xx,ty=oy+yy;if(tx<0||ty<0||tx>=data.width||ty>=data.height)continue;
    const m=(yy*w+xx)*4,p=(ty*data.width+tx)*4;
@@ -95,12 +99,28 @@ function impact(x,y,bullet){
   tile.ctx.putImageData(data,0,0);
  }
 }
+function solidAt(x,y){
+ return solidTiles.some(tile=>{
+  const tx=x-tile.x,ty=y-tile.y,{data,width,height}=tile.rgba;
+  return tx>=0&&tx<width&&ty>=0&&ty<height&&data[(ty*width+tx)*4+3]>0;
+ });
+}
+function impact(x,y,bullet){
+ explosions.push({x,y,at:performance.now()});
+ if([4,5,13,14,16,23,26,28,30,34,36,51,57].includes(bullet))return;
+ breakGround(x,y,bullet);
+}
 function updateShot(delta){
  if(!shot)return;
  shot.elapsed+=delta*(forceMax?2:1);
  const sample=Math.min(shot.samples-1,Math.floor(shot.elapsed/FRAME_MS));
  for(const path of shot.paths){
   const last=path.length-1;
+  if(shot.bullet===30||shot.bullet===52){
+   for(let i=shot.sample+1;i<=Math.min(last,sample);i++){
+    const [x,y]=path[i];if(solidAt(x,y))breakGround(x,y,shot.bullet);
+   }
+  }
   if(last>shot.sample&&last<=sample)impact(...path[last],shot.bullet);
  }
  while(shot.impactIndex<shot.impacts.length&&shot.impacts[shot.impactIndex].sample<=sample){
