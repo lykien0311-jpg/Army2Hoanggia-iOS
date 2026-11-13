@@ -7,4 +7,4 @@ User authorized all four notes on 13 November 2026; resumed 14 November.
 - Render the market stock with the native chest's dimensions, icon sizes, quantity position and shared equipment upgrade painter.
 - Use the in-game bottom input panel and a native iOS input dialog. Quantity, lot price and secondary password are separate steps; cancel, erase, validation, masking and pending mutation handling are retained.
 
-Status: implementation and CI verification in progress. No claim of physical iPhone or live server testing. Base: supplied Build281 IPA; game executable and server remain the supplied versions.
+Status: device framework compiled and Apple code-sign verification passed. Compiled ARM64 tests passed for six variants and 600 updates; native UIKit simulator quantity/price/password/cancel checks passed. Final stock selection and grouping validation is running. No claim of physical iPhone or live server testing. Base: supplied Build281 IPA; game executable and server remain the supplied versions.

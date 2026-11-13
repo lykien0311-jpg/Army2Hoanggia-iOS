@@ -57,7 +57,7 @@ function fieldMenu(){menu([['Thông tin',profile],['Trận đấu',()=>send(-120
 function profileMenu(){menu([['Chi tiết',profileDetails]]);}
 function filterMenu(){menu([['Tất cả',()=>applyFilter(-1)],...names.map((n,i)=>[n,()=>applyFilter(i)])]);}
 function applyFilter(n){filter=n;focus=scroll=0;if(view==='stock')return;browse(0,filter,market.own);}
-function marketMenu(){menu([['Lọc',filterMenu],['Gian hàng',()=>browse()],['Rương gian hàng',stock],['Đồ của tôi',()=>browse(0,filter,true)]]);}
+function marketMenu(){const items=[['Lọc',filterMenu],['Gian hàng',()=>browse()],['Rương gian hàng',stock],['Đồ của tôi',()=>browse(0,filter,true)]];if(view==='stock')items.unshift(['Chi tiết',()=>marketDetails(currentItems()[focus])]);menu(items);}
 function hideEdit(){const form=document.getElementById('edit');for(const n of form.querySelectorAll('input'))n.value='';form.replaceChildren();form.style.display='none';editSubmit=null;editState=null;inputPending=false;editSerial++;}
 function openEditor(){
  if(!editState||inputPending||waiting)return;
@@ -104,7 +104,8 @@ function marketSelect(){
     if(waiting)return;
     const item=currentItems()[focus];
     if(!item)return;
-    const action=view==='stock'?'Bán':market.own?'Rút':'Mua';
+    if(view==='stock'){sell(item);return;}
+    const action=market.own?'Rút':'Mua';
     menu([[action,()=>{
         if(view==='stock'){sell(item);return;}
         if(market.own){lotConfirm(item,true);return;}
@@ -113,12 +114,11 @@ function marketSelect(){
             return;
         }
         modal={title:'Mua món này?',lines:[item.name,'Số lượng: '+item.quantity],yes:'Mua',no:'Không',confirm:()=>lotConfirm(item,false)};
-    }],['Chi tiết',()=>{
-        const lines=[item.name,'Số lượng: '+item.quantity,...item.detail.split('; ').filter(s=>s&&s!==item.name)];
-        if(view!=='stock')lines.push('Người bán: '+item.seller);
-        modal={title:'Chi tiết',lines};
-    }]]);
+    }],['Chi tiết',()=>marketDetails(item)]]);
 }
+function marketDetails(item){if(!item)return;const lines=[item.name,'Số lượng: '+item.quantity,...item.detail.split('; ').filter(s=>s&&s!==item.name)];if(view!=='stock')lines.push('Người bán: '+item.seller);modal={title:'Chi tiết',lines};
+}
+
 function lotConfirm(item,own){
     const lines=[item.name,'Số lượng: '+item.quantity];
     if(!own)lines.push('Giá cả lô: '+item.price+' xu');
@@ -155,7 +155,10 @@ window.lobbyBalance=(xu,luong)=>{
 function currentItems(){
     const items=view==='stock'?market.stock:market.list;
     const now=Date.now();
-    return items.filter(i=>(!i.expiresAt||i.expiresAt>now)&&(view!=='stock'||filter===-1||i.nv===filter));
+    const visible=items.filter(i=>(!i.expiresAt||i.expiresAt>now)&&(view!=='stock'||filter===-1||i.nv===filter));
+    if(view!=='stock')return visible;
+    const group=i=>i.equipment?0:i.category==='Ngọc'?1:i.category==='Đá'?2:i.category.includes('Công thức')?3:4;
+    return visible.map((item,index)=>({item,index})).sort((a,b)=>group(a.item)-group(b.item)||a.index-b.index).map(x=>x.item);
 }
 function wrap(f,d,n,cols){if(n<=1)return 0;if(Math.abs(d)===1){const first=Math.floor(f/cols)*cols,last=Math.min(n-1,first+cols-1);return d<0?(f===first?last:f-1):(f===last?first:f+1);}const first=f%cols,last=first+Math.floor((n-1-first)/cols)*cols;return d<0?(f===first?last:f-cols):(f===last?first:f+cols);}
 function move(delta){if(menuItems){menuFocus=(menuFocus+delta+menuItems.length)%menuItems.length;return;}const n=tab==='field'&&view==='board'?field.board.length:tab==='market'?currentItems().length:reply?.rows?.length||0;if(n)focus=(focus+delta+n)%n;}

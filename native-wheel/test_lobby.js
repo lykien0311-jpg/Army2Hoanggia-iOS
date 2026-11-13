@@ -104,6 +104,9 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await open('market',6);
  const stock=w().byte(1).utf('test-stock-token').byte(0).short(22);for(let i=0;i<22;i++)item(stock,i);
  await page.evaluate(b=>receiveFrame(-121,b),Buffer.from(stock.bytes).toString('base64'));
+ await page.evaluate(()=>market.stock.push({key:'M:1',category:'Ngọc',nv:-1,equipment:false,quantity:2},{key:'M:105',category:'Đá',nv:-1,equipment:false,quantity:2}));
+ assert.deepEqual(await page.evaluate(()=>currentItems().slice(-2).map(x=>x.category)),['Ngọc','Đá'],'Stock groups follow the native chest after equipment');
+ await page.evaluate(()=>market.stock.splice(-2));
  assert.deepEqual(await page.evaluate(()=>market.stock[16].sprite),[6,1,0]);
  assert.equal(await page.evaluate(()=>market.stock[16].enhancement),16);
  await page.evaluate(()=>lobbyBalance('520490301781','49618047296'));
@@ -112,8 +115,7 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await page.evaluate(()=>lobbyKey(-3));assert.equal(await page.evaluate(()=>focus),6,'Chest wraps horizontally within the row');
  await page.evaluate(()=>{focus=21;lobbyKey(-2);});assert.equal(await page.evaluate(()=>focus),0,'Chest wraps vertically to first valid cell');
  await soft(-5);
- assert.deepEqual(await labels(),['Bán','Chi tiết']);
- await soft(-5);
+ assert.equal(await page.evaluate(()=>editState.title),'Nhập Số Lượng','Choose immediately opens quantity like APK');
  assert.equal(await page.evaluate(()=>document.getElementById('lobby-input').value),'1');
  async function enter(value){await soft(-5);const request=await page.evaluate(()=>sent.at(-1));assert.equal(request[0],'edit');await page.evaluate(([s,v])=>lobbyInputResult(s,v),[request[1].serial,value]);await soft(-5);}
  await enter('1');
@@ -121,7 +123,7 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await enter('500');
  assert.equal(await page.locator('#edit input').getAttribute('type'),'password');
  await soft(-6);assert.equal(await page.evaluate(()=>editState),null,'F1 closes amount entry and restores chest');
- await soft(-5);await soft(-5);
+ await soft(-5);
  await enter('7');
  assert.equal(await page.evaluate(()=>editState.label),'Trang bị 0 × 7');
  await page.screenshot({path:path.join(root,'market-price-282.png')});
