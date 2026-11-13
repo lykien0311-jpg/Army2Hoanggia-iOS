@@ -11,14 +11,14 @@ bash build.sh
 sim_sdk="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 preview=build/SpectatorPreview.app
 mkdir -p "$preview/viewer"
-cp viewer/* "$preview/viewer/"
+cp -R viewer/. "$preview/viewer/"
 cp testdata/watch-pvp.json "$preview/"
 cp build/WheelPreview.app/Info.plist "$preview/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set CFBundleIdentifier vn.army2hoanggia.spectatorpreview' "$preview/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set CFBundleExecutable SpectatorPreview' "$preview/Info.plist"
 xcrun --sdk iphonesimulator clang -arch "$(uname -m)" -isysroot "$sim_sdk" -mios-simulator-version-min=16.0 \
-  -fobjc-arc -fblocks -Wno-deprecated-declarations -framework UIKit -framework Foundation -framework CoreGraphics -framework WebKit \
-  testdata/SpectatorPreview.m Spectator.m Lobby.m -o "$preview/SpectatorPreview"
+  -DAG_WHEEL_PREVIEW=1 -fobjc-arc -fblocks -Wno-deprecated-declarations -framework UIKit -framework Foundation -framework CoreGraphics -framework WebKit \
+  testdata/SpectatorPreview.m Spectator.m Lobby.m GameViewport.m -o "$preview/SpectatorPreview"
 codesign --force --sign - --timestamp=none "$preview"
 device="$(cat build/simulator-id)"
 xcrun simctl install "$device" "$preview"
@@ -31,7 +31,7 @@ cp "$result" build/viewer-result.txt
 framework=build/QA/AGWheel.framework
 mkdir -p "$framework/viewer"
 cp build/AGWheel.dylib "$framework/AGWheel"
-cp viewer/*.html viewer/*.js "$framework/viewer/"
+cp -R viewer/. "$framework/viewer/"
 python3 - <<'PY'
 import plistlib
 from pathlib import Path
@@ -48,3 +48,4 @@ codesign --force --sign - --timestamp=none "$framework"
 codesign --verify --strict --verbose=2 "$framework"
 (cd build/QA && /usr/bin/zip -qr ../AGWheel-framework.zip AGWheel.framework)
 shasum -a 256 build/AGWheel-framework.zip
+

@@ -1,23 +1,7 @@
-<!doctype html>
-<html lang="vi"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src data:; form-action 'none'">
-<title>Sảnh Army2</title>
-<style>
-*{box-sizing:border-box}body{margin:0;color:#18324c;background:#edf3f9;font:16px -apple-system,sans-serif}
-nav,main,#notice{padding:10px 12px}nav{display:flex;flex-wrap:wrap;gap:8px;background:#1d486d}button,input,select{font:inherit}button,select{min-height:40px}
-button{background:#fff;border:1px solid #7590a5;border-radius:5px;padding:6px 11px;color:#163c5e}button:disabled{opacity:.55}
-h1{font-size:21px;margin:3px 0 12px}p{margin:6px 0;white-space:pre-line;overflow-wrap:anywhere}
-.row{padding:10px 0;border-bottom:1px solid #b5c6d6}.buttons{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-label{display:block;margin:10px 0}input{display:block;width:100%;max-width:28em;padding:8px}
-#notice{margin:0;color:#573500;background:#fff1c9}#notice:empty{display:none}img{width:36px;height:36px;object-fit:contain;image-rendering:pixelated;vertical-align:middle;margin-right:6px}
-.aura{display:inline-block;width:22px;height:20px;margin-right:8px;vertical-align:middle;border:2px solid var(--aura);border-radius:50%;box-shadow:0 0 5px var(--aura),inset 0 0 4px var(--aura);animation:shine 1.7s ease-in-out infinite}
-.aura[data-tier="5"]{border-radius:2px;transform:rotate(45deg) scale(.75)}
-.aura[data-tier="6"]{border-radius:50% 0 50% 0;transform:rotate(45deg)}
-.aura[data-tier="7"]{border-style:double;border-width:4px;box-shadow:0 0 8px 1px var(--aura),inset 0 0 5px var(--aura)}
-@keyframes shine{50%{opacity:.62}}@media(prefers-reduced-motion:reduce){.aura{animation:none}}
-</style></head><body>
-<nav><button id="field">Chiến trường</button><button id="market">Gian hàng</button><button id="event">BXH Sự kiện</button></nav>
-<p role="status" id="notice"></p><main id="body"><h1>Sảnh</h1></main>
-<script src="protocol.js"></script><script src="market.js"></script><script src="battlefield.js"></script><script src="event-rank.js"></script><script src="lobby.js"></script>
-</body></html>
+<!doctype html><html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; form-action 'none'">
+<title>Army2</title><style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#60cdf7;touch-action:none}canvas{display:block;width:100%;height:100%;image-rendering:pixelated}#edit{display:none;position:absolute;left:8%;right:8%;bottom:34px;background:#c7d5ed;border:2px solid #ffdc37;padding:8px;color:#254d70;font:15px sans-serif}#edit label{display:block;margin:5px 0}#edit input{width:100%;font:16px sans-serif;border:1px solid #4d79a7;background:#e4edfa;color:#123b64;padding:6px;border-radius:0}#edit button{background:#c7d5ed;color:#254d70;border:1px solid #567491;padding:7px 12px;margin:4px 0 0}#edit button:last-child{float:right}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style></head><body><canvas id="game" tabindex="0" aria-label="Army2"></canvas><div id="edit"></div><p id="status" class="sr" role="status"></p>
+<script src="protocol.js"></script><script src="market.js"></script><script src="battlefield.js"></script><script src="event-rank.js"></script><script src="art.js"></script><script src="pixel-ui.js"></script><script src="lobby.js"></script></body></html>

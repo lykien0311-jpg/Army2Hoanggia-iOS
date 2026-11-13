@@ -12,11 +12,12 @@ function readEventRank(bytes){
         reader.i16(); // clan
         const level=reader.view.getBigInt64(reader.take(8)).toString();
         const percent=reader.u8(),rank=reader.u8();
-        reader.take(10); // five equipment IDs
+        const parts=Array.from({length:5},()=>reader.i16());
         const score=reader.utf();
         if(id<=0||hero>9||rank!==page*10+rows.length+1||!/^\d+$/.test(score))throw Error('Dữ liệu BXH Sự kiện không hợp lệ');
-        rows.push({id,name,hero,level,percent,rank,score});
+        rows.push({id,name,hero,parts,level,percent,rank,score});
     }
     return {page,heading,rows};
 }
 if(typeof module!=='undefined')module.exports={readEventRank};
+

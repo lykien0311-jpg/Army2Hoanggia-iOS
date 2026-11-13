@@ -30,7 +30,9 @@ function marketItem(r) {
     if(price<0||!Number.isSafeInteger(price)||quantity<1)throw Error('Số lượng hoặc giá không hợp lệ');
     const seller=r.utf(),description=r.utf(),size=r.u16(),start=r.take(size);
     const icon=r.bytes.slice(start,start+size);
-    return {key,name,category,nv,quantity,price,seller,detail:description.split('\u001e')[0],icon};
+    const meta=description.split('\u001e119,')[1]?.split(',').map(Number);
+    const enhancement=meta&&meta.length>=5&&Number.isInteger(meta[4])&&meta[4]>=0&&meta[4]<=16?meta[4]:0;
+    return {key,name,category,nv,quantity,price,seller,enhancement,detail:description.split('\u001e')[0],icon};
 }
 class ArmyMarket {
     constructor(){this.list=[];this.stock=[];this.token='';this.staging=null;this.pending=false;}
@@ -84,3 +86,4 @@ class ArmyMarket {
     }
 }
 if(typeof module!=='undefined')module.exports={ArmyWriter,ArmyMarket};
+

@@ -207,6 +207,7 @@ __attribute__((visibility("default"))) int AGNotesReceive(void *env,void *messag
 // Native input guards close the short interval before UIKit presents its modal.
 __attribute__((visibility("default"))) int AGNotesInput(int variant,int kind,int a,int b){
     if(variant<0||variant>=6)return 0;
+    if(AGLobbyInput(variant,kind,a,b)){NClear(variant);return 1;}
     if(!atomic_load(&NInitialized)){int wheel=AGWheelInput(variant,kind,a,b);if(wheel)NClear(variant);return wheel;}
     int room=NRoom(variant),consumed=0,inbox=0;pthread_mutex_lock(&NMutex);NModel *m=&NModels[variant];
     AGCaptchaContext(&m->cap,m->cap.boss,room);
@@ -442,4 +443,5 @@ __attribute__((visibility("default"))) void AGNotesPreviewCheck(void){
 
 
 int AGNotesBlocksAuto(int v){if(v<0||v>=6)return 1;pthread_mutex_lock(&NMutex);int blocked=NModels[v].cap.active||NModels[v].inboxVisible;pthread_mutex_unlock(&NMutex);return blocked;}
+
 

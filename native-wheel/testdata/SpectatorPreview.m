@@ -6,6 +6,7 @@
 #include "../Spectator.h"
 #include "../SpectatorWait.h"
 #include "../Lobby.h"
+int AGWheelGuard(void *env,int (*fn)(void *,void *),void *context,void *trap){return 0;}
 static NSMutableArray *sent;
 static NSMutableArray *frames;
 static UIWindow *host;
@@ -59,9 +60,9 @@ static void testLobby(int step,int tries){
             deliver(-121,[NSData dataWithBytes:empty length:sizeof empty]);step++;
         }
     }else if(step==2 && web){
-        [web evaluateJavaScript:@"document.body.innerText.includes('Chưa có món đang bán.')" completionHandler:^(id v,NSError *err){
+        [web evaluateJavaScript:@"tab==='market' && view==='market' && market.list.length===0 && !!document.getElementById('game')" completionHandler:^(id v,NSError *err){
             BOOL done=[v isEqual:@YES];
-            if(done)[(UIButton *)find(window,UIButton.class,@"Về sảnh") sendActionsForControlEvents:UIControlEventTouchUpInside];
+            if(done)[web evaluateJavaScript:@"close()" completionHandler:nil];
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby(done?3:2,tries-1);});
         }];return;
     }else if(step==3 && window==host){
@@ -74,7 +75,7 @@ static void testLobby(int step,int tries){
             deliver(-120,[NSData dataWithBytes:reply length:sizeof reply]);step++;
         }
     }else if(step==5 && web){
-        [web evaluateJavaScript:@"document.body.innerText.includes('Trận đang đấu') && (document.getElementById('event').click(),true)"
+        [web evaluateJavaScript:@"tab==='field' && view==='board' && (openTab('event'),true)"
             completionHandler:^(id v,NSError *err){dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?6:5,tries-1);});}];return;
     }else if(step==6){
         AGLobbyTick((void *)1,0,44);
@@ -86,10 +87,9 @@ static void testLobby(int step,int tries){
             [reply appendBytes:row length:sizeof row];deliver(-14,reply);step++;
         }
     }else if(step==7 && web){
-        [web evaluateJavaScript:@"document.body.innerText.includes('#1 QA1') && document.body.innerText.includes('42 điểm') && !!document.querySelector('.aura[data-tier=\"7\"]')" completionHandler:^(id v,NSError *err){
+        [web evaluateJavaScript:@"reply.rows[0].name==='QA1' && reply.rows[0].score==='42' && reply.rows[0].aura===240 && ArmyArt.geometry[2].length===384" completionHandler:^(id v,NSError *err){
             if([v isEqual:@YES]){
-                UIButton *back=(UIButton *)find(window,UIButton.class,@"Về sảnh");
-                [back sendActionsForControlEvents:UIControlEventTouchUpInside];
+                [web evaluateJavaScript:@"close()" completionHandler:nil];
                 AGLobbyTick((void *)1,0,44);
             }
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(),^{testLobby([v isEqual:@YES]?8:7,tries-1);});
@@ -193,3 +193,4 @@ static void runStep(int step,int tries) {
 }
 @end
 int main(int argc,char **argv){@autoreleasepool{return UIApplicationMain(argc,argv,nil,NSStringFromClass(Demo.class));}}
+

@@ -1,0 +1,65 @@
+name: Build 276 game UI and aura
+on:
+  push:
+    branches: [qa/ios-276-game-ui]
+permissions:
+  contents: read
+concurrency:
+  group: game-ui-276
+  cancel-in-progress: true
+jobs:
+  framework:
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash native-wheel/build_framework.sh
+      - uses: actions/upload-artifact@v4
+        id: artifact
+        continue-on-error: true
+        with:
+          name: Army2Hoanggia-B276-framework
+          path: |
+            native-wheel/build/AGWheel-framework.zip
+            native-wheel/build/build-info.json
+            native-wheel/build/viewer-result.txt
+            native-wheel/build/ui-check.json
+          retention-days: 7
+      - name: Retain private build if artifact quota is unavailable
+        if: steps.artifact.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" = true
+          python3 - <<'PY'
+          import base64,json,os,subprocess,hashlib
+          from pathlib import Path
+          data=Path('native-wheel/build/AGWheel-framework.zip').read_bytes()
+          chunks=[]
+          for offset in range(0,len(data),48000):
+              encoded=base64.b64encode(data[offset:offset+48000]).decode()
+              body=json.dumps({'encoding':'utf-8','content':encoded})
+              sha=subprocess.check_output(['gh','api','--method','POST',f'repos/{os.environ["GITHUB_REPOSITORY"]}/git/blobs','--input','-','--jq','.sha'],input=body,text=True).strip()
+              chunks.append(sha)
+          print('B276_FRAMEWORK_CHUNKS='+json.dumps(chunks))
+          print('B276_FRAMEWORK_SHA256='+hashlib.sha256(data).hexdigest())
+          PY
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node native-wheel/test_lobby.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Army2Hoanggia-B276-UI-check
+          path: native-wheel/build/lobby-*.png
+          retention-days: 7

@@ -5,6 +5,7 @@
 #include "Lobby.h"
 #include "Spectator.h"
 #include "Aura.h"
+#import "GameViewport.h"
 
 @interface AGLobby : UIViewController <WKScriptMessageHandler,WKNavigationDelegate>
 @property(nonatomic,strong) UIWindow *overlay;
@@ -22,6 +23,7 @@
 @end
 
 static atomic_bool opened[6];
+static atomic_bool inputOpen[6];
 static uintptr_t connections[6];
 static uintptr_t battlefield[6];
 static AGLobby *activePanel;
@@ -45,7 +47,17 @@ static NSString *eventAuras(NSData *body,int variant,uintptr_t connection){
     return [NSString stringWithFormat:@"[%@]",[codes componentsJoinedByString:@","]];
 }
 
-int AGLobbyOpened(int variant){return atomic_load(&opened[variant]);}
+int AGLobbyOpened(int variant){return variant>=0&&variant<6?atomic_load(&opened[variant]):0;}
+int AGLobbyInput(int variant,int kind,int code,int b){
+    (void)b;
+    if(variant<0||variant>=6||!atomic_load(&inputOpen[variant]))return 0;
+    if(kind==0)dispatch_async(dispatch_get_main_queue(),^{
+        AGLobby *active=activePanel;
+        if(active&&active.variant==variant&&active.web)
+            [active.web evaluateJavaScript:[NSString stringWithFormat:@"lobbyKey(%d)",code] completionHandler:nil];
+    });
+    return 1;
+}
 
 __attribute__((visibility("default"))) void AGLobbyOpenNative(void *env,int variant,int tab){
     if(!env||variant<0||variant>=6||(tab!=1&&tab!=2))return;
@@ -53,6 +65,7 @@ __attribute__((visibility("default"))) void AGLobbyOpenNative(void *env,int vari
     if(!connection)return;
     @synchronized(AGLobby.class){connections[variant]=connection;}
     atomic_store(&opened[variant],1);
+    atomic_store(&inputOpen[variant],1);
     dispatch_async(dispatch_get_main_queue(),^{
         AGLobby *lobby=[AGLobby new];
         lobby.variant=variant;lobby.connection=connection;lobby.startTab=tab;
@@ -146,23 +159,27 @@ int AGLobbyReceive(void *env,void *message,int v){
     WKWebViewConfiguration *config=[WKWebViewConfiguration new];config.websiteDataStore=[WKWebsiteDataStore nonPersistentDataStore];
     [config.userContentController addScriptMessageHandler:self name:@"lobby"];
     self.web=[[WKWebView alloc] initWithFrame:CGRectZero configuration:config];self.web.navigationDelegate=self;
-    self.view.backgroundColor=UIColor.whiteColor;
-    [self.view addSubview:self.web];self.web.translatesAutoresizingMaskIntoConstraints=NO;
-    UILayoutGuide *safe=self.view.safeAreaLayoutGuide;
-    UIButton *back=[UIButton buttonWithType:UIButtonTypeSystem];[back setTitle:@"Về sảnh" forState:UIControlStateNormal];
-    [back addTarget:self action:@selector(close) forControlEvents:UIControlEventTouchUpInside];
-    back.translatesAutoresizingMaskIntoConstraints=NO;[self.view addSubview:back];
-    [NSLayoutConstraint activateConstraints:@[[self.web.topAnchor constraintEqualToAnchor:safe.topAnchor],
-        [self.web.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor],[self.web.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor],
-        [self.web.bottomAnchor constraintEqualToAnchor:back.topAnchor],[back.heightAnchor constraintEqualToConstant:44],
-        [back.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor],[back.centerXAnchor constraintEqualToAnchor:safe.centerXAnchor]]];
-    if(@available(iOS 13.0,*)){if(self.host.windowScene)self.overlay=[[UIWindow alloc] initWithWindowScene:self.host.windowScene];}
-    if(!self.overlay)self.overlay=[[UIWindow alloc] initWithFrame:self.host.bounds];
+    self.view.backgroundColor=UIColor.clearColor;
+    self.web.opaque=NO;self.web.backgroundColor=UIColor.clearColor;
+    self.web.scrollView.scrollEnabled=NO;self.web.scrollView.bounces=NO;
+    self.web.scrollView.contentInsetAdjustmentBehavior=UIScrollViewContentInsetAdjustmentNever;
+    [self.view addSubview:self.web];
+    if(@available(iOS 13.0,*)){if(self.host.windowScene)self.overlay=[[AGGameWindow alloc] initWithWindowScene:self.host.windowScene];}
+    if(!self.overlay)self.overlay=[[AGGameWindow alloc] initWithFrame:self.host.bounds];
+    ((AGGameWindow *)self.overlay).passesGameKeys=YES;
+    AGViewportWheelVisible(1);
     self.overlay.rootViewController=self;self.overlay.windowLevel=UIWindowLevelAlert;
     [self.overlay makeKeyAndVisible];[self.web loadFileURL:url allowingReadAccessToURL:url.URLByDeletingLastPathComponent];
 }
+- (void)viewDidLayoutSubviews{
+    [super viewDidLayoutSubviews];
+    CGRect game=AGGameRect(self.view);self.web.frame=game;
+    ((AGGameWindow *)self.overlay).gameBottom=CGRectGetMaxY(game);
+}
 - (void)close{
     @synchronized(AGLobby.class){if(activePanel==self)activePanel=nil;self.outgoing=nil;self.watchSerial=0;}
+    atomic_store(&inputOpen[self.variant],0);
+    AGViewportWheelVisible(0);
     BOOL restore=self.overlay.isKeyWindow;
     [self.web.configuration.userContentController removeScriptMessageHandlerForName:@"lobby"];
     [self.web stopLoading];self.web.navigationDelegate=nil;[self.web removeFromSuperview];self.web=nil;
@@ -184,6 +201,7 @@ int AGLobbyReceive(void *env,void *message,int v){
 - (void)userContentController:(WKUserContentController *)ctrl didReceiveScriptMessage:(WKScriptMessage *)message{
     if(message.webView!=self.web||!message.frameInfo.isMainFrame||![message.body isKindOfClass:NSArray.class])return;
     NSArray *args=message.body;
+    if(args.count==2&&[args[0] isKindOfClass:NSString.class]&&[args[0] isEqual:@"close"]){[self close];return;}
     if(args.count!=2||![args[0] isKindOfClass:NSNumber.class]||![args[1] isKindOfClass:NSString.class]||[args[1] length]>1400)return;
     int cmd=[args[0] intValue];NSData *data=[[NSData alloc]initWithBase64EncodedString:args[1] options:0];
     if(!data.length||(cmd!=-120&&cmd!=-121&&cmd!=-14))return;
@@ -200,3 +218,4 @@ int AGLobbyReceive(void *env,void *message,int v){
     }
 }
 @end
+

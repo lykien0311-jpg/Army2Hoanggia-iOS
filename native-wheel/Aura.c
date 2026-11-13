@@ -97,9 +97,9 @@ static int mix(int rgb,int white) {
 }
 
 static int palette(int level,int frame) {
-    const int colors[]={0xdce8ff,0x0048ff,0x00b300,0xff7f00,0xcdffff,0xff0019};
+    const int colors[]={0xdce8ff,0x0048ff,0x00b300,0xff7f00,0xce00ff,0xff0019};
     const int bands[]={0,1,1,1,1,2,2,2,2,3,3,3,4,4,3,5,5};
-    const int pulse=level==4?2:level==8?3:level==14?5:bands[level];
+    const int pulse=level==4?2:level==8?3:level==14?4:bands[level];
     return colors[frame%40<20?bands[level]:pulse];
 }
 
@@ -190,7 +190,12 @@ static int visible(Paint *p) {
     return width>0&&height>0&&x+40>=cx&&x-40<=cx+width&&y+10>=cy&&y-58<=cy+height;
 }
 
+extern int AGAuraSpritePaint(void *,void *,int,int,int,int,int,int,int);
 static void draw(void *env,Paint *p) {
+    if(p->tier>=5) {
+        AGAuraSpritePaint(env,p->graphics,p->x,p->y,p->tier,p->level,p->layer,p->frame);
+        return;
+    }
     const uint8_t *g=p->graphics;
     p->shapes=*(void **)(g+0x18);
     p->tx=g[0x50]?*(int *)(g+0x48):0;
@@ -222,3 +227,4 @@ __attribute__((visibility("default"))) void AGAuraPaintActor(void *env,uint8_t *
     nativePaint(env,actor,graphics);
     paint.layer=1;draw(env,&paint);
 }
+

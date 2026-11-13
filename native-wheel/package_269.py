@@ -26,8 +26,8 @@ def assemble(base, framework, target, version, boss_client=None, boss_server=Non
         raise ValueError("Choose a new output and a build number above 269")
     if digest(base) != BASE_SHA:
         raise ValueError("Unexpected baseline IPA")
-    if version != 275 or boss_client is None or boss_server is None:
-        raise ValueError("Build 275 requires the matching client and server JARs")
+    if version not in (275,276) or boss_client is None or boss_server is None:
+        raise ValueError("Build 275/276 requires the matching client and server JARs")
     maps = {APP + "BossMaps/" + name: data for name, data in boss_assets(boss_client, boss_server).items()}
     target.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=target.parent) as tmp, ZipFile(base) as old, ZipFile(framework) as lib:
@@ -90,3 +90,4 @@ if __name__=="__main__":
     parser.add_argument("--boss-server",type=Path,required=True)
     args=parser.parse_args()
     assemble(args.baseline,args.framework,args.output,args.build,args.boss_client,args.boss_server)
+
