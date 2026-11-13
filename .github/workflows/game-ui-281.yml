@@ -1,0 +1,46 @@
+name: Build Army2 iOS 281
+on:
+  push:
+    branches: [qa/ios-281-native-parity]
+permissions:
+  contents: read
+concurrency:
+  group: game-ui-281
+  cancel-in-progress: true
+jobs:
+  framework:
+    runs-on: macos-15
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash native-wheel/build_framework.sh
+      - name: Retain verified framework
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          from zipfile import ZipFile, ZIP_DEFLATED
+          from hashlib import sha256
+          import json
+          root = 'AGWheel.framework/'
+          with ZipFile('native-wheel/build/AGWheel-framework.zip') as src, ZipFile('native-wheel/build/framework-281.zip','w',ZIP_DEFLATED) as dst:
+              manifest={name:sha256(src.read(name)).hexdigest() for name in src.namelist() if not name.endswith('/')}
+              dst.writestr('framework-sha256.json',json.dumps(manifest))
+              for name in ('AGWheel','Info.plist','_CodeSignature/CodeResources','viewer/lobby.js','viewer/pixel-ui.js','viewer/native-watch.html','viewer/native-watch.js',*[f'viewer/art/tab_{i}.png' for i in range(1,6)],'viewer/art/corner.png'):
+                  dst.writestr(root+name,src.read(root+name))
+          PY
+          python3 native-wheel/retain_build.py B281_FRAMEWORK native-wheel/build/framework-281.zip
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node native-wheel/test_lobby.js
+      - run: node native-wheel/test_watch_render.js

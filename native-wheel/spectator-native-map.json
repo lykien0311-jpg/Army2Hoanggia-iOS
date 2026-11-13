@@ -1,0 +1,74 @@
+[
+  {
+    "arenaInit": 5508160,
+    "start": 5537668,
+    "show": 5516120,
+    "arenaNew": 5498768,
+    "mapNew": 5204736,
+    "mapInit": 5206592,
+    "cameraClass": 34170400,
+    "restore": 5954024,
+    "clockSet": 5809416,
+    "clockReset": 5809252
+  },
+  {
+    "arenaInit": 6474536,
+    "start": 6503404,
+    "show": 6481936,
+    "arenaNew": 6466184,
+    "mapNew": 6182136,
+    "mapInit": 6183992,
+    "cameraClass": 34361184,
+    "restore": 6906460,
+    "clockSet": 6765812,
+    "clockReset": 6765688
+  },
+  {
+    "arenaInit": 7411692,
+    "start": 7440560,
+    "show": 7419092,
+    "arenaNew": 7403340,
+    "mapNew": 7119292,
+    "mapInit": 7121148,
+    "cameraClass": 34548816,
+    "restore": 7843616,
+    "clockSet": 7702968,
+    "clockReset": 7702844
+  },
+  {
+    "arenaInit": 8348848,
+    "start": 8377716,
+    "show": 8356248,
+    "arenaNew": 8340496,
+    "mapNew": 8056448,
+    "mapInit": 8058304,
+    "cameraClass": 34736448,
+    "restore": 8780772,
+    "clockSet": 8640124,
+    "clockReset": 8640000
+  },
+  {
+    "arenaInit": 9286004,
+    "start": 9314872,
+    "show": 9293404,
+    "arenaNew": 9277652,
+    "mapNew": 8993604,
+    "mapInit": 8995460,
+    "cameraClass": 34924080,
+    "restore": 9717928,
+    "clockSet": 9577280,
+    "clockReset": 9577156
+  },
+  {
+    "arenaInit": 10223160,
+    "start": 10252028,
+    "show": 10230560,
+    "arenaNew": 10214808,
+    "mapNew": 9930760,
+    "mapInit": 9932616,
+    "cameraClass": 35111712,
+    "restore": 10655084,
+    "clockSet": 10514436,
+    "clockReset": 10514312
+  }
+]

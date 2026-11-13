@@ -562,7 +562,7 @@ __attribute__((visibility("default"))) int AGBossNativeHook(void *env, uintptr_t
     return 0;
 }
 
-enum { WaitRoomAssets, WaitRoomBoss, LocalAura, RoomPlayerAura };
+enum { WaitRoomAssets, WaitRoomBoss, LocalAura, RoomPlayerAura, RankPlayerAura };
 enum { Preview, Fire, Ice, WaitArtCount };
 
 typedef struct {
@@ -742,7 +742,7 @@ __attribute__((visibility("default"))) void AGSceneHook(void *env, void *graphic
         return;
     }
     LocalAuraPlayer player = { .variant = v };
-    if (operation == RoomPlayerAura) {
+    if (operation == RoomPlayerAura || operation == RankPlayerAura) {
         if (data) player.id = *(uint32_t *)(data + 0xb8);
     } else if (AGAuraKnown(v)) {
         guarded(env, readLocalAuraPlayer, &player);
@@ -757,3 +757,4 @@ __attribute__((visibility("default"))) void AGSceneHook(void *env, void *graphic
     paint(env, graphics, hero, pose, x, y, mode, costume);
     AGAuraSpritePaint(env, graphics, x, y, aura >> 5, aura & 31, 1, frame);
 }
+

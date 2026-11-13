@@ -16,7 +16,7 @@ xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk" -miphoneos-version-min=1
   -Wno-unused-parameter -Wno-deprecated-declarations -Wno-unused-function \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics -framework WebKit \
   -Wl,-headerpad,4000 -Wl,-install_name,@executable_path/Frameworks/AGWheel.dylib \
-  AGWheel.m Spectator.m Lobby.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c Aura.c AuraSprites.m AuraState.c BattleWait.c Corpse.c Stats.c ShipTraceDisabled.c BossMaps.c BossNative.m NativeGuard.S \
+  AGWheel.m Spectator.m SpectatorNative.c Lobby.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c Aura.c AuraSprites.m AuraState.c BattleWait.c Corpse.c Stats.c ShipTraceDisabled.c BossMaps.c BossNative.m NativeGuard.S \
   -o build/AGWheel.dylib
 codesign --force --sign - --timestamp=none build/AGWheel.dylib
 codesign --verify --strict --verbose=2 build/AGWheel.dylib 2>build/code-signing.txt
@@ -67,7 +67,7 @@ xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -fobjc-arc -fblocks -fvisibility=hidden -O1 -Wno-deprecated-declarations \
   -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics -framework WebKit \
   -Wl,-headerpad,4000 -Wl,-install_name,@rpath/libAGWheelPreview.dylib \
-  AGWheel.m Spectator.m Lobby.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c Aura.c AuraSprites.m AuraState.c BattleWait.c Corpse.c Stats.c ShipTrace.c AirshipDiagnostics.m BossMaps.c BossNative.m \
+  AGWheel.m Spectator.m SpectatorNative.c Lobby.m GameViewport.m GridLayout.c Turn33.c UfoAuto.c UfoDiagnostics.m Notes77.m NotesProtocol.c WheelProtocol.c RoomNames.c RoomBridge.c Movement.c Blind.c BlindState.c Aura.c AuraSprites.m AuraState.c BattleWait.c Corpse.c Stats.c ShipTrace.c AirshipDiagnostics.m BossMaps.c BossNative.m \
   -o build/WheelPreview.app/Frameworks/libAGWheelPreview.dylib
 xcrun --sdk iphonesimulator clang -arch "$sim_arch" -isysroot "$sim_sdk" \
   -mios-simulator-version-min=16.0 -fobjc-arc -fblocks -O1 -framework UIKit \
@@ -123,6 +123,7 @@ for mode in input waiting single; do
   sleep 5
   xcrun simctl io "$(cat build/simulator-id)" screenshot "build/wheel-$mode-preview.png"
 done
+
 
 
 

@@ -488,6 +488,7 @@ __attribute__((visibility("default"))) void AGNotesPreviewCheck(void){
 #endif
 
 
-int AGNotesBlocksAuto(int v){if(v<0||v>=6)return 1;pthread_mutex_lock(&NMutex);int blocked=NModels[v].cap.active||NModels[v].inboxVisible;pthread_mutex_unlock(&NMutex);return blocked;}
+int AGNotesBlocksAuto(int v){if(v<0||v>=6)return 1;pthread_mutex_lock(&NMutex);int blocked=NModels[v].cap.active||NModels[v].inboxVisible||AGViewerActive(v);pthread_mutex_unlock(&NMutex);return blocked;}
+
 
 

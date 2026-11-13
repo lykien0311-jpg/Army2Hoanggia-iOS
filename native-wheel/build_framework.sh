@@ -18,7 +18,7 @@ cp build/WheelPreview.app/Info.plist "$preview/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set CFBundleExecutable SpectatorPreview' "$preview/Info.plist"
 xcrun --sdk iphonesimulator clang -arch "$(uname -m)" -isysroot "$sim_sdk" -mios-simulator-version-min=16.0 \
   -DAG_WHEEL_PREVIEW=1 -fobjc-arc -fblocks -Wno-deprecated-declarations -framework UIKit -framework Foundation -framework CoreGraphics -framework WebKit \
-  testdata/SpectatorPreview.m Spectator.m Lobby.m GameViewport.m -o "$preview/SpectatorPreview"
+  testdata/SpectatorPreview.m Spectator.m SpectatorNative.c Lobby.m GameViewport.m -o "$preview/SpectatorPreview"
 codesign --force --sign - --timestamp=none "$preview"
 device="$(cat build/simulator-id)"
 xcrun simctl install "$device" "$preview"
@@ -48,4 +48,5 @@ codesign --force --sign - --timestamp=none "$framework"
 codesign --verify --strict --verbose=2 "$framework"
 (cd build/QA && /usr/bin/zip -qr ../AGWheel-framework.zip AGWheel.framework)
 shasum -a 256 build/AGWheel-framework.zip
+
 
