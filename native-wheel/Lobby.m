@@ -90,6 +90,8 @@ void AGLobbyTick(void *env,int v,uintptr_t connection){
     }
     if(body && !AGLobbySend(env,v,connection,cmd,body.bytes,body.length)){
         dispatch_async(dispatch_get_main_queue(),^{[active close];});
+    }else if(body&&cmd==5){
+        dispatch_async(dispatch_get_main_queue(),^{if(active.web)[active.web evaluateJavaScript:@"lobbyMessageSent()" completionHandler:nil];});
     }
 }
 
@@ -204,7 +206,11 @@ int AGLobbyReceive(void *env,void *message,int v){
     if(args.count==2&&[args[0] isKindOfClass:NSString.class]&&[args[0] isEqual:@"close"]){[self close];return;}
     if(args.count!=2||![args[0] isKindOfClass:NSNumber.class]||![args[1] isKindOfClass:NSString.class]||[args[1] length]>1400)return;
     int cmd=[args[0] intValue];NSData *data=[[NSData alloc]initWithBase64EncodedString:args[1] options:0];
-    if(!data.length||(cmd!=-120&&cmd!=-121&&cmd!=-14))return;
+    if(!data.length||(cmd!=-120&&cmd!=-121&&cmd!=-14&&cmd!=5))return;
+    if(cmd==5){
+        const uint8_t *p=data.bytes;
+        if(data.length<7||data.length>370||p[0]&128||!(p[0]|p[1]|p[2]|p[3])||(((unsigned)p[4]<<8)|p[5])!=data.length-6)return;
+    }
     @synchronized(AGLobby.class){
         if(activePanel!=self||self.outgoing)return;
         self.watchSerial=0;self.challengeSerial=0;

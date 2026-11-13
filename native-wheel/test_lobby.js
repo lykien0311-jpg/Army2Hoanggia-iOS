@@ -51,8 +51,9 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await page.evaluate(b=>receiveFrame(-14,b,[240]),Buffer.from(event.bytes).toString('base64'));
  assert.equal(await page.evaluate(()=>reply.rows[0].parts.length),5);assert.equal(await page.evaluate(()=>reply.rows[0].aura),240);
  await page.waitForTimeout(150);await page.screenshot({path:path.join(root,'lobby-event.png')});
+ await page.evaluate(()=>lobbyKey(-5));assert.equal(await page.locator('#edit').isVisible(),true,'Message softkey opens editor');await page.evaluate(()=>lobbyKey(-7));
  await page.evaluate(()=>lobbyKey(-7));assert.deepEqual(await page.evaluate(()=>sent.at(-1)),['close',0]);
- await page.setViewportSize({width:320,height:240});await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>PixelUI.canvas.width),320);
+ await page.setViewportSize({width:320,height:240});await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>PixelUI.canvas.width),450);
  assert.deepEqual(errors,[]);
  await browser.close();console.log('PASS lobby wire protocol, aura animation, native keypad, grid wrapping, quantity cancellation, event sprites, host return and compact layout');
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -2,21 +2,28 @@
 // Coordinates, bitmap fonts, sprite rectangles and gear layers follow the JAR painters.
 const PixelUI=(()=>{
  const canvas=document.getElementById('game'),g=canvas.getContext('2d',{alpha:false}),images=new Map(),fonts=new Map();
- let height=480,frame=0,hits=[],raf;
- function image(name){if(!images.has(name)){const i=new Image();i.src='art/'+name+'.png';images.set(name,i);}return images.get(name);}
+ const nativeScale=450/320;let height=480,frame=0,hits=[],raf;
+ function image(name){const cached=images.get(name);if(cached){images.delete(name);images.set(name,cached);return cached;}const i=new Image();i.src='art/'+name+'.png';images.set(name,i);if(/^[kv][1-4]-/.test(name)){const auraKeys=[...images.keys()].filter(k=>/^[kv][1-4]-/.test(k));if(auraKeys.length>24)images.delete(auraKeys[0]);}return i;}
  for(const k of ['body','title','b','a','cl1','cl2','cl3','miniballoon'])image(k);
- for(let h=0;h<10;h++)image('hero'+h);
- function resize(){height=Math.max(220,Math.round(320*innerHeight/Math.max(1,innerWidth)));canvas.width=320;canvas.height=height;g.imageSmoothingEnabled=false;}
+
+ function resize(){height=Math.max(220,Math.round(320*innerHeight/Math.max(1,innerWidth)));canvas.width=450;canvas.height=Math.round(height*nativeScale);g.setTransform(nativeScale,0,0,nativeScale,0,0);g.imageSmoothingEnabled=false;}
  addEventListener('resize',resize);resize();
  function rect(x,y,w,h,color){g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
  function sprite(name,x,y,w,h){const im=image(name);if(im.complete&&im.naturalWidth)g.drawImage(im,Math.round(x),Math.round(y),w??im.naturalWidth,h??im.naturalHeight);}
  function font(kind,color){if(kind==='title'){const i=image(kind);return i.complete&&i.naturalWidth?i:null;}const key=kind+color;if(fonts.has(key))return fonts.get(key);const im=image(kind);if(!im.complete||!im.naturalWidth)return null;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);x.globalCompositeOperation='source-in';x.fillStyle=color;x.fillRect(0,0,c.width,c.height);fonts.set(key,c);return c;}
  function text(str,x,y,{color='#214e73',title=false,align='left',max=310,scale=1,shadow=false}={}){
-  scale*=.70;str=String(str??'').normalize('NFC');if(title)str=str.toUpperCase();const kind=title?'title':'body',f=ArmyArt[kind],pic=font(kind,color);if(!pic)return;
-  const idx=[...str].map(c=>Math.max(0,f.chars.indexOf(c)));let w=idx.reduce((a,i)=>a+f.widths[i],0);scale=Math.min(scale,max/Math.max(1,w));if(align==='center')x-=w*scale/2;else if(align==='right')x-=w*scale;
-  for(const i of idx){if(shadow&&!title){const black=font(kind,'#15232e');g.drawImage(black,0,i*f.height,pic.width,f.height,Math.round(x)+1,Math.round(y)+1,pic.width*scale,f.height*scale);}g.drawImage(pic,0,i*f.height,pic.width,f.height,Math.round(x),Math.round(y),pic.width*scale,f.height*scale);x+=f.widths[i]*scale;}
+  // Keep every bitmap glyph at its native pixel size, then scale the complete
+  // game surface. Downsampling individual glyphs erases their one-pixel strokes.
+  scale=1/nativeScale;str=String(str??'').normalize('NFC');if(title)str=str.toUpperCase();const kind=title?'title':'body',f=ArmyArt[kind],pic=font(kind,color);if(!pic)return;
+  let idx=[...str].map(c=>Math.max(0,f.chars.indexOf(c))),w=idx.reduce((a,i)=>a+f.widths[i],0);
+  if(w*scale>max){const dot=f.chars.indexOf('.'),dots=3*f.widths[dot];while(idx.length&&(w+dots)*scale>max)w-=f.widths[idx.pop()];if(dots*scale<=max){idx.push(dot,dot,dot);w+=dots;}}
+  if(align==='center')x-=w*scale/2;else if(align==='right')x-=w*scale;
+  const t=g.getTransform(),pixelScale=scale*t.a;let px=t.a*x+t.e;const py=Math.round(t.d*y+t.f);
+  g.save();g.setTransform(1,0,0,1,0,0);
+  for(const i of idx){if(shadow&&!title){const black=font(kind,'#15232e');g.drawImage(black,0,i*f.height,pic.width,f.height,Math.round(px)+1,py+1,pic.width*pixelScale,f.height*pixelScale);}g.drawImage(pic,0,i*f.height,pic.width,f.height,Math.round(px),py,pic.width*pixelScale,f.height*pixelScale);px+=f.widths[i]*pixelScale;}
+  g.restore();
  }
- function zone(x,y,w,h,run){const t=g.getTransform();hits.push({x:t.a*x+t.e,y:t.d*y+t.f,w:w*t.a,h:h*t.d,run});}
+ function zone(x,y,w,h,run){const t=g.getTransform();hits.push({x:(t.a*x+t.e)/nativeScale,y:(t.d*y+t.f)/nativeScale,w:w*t.a/nativeScale,h:h*t.d/nativeScale,run});}
  function sky(){rect(0,0,320,height,'#60cdf7');sprite('cl1',38,28);sprite('cl2',240,86);sprite('cl3',113,120);sprite('miniballoon',13,61);for(const [x,y]of [[33,height-56],[64,height-68],[96,height-45],[258,height-51],[280,height-39]]){for(let k=0;k<5;k++){rect(x+14,y+20+k*7,5,7,k%2?'#a87536':'#e6cb71');rect(x+14,y+20+k*7,1,7,'#71592a');}sprite('b',x,y,42,29);}}
  function aura(code,x,y,layer){const tier=code>>>5,level=code&31;if(tier<1||tier>7||level>16)return;
   if(tier>=5){const pal=level<1?0:level<=3?1:level===4?6:level<=7?2:level===8?7:level<=11?3:level<=14?4:5;
