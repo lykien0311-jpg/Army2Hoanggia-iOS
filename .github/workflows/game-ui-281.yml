@@ -16,6 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash native-wheel/build_framework.sh
+      - name: Execute compiled iPhone spectator adapter
+        run: |
+          python3 -m venv native-wheel/build/native-tests
+          native-wheel/build/native-tests/bin/pip install --quiet lief unicorn
+          native-wheel/build/native-tests/bin/python native-wheel/test_native_watch.py native-wheel/build/QA/AGWheel.framework/AGWheel
       - name: Retain verified framework
         env:
           GH_TOKEN: ${{ github.token }}

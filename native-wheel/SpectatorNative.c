@@ -7,6 +7,7 @@
 #include "SpectatorNative.h"
 #ifdef AG_WHEEL_PREVIEW
 int AGNativeWatchAvailable(void){return 0;}
+int AGNativeWatchFree(int v){return 0;}
 int AGNativeWatchPacket(void *e,int v,const uint8_t *p,size_t n){return 0;}
 void AGNativeWatchEnd(void *e,int v){}
 void AGNativeWatchCamera(int v,int k,int c){}
@@ -111,6 +112,7 @@ static int restore(void *e,void *opaque){
 }
 static int guard(void *e,int (*fn)(void *,void *),void *j){return AGWheelGuard(e,fn,j,(void *)(base()+0x1300d54));}
 int AGNativeWatchAvailable(void){return 1;}
+int AGNativeWatchFree(int v){return v>=0&&v<6&&atomic_load(&freeCamera[v]);}
 static void endNative(void *e,int v){
     if(v<0||v>=6)return;Watch *w=&watches[v];
     if(w->prepared)guard(e,restore,w);

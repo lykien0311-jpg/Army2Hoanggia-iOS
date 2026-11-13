@@ -61,8 +61,13 @@ int AGViewerInput(int variant,int kind,int code) {
         if(kind==0&&index<256)heldKeys[variant][index]=true;
     }
     if(AGNativeWatchAvailable()&&watch.phase==InMatch){
-        AGNativeWatchCamera(variant,kind,code);
-        if(kind==0&&code==-6)dispatch_async(dispatch_get_main_queue(),^{[watch cancel];});
+        int key=code==-21||code=='L'||code=='l'?-6:
+            code==-22||code==-11||code=='R'||code=='r'||code==27||code==35?-7:code;
+        AGNativeWatchCamera(variant,kind,key);
+        if(kind==0&&key==-6)dispatch_async(dispatch_get_main_queue(),^{[watch cancel];});
+        if(kind==0&&key==-7){int mode=AGNativeWatchFree(variant);dispatch_async(dispatch_get_main_queue(),^{
+            [watch.web evaluateJavaScript:[NSString stringWithFormat:@"window.watchCameraMode(%d)",mode] completionHandler:nil];
+        });}
         return 1;
     }
     if(kind==0)dispatch_async(dispatch_get_main_queue(),^{

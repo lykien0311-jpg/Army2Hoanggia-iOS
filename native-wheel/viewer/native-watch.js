@@ -2,6 +2,7 @@
 // Only spectator controls are overlaid. The native game owns every fight pixel.
 let phase=0,message='',free=false;
 const send=value=>window.webkit.messageHandlers.viewer.postMessage(value);
+window.watchCameraMode=flag=>{free=!!flag;};
 window.setWatchPhase=(p,text)=>{phase=p;message=text||'';};
 window.watchKey=code=>{
  if(phase===0&&[-6,-5,13,53].includes(code))send('accept');
