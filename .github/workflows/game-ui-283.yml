@@ -1,5 +1,6 @@
 name: Build Army2 iOS 283
 on:
+  workflow_dispatch:
   push:
     branches: [qa/ios-283-watch-profile]
 permissions:
