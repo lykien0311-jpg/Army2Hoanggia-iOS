@@ -6,9 +6,28 @@ function ints(r){const n=r.u8();if(n>64)throw Error('Bảng chỉ số quá dài
 function gear(r){return {id:r.i16(),name:r.utf(),upgrade:r.u8(),tier:r.u8(),gems:ints(r)};}
 function look(r){return {character:r.u8(),parts:Array.from({length:5},()=>r.i16())};}
 function rankedLook(r){return {...look(r),percent:r.i8(),aura:r.i32()};}
-function readWallet(r){
-    const n=r.i32()*4294967296+r.view.getUint32(r.take(4));
-    if(!Number.isSafeInteger(n))throw Error('Số dư vượt phạm vi hiển thị');return n;
+function readWallet(r){return ((BigInt(r.i32())<<32n)|BigInt(r.view.getUint32(r.take(4)))).toString();}
+
+// Package 90, subtype 4 is also used by the game's own Trang bị screen.
+// The item ID is distinct from its row in the 16px icon atlas.
+function readGearAtlas(bytes){
+    const r=new FieldReader(bytes),frames=new Map(),count=r.u8();
+    if(count<1||count>10)throw Error('Danh mục trang bị');
+    for(let i=0;i<count;i++){
+        const hero=r.u8();r.take(2);const slots=r.u8();
+        if(hero>9||slots>8)throw Error('Danh mục nhân vật');
+        for(let j=0;j<slots;j++){
+            const slot=r.u8(),n=r.u8();
+            for(let k=0;k<n;k++){
+                const id=r.i16();if(slot===0)r.take(1);
+                const frame=r.u16();r.take(49);
+                frames.set(hero+':'+slot+':'+id,frame);
+            }
+        }
+    }
+    const n=r.u16(),at=r.take(n),png=bytes.subarray(at,at+n);
+    if(n<24||png[0]!==137||png[1]!==80||png[2]!==78||png[3]!==71)throw Error('Ảnh trang bị');
+    return {frames,png};
 }
 class ArmyBattlefield {
     constructor(){this.serial=0;this.pending=0;this.board=[];this.matches=[];this.playback=null;}
@@ -105,4 +124,4 @@ class ArmyBattlefield {
         return {type:'other',op};
     }
 }
-if(typeof module!=='undefined')module.exports={ArmyBattlefield};
+if(typeof module!=='undefined')module.exports={ArmyBattlefield,readGearAtlas};

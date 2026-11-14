@@ -23,6 +23,9 @@
 @property(nonatomic) uint32_t challengeSerial;
 @property(nonatomic) int fieldResult;
 @property(nonatomic) BOOL closing;
+@property(nonatomic) BOOL watching;
+@property(nonatomic) BOOL requestedGearAtlas;
+@property(nonatomic) NSTimeInterval watchDeadline;
 @property(nonatomic,strong) NSData *outgoing;
 - (void)open;
 - (void)close;
@@ -37,7 +40,24 @@ static uintptr_t returnToBoard[6];
 static int fieldResult[6];
 static uint32_t nextFieldSerial;
 static AGLobby *activePanel;
+static NSData *gearAtlas[6];
+static uintptr_t atlasConnection[6];
 enum { NoFieldResult = 256 };
+
+void AGLobbyWatchFinished(int v,uintptr_t connection){
+    AGLobby *panel;
+    @synchronized(AGLobby.class){
+        panel=activePanel;
+        if(!panel.watching||panel.closing||panel.variant!=v||panel.connection!=connection)return;
+        panel.watching=NO;panel.watchDeadline=0;
+        atomic_store(&opened[v],1);
+    }
+    dispatch_async(dispatch_get_main_queue(),^{
+        if(!panel.overlay||panel.closing)return;
+        [panel.overlay makeKeyAndVisible];
+        [panel.web evaluateJavaScript:@"lobbyWatchReturned()" completionHandler:nil];
+    });
+}
 
 static NSString *eventAuras(NSData *body,int variant,uintptr_t connection){
     const uint8_t *p=body.bytes;
@@ -116,9 +136,10 @@ __attribute__((visibility("default"))) void AGLobbyOpenNative(void *env,int vari
 // The game thread owns the connection. UIKit enqueues requests against it.
 void AGLobbyTick(void *env,int v,uintptr_t connection){
     AGLobby *active;NSData *body;int cmd=0,outcome=NoFieldResult;
-    BOOL reopen=NO;
+    BOOL reopen=NO,requestAtlas=NO;
     @synchronized(AGLobby.class){
         connections[v]=connection;
+        if(atlasConnection[v]!=connection){atlasConnection[v]=0;gearAtlas[v]=nil;}
         if(battlefield[v]!=connection)battlefield[v]=0;
         if(returnToBoard[v]!=connection)returnToBoard[v]=0;
         active=activePanel;
@@ -132,11 +153,23 @@ void AGLobbyTick(void *env,int v,uintptr_t connection){
             dispatch_async(dispatch_get_main_queue(),^{[active close];});
             return;
         }
+        if(active.watching&&active.variant==v){
+            if(active.watchDeadline<NSProcessInfo.processInfo.systemUptime&&!AGViewerActive(v))
+                AGLobbyWatchFinished(v,connection);
+            return;
+        }
         if(active&&active.variant==v&&!active.closing){
             body=active.outgoing;cmd=active.command;active.outgoing=nil;
+            if(!body&&active.loaded&&active.tab==AGLobbyField&&!active.requestedGearAtlas&&atlasConnection[v]!=connection){
+                active.requestedGearAtlas=YES;requestAtlas=YES;
+            }
         }
     }
     if(reopen)openLobby(env,v,AGLobbyField,outcome);
+    if(requestAtlas){
+        const uint8_t package[]={4,255};
+        AGLobbySend(env,v,connection,90,package,sizeof package);
+    }
     if(body && !AGLobbySend(env,v,connection,cmd,body.bytes,body.length)){
         dispatch_async(dispatch_get_main_queue(),^{
             if(cmd==-120){
@@ -151,7 +184,7 @@ void AGLobbyTick(void *env,int v,uintptr_t connection){
 int AGLobbyReceive(void *env,void *message,int v){
     if(!env||!message||v<0||v>=6)return 0;
     int cmd=*(int8_t *)((uint8_t *)message+0x30);
-    if(cmd!=-120&&cmd!=-121&&cmd!=-14&&cmd!=105)return 0;
+    if(cmd!=-120&&cmd!=-121&&cmd!=-14&&cmd!=105&&cmd!=90)return 0;
     AGLobby *active;
     uintptr_t fight;
     @synchronized(AGLobby.class){active=activePanel;fight=battlefield[v];}
@@ -159,11 +192,28 @@ int AGLobbyReceive(void *env,void *message,int v){
     uintptr_t connection=active&&active.variant==v?active.connection:fight;
     if(!connection || connection!=AGViewerConnection(env,v))return 0;
     uint8_t *in=*(uint8_t **)((uint8_t *)message+0x20);
-    if(!in)return cmd!=105;
+    if(!in)return cmd!=105&&cmd!=90;
     uint8_t *array=*(uint8_t **)(in+0x10);
-    if(!array)return cmd!=105;
+    if(!array)return cmd!=105&&cmd!=90;
     int count=*(int *)(in+0x18),pos=*(int *)(in+0x20);
-    if(pos<0||count<=pos||count>*(int *)(array+0x10)||count-pos>65535)return cmd!=105;
+    if(pos<0||count<=pos||count>*(int *)(array+0x10)||count-pos>(cmd==90?2000000:65535))return cmd!=105&&cmd!=90;
+    const uint8_t *payload=array+0x14+pos;
+    if(cmd==90){
+        size_t n=count-pos;
+        if(n<6||payload[0]!=4||!active.requestedGearAtlas)return 0;
+        uint32_t len=(uint32_t)payload[2]<<24|(uint32_t)payload[3]<<16|(uint32_t)payload[4]<<8|payload[5];
+        if(len!=n-6)return 0;
+        NSData *data=[NSData dataWithBytes:payload+6 length:len];
+        @synchronized(AGLobby.class){
+            if(activePanel!=active||active.connection!=connection||atlasConnection[v]==connection)return 0;
+            atlasConnection[v]=connection;gearAtlas[v]=data;
+        }
+        NSString *encoded=[data base64EncodedStringWithOptions:0];
+        dispatch_async(dispatch_get_main_queue(),^{
+            [active.web evaluateJavaScript:[NSString stringWithFormat:@"lobbyGearAtlas('%@')",encoded] completionHandler:nil];
+        });
+        return 1;
+    }
     NSData *body=[NSData dataWithBytes:array+0x14+pos length:count-pos];
     const uint8_t *p=body.bytes;
     if(cmd==105){
@@ -194,20 +244,34 @@ int AGLobbyReceive(void *env,void *message,int v){
     if(!active||active.variant!=v||active.connection!=connection)return 0;
     if(cmd==-120 && body.length==9 && !memcmp(p,"CT46",4) && p[4]==6){
         uint32_t serial;memcpy(&serial,p+5,4);
+        BOOL watching=NO;
         @synchronized(AGLobby.class){
             if(activePanel!=active||active.closing||!serial)return 1;
-            if(active.watchSerial==serial)AGViewerExpectBattlefield(v,connection);
+            if(active.watchSerial==serial){
+                active.watching=watching=YES;
+                active.watchDeadline=NSProcessInfo.processInfo.systemUptime+20;
+                atomic_store(&opened[v],0);
+            }
             else if(active.challengeSerial==serial)battlefield[v]=connection;
             else return 1;
-            active.closing=YES;
+            active.closing=!watching;
             active.watchSerial=active.challengeSerial=0;
+        }
+        if(watching){
+            dispatch_async(dispatch_get_main_queue(),^{
+                if(!active.watching)return;
+                active.overlay.hidden=YES;
+                if(!active.host.hidden)[active.host makeKeyWindow];
+            });
+            AGViewerExpectBattlefield(v,connection);
+            return 1;
         }
         dispatch_async(dispatch_get_main_queue(),^{[active close];});return 1;
     }
     NSString *blob=[body base64EncodedStringWithOptions:0];
     NSString *auras=cmd==-14?eventAuras(body,v,connection):@"[]";
     dispatch_async(dispatch_get_main_queue(),^{
-        if(!active.web)return;
+        if(!active.web||active.watching)return;
         NSString *js=[NSString stringWithFormat:@"receiveFrame(%d,'%@',%@)",cmd,blob,auras];
         [active.web evaluateJavaScript:js completionHandler:^(id val,NSError *err){if(err)[active close];}];
     });
@@ -276,6 +340,13 @@ int AGLobbyReceive(void *env,void *message,int v){
                      account.canvasWidth,account.inventoryGeometry[0],account.inventoryGeometry[1],account.inventoryGeometry[2],account.inventoryGeometry[3],account.inventoryGeometry[4],account.inventoryGeometry[5],account.inventoryGeometry[6],tab,account.character,self.firstSerial,outcome,(long long)account.xu,(long long)account.luong];
     self.loaded=YES;
     [web evaluateJavaScript:start completionHandler:^(id value,NSError *error){if(error)[self close];}];
+    if(self.tab==AGLobbyField){
+        NSString *atlas;
+        @synchronized(AGLobby.class){
+            if(atlasConnection[self.variant]==self.connection)atlas=[gearAtlas[self.variant] base64EncodedStringWithOptions:0];
+        }
+        if(atlas)[web evaluateJavaScript:[NSString stringWithFormat:@"lobbyGearAtlas('%@')",atlas] completionHandler:nil];
+    }
 }
 - (void)webView:(WKWebView *)web decidePolicyForNavigationAction:(WKNavigationAction *)action decisionHandler:(void (^)(WKNavigationActionPolicy))decision{
     NSURL *allowed=[[NSBundle bundleForClass:self.class] URLForResource:@"lobby" withExtension:@"html" subdirectory:@"viewer"];
@@ -319,7 +390,7 @@ int AGLobbyReceive(void *env,void *message,int v){
     int cmd=[args[0] intValue];NSData *data=[[NSData alloc]initWithBase64EncodedString:args[1] options:0];
     if(!data.length||(cmd!=-120&&cmd!=-121&&cmd!=-14&&cmd!=5))return;
     @synchronized(AGLobby.class){
-        if(activePanel!=self||self.closing||self.outgoing)return;
+        if(activePanel!=self||self.closing||self.watching||self.outgoing)return;
         self.watchSerial=0;self.challengeSerial=0;
         if(cmd==-120 && (data.length==17||data.length==18)){
             const uint8_t *p=data.bytes;

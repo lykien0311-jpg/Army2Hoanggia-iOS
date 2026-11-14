@@ -3,6 +3,7 @@
 #import "../Lobby.m"
 int AGAuraRank(int v,uintptr_t c,uint32_t i,unsigned h){return 0;}
 uintptr_t AGViewerConnection(void *e,int v){return 1;}
+int AGViewerActive(int v){return 0;}
 void AGViewerExpectBattlefield(int v,uintptr_t c){}
 int AGLobbyReadAccount(void *e,int v,AGLobbyAccount *a){return 0;}
 int AGLobbySend(void *e,int v,uintptr_t c,int cmd,const uint8_t *b,size_t n){return 1;}
@@ -57,3 +58,4 @@ int AGWheelGuard(void *e,int (*f)(void *,void *),void *c,void *t){return 0;}
 }
 @end
 int main(int argc,char **argv){@autoreleasepool{return UIApplicationMain(argc,argv,nil,NSStringFromClass(App.class));}}
+

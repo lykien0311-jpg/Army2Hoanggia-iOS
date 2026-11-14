@@ -1,0 +1,43 @@
+name: Build Army2 iOS 283
+on:
+  push:
+    branches: [qa/ios-283-watch-profile]
+permissions:
+  contents: read
+concurrency:
+  group: game-ui-283
+  cancel-in-progress: true
+jobs:
+  framework:
+    runs-on: macos-15
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and verify iPhone framework
+        run: bash native-wheel/build_283.sh
+      - name: Test compiled ARM64 bridges
+        run: |
+          python3 -m venv native-wheel/build/device-qa
+          native-wheel/build/device-qa/bin/pip install --quiet lief unicorn
+          py=native-wheel/build/device-qa/bin/python
+          bin=native-wheel/build/QA/AGWheel.framework/AGWheel
+          "$py" native-wheel/test_native_watch.py "$bin"
+          "$py" native-wheel/test_inventory_device282.py "$bin"
+      - name: Retain verified framework
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 native-wheel/retain_build.py B283_FRAMEWORK native-wheel/build/framework-283.zip
+  interface:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node native-wheel/test_lobby.js
+      - run: node native-wheel/test_native_watch_ui.js

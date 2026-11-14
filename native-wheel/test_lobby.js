@@ -5,9 +5,17 @@ const path=require('node:path');
 const {pathToFileURL}=require('node:url');
 const {chromium}=require('playwright');
 const {ArmyWriter}=require('./viewer/market.js');
+const {readGearAtlas}=require('./viewer/battlefield.js');
 const root=path.join(__dirname,'build');fs.mkdirSync(root,{recursive:true});
 const w=()=>new ArmyWriter();
 const png=fs.readFileSync(path.join(__dirname,'viewer/art/b.png'));
+const atlas=w().byte(1).byte(0).short(100).byte(1).byte(0).byte(3);
+for(const [id,frame] of [[54,211],[55,212],[56,213]]){
+ atlas.short(id).byte(13).short(frame);
+ for(let i=0;i<49;i++)atlas.byte(0);
+}
+atlas.short(png.length);for(const b of png)atlas.byte(b);
+assert.deepEqual([...readGearAtlas(Uint8Array.from(atlas.bytes)).frames],[['0:0:54',211],['0:0:55',212],['0:0:56',213]]);
 function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte(i%10).int(123+i).long(100000).utf('QA').utf('Đồ thử\u001e119,1,'+(i%10)+',1,0,'+(i%17)).short(png.length);for(const b of png)out.byte(b);}
 (async()=>{
  const browser=await chromium.launch({args:['--no-sandbox'],executablePath:process.env.ARMY2_CHROMIUM});
@@ -52,19 +60,36 @@ function item(out,i){out.utf('M:'+i).utf('Trang bị '+i).utf('Trang bị').byte
  await soft(-6);await soft(-5);
  assert.equal(await page.evaluate(()=>waiting),true);
  const profileWire=w().int(1129591862).byte(2).int(4).int(1).utf('striker').int(999).utf('Gunner').byte(5);for(const v of [50000,1000,900,80,100])profileWire.int(v);
- for(let i=0;i<5;i++)profileWire.short(rows[0].parts[i]).utf('Trang bị '+i).byte(16).byte(7).byte(0);
+ const gearNames=['súng kim cương 3','nón kim cương 2','áo kim cương 1','kính kim cương 3','balo kim cương 2'];
+ const upgrades=[16,8,4,15,12];
+ for(let i=0;i<5;i++)profileWire.short(rows[0].parts[i]).utf(gearNames[i]).byte(upgrades[i]).byte(5+i%3).byte(0);
  profileWire.byte(0);rows[0].parts.forEach(v=>profileWire.short(v));profileWire.byte(1).byte(48).long(20000000).long(2000).int(240).byte(0).int(1145394248).byte(6);
  for(let i=0;i<6;i++){profileWire.byte(i<5?1:0);if(i<5){profileWire.byte(5);for(let j=0;j<5;j++)profileWire.int(j+1);profileWire.byte(5);for(let j=0;j<5;j++)profileWire.int(j);profileWire.int(7).byte(3);}}
  profileWire.int(1195724105).byte(6);for(let i=0;i<6;i++){profileWire.byte(i<5?1:0);if(i<5)profileWire.utf('Ngọc 11').utf('Tăng chỉ số tổng 2%');}
  await page.evaluate(b=>receiveFrame(-120,b),Buffer.from(profileWire.bytes).toString('base64'));
  await page.waitForTimeout(150);await page.screenshot({path:path.join(root,'lobby-profile.png')});
  assert.deepEqual(await page.evaluate(()=>[view,reply.name]),['profile','striker']);
+ assert.deepEqual(await page.evaluate(()=>reply.items.map(i=>[i.name,i.upgrade])),gearNames.map((n,i)=>[n,upgrades[i]]));
  await soft(-6);assert.deepEqual(await labels(),['Chi tiết']);await soft(-5);
  assert.equal(await page.evaluate(()=>modal.lines.includes('Ngọc 11')),true,'Equipment details preserve inserted gems');
  await page.evaluate(()=>{lobbyKey(-7);lobbyKey(-7);});
  assert.deepEqual(await page.evaluate(()=>[view,focus,closed]),['board',0,false]);
  await page.evaluate(()=>{lobbyKey(-6);lobbyKey(-2);lobbyKey(-5);});
  assert.equal(await page.evaluate(()=>new ArmyReader(Uint8Array.from(atob(sent.at(-1)[1]),c=>c.charCodeAt(0))).bytes[4]),5,'Native keypad menu opens match list');
+ const matches=w().int(1129591862).byte(5).int(5).short(0).byte(0).byte(2);
+ for(const n of [12,13])matches.long(n).utf('Trận '+n).utf('Đang đấu');
+ await page.evaluate(b=>receiveFrame(-120,b),Buffer.from(matches.bytes).toString('base64'));
+ await soft(-2);await soft(-5);
+ assert.deepEqual(await page.evaluate(()=>[modal.bottom,modal.lines[0],focus]),[true,'Trận 13',1]);
+ await back();assert.equal(await page.evaluate(()=>focus),1);
+ await soft(-5);await soft(13);
+ assert.equal(await page.evaluate(()=>atob(sent.at(-1)[1]).charCodeAt(16)),13);
+ await page.evaluate(()=>lobbyWatchReturned());
+ assert.equal(await page.evaluate(()=>atob(sent.at(-1)[1]).charCodeAt(4)),5);
+ const refreshed=w().int(1129591862).byte(5).int(7).short(0).byte(0).byte(2);
+ for(const n of [13,12])refreshed.long(n).utf('Trận '+n).utf('Đang đấu');
+ await page.evaluate(b=>receiveFrame(-120,b),Buffer.from(refreshed.bytes).toString('base64'));
+ assert.deepEqual(await page.evaluate(()=>[view,reply.rows[focus].title,waiting]),['matches','Trận 13',false]);
  await back();
  await back();
  assert.deepEqual(await page.evaluate(()=>sent.at(-1)),['close',0],'A list back first returns to the board and then the native submenu');

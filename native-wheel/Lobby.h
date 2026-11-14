@@ -13,6 +13,7 @@ int AGLobbyInput(int variant,int kind,int a,int b);
 void AGLobbyOpenNative(void *env,int variant,int tab);
 void AGLobbyTick(void *env,int variant,uintptr_t connection);
 int AGLobbyReceive(void *env,void *message,int variant);
+void AGLobbyWatchFinished(int variant,uintptr_t connection);
 int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uint8_t *bytes,size_t length);
 int AGLobbyReadAccount(void *env,int variant,AGLobbyAccount *account);
 

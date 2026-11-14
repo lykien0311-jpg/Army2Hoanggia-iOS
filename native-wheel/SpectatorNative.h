@@ -4,6 +4,10 @@
 int AGNativeWatchAvailable(void);
 int AGNativeWatchFree(int variant);
 int AGNativeWatchPacket(void *env,int variant,const uint8_t *data,size_t length);
+void AGNativeWatchObserve(int variant,int command,const uint8_t *data,size_t length);
+void AGNativeWatchOption(int variant,int option);
+int AGNativeWatchAux(int variant);
+void AGNativeWatchSwitch(void *env,int variant);
 void AGNativeWatchEnd(void *env,int variant);
 void AGNativeWatchCamera(int variant,int kind,int code);
 void AGNativeWatchTick(void *env,int variant);

@@ -89,6 +89,7 @@ int AGLobbySend(void *env,int variant,uintptr_t connection,int command,const uin
     if(command==-121){if(length>1024||bytes[0]>4)return 0;}
     else if(command==-120){if(length<9||length>18||memcmp(bytes,"CT46",4)||bytes[4]<1||bytes[4]>6)return 0;}
     else if(command==-14){if(length!=2||bytes[0]!=3||bytes[1]>9)return 0;}
+    else if(command==90){if(length!=2||bytes[0]!=4||bytes[1]!=255)return 0;}
     else if(command==5){
         uint32_t recipient=length>=4?((uint32_t)bytes[0]<<24)|((uint32_t)bytes[1]<<16)|((uint32_t)bytes[2]<<8)|bytes[3]:0;
         if(length<7||length>306||recipient<=2||recipient>INT32_MAX||
@@ -198,7 +199,7 @@ static int NCallback(void *env,void *context){
 void AGNotesTick(void *env,int variant){
     if(env&&variant>=0&&variant<6)AGViewerTick(env,variant);
     if(!env||variant<0||variant>=6)return;
-    if(!atomic_load(&NInitialized)&&!AGLobbyOpened(variant)&&!AGAuraKnown(variant))return;
+    if(!atomic_load(&NInitialized)&&!AGLobbyOpened(variant)&&!AGAuraKnown(variant)&&!AGViewerActive(variant))return;
     if(!atomic_load(&NInitialized))NInit();
     double now=NNow();int changed=0;NJob probe={.variant=variant};int connected=NRun(env,NNative,&probe);
     uint8_t *canvas=NCanvas(variant);int room=NRoom(variant);NCallbackJob cb={.variant=variant,.which=-1};NJob job={.variant=variant};uint64_t generation;

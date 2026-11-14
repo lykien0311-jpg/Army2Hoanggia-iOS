@@ -51,6 +51,8 @@ for v,mp in enumerate(maps):
     for address,obj in ((arena[v],a),(canvas[v],c),(mapClass[v],g),(mp['cameraClass'],cam)):put(MAIN+address,'<Q',obj)
     put(c+0xb8,'<Q',back);put(c+0x130,'<i',450);put(c+0x128,'<i',650)
     put(a+0xc8,'<Q',oldMap);put(a+0x266,'<B',7);put(g+0xb8,'<Q',oldTiles);put(g+0xd8,'<ii',800,600)
+    actors=[0x207f060,0x20aec70,0x20dc970,0x210a660,0x2138350,0x2166040]
+    players=alloc(0x100);put(MAIN+actors[v],'<Q',players)
     objects.append((a,c,g,cam,back,oldMap,oldTiles))
     for k in ('arenaNew','arenaInit','mapNew','mapInit','start','show','restore','clockSet','clockReset'):native[MAIN+mp[k]]=(k,v)
     native[MAIN+tileNew[v]]=('tileNew',v);native[MAIN+tileInit[v]]=('tileInit',v);native[MAIN+reset[v]]=('reset',v)
@@ -89,7 +91,14 @@ def hook(uc,pc,size,_):
         elif name=='start':
             values=[list(struct.unpack('<8q',u.mem_read(reg(i)+0x18,64)))for i in (3,4,5)]
             assert reg(6)==0;assert get(a+0x266,'<B')==next(i for i,x in enumerate(values[0])if x!=-1)
-            started.append((v,reg(2),values));clock=alloc(0x30);put(a+0x110,'<Q',clock);camera=alloc(0x30);put(a+0xd8,'<Q',camera);ret()
+            started.append((v,reg(2),values));clock=alloc(0x30);put(a+0x110,'<Q',clock);camera=alloc(0x30);put(a+0xd8,'<Q',camera)
+            players=get(MAIN+actors[v],'<Q');array=alloc(0x18+8*8)
+            put(players+0xa0,'<Q',array);put(array+0x10,'<i',8)
+            for slot,x in enumerate(values[0]):
+                if x==-1:continue
+                player=alloc(0x200);put(array+0x18+slot*8,'<Q',player)
+                put(player+0x114,'<ii',x,values[1][slot]);put(player+0x68,'<q',values[2][slot])
+            ret()
         elif name=='show':put(c+0xb8,'<Q',reg(1));shown.append(v);assert reg(2)==back;ret()
         elif name=='restore':put(c+0xb8,'<Q',reg(1));restored.append(v);assert reg(1)==back;ret()
         elif name=='clockSet':put(reg(1)+0x1c,'<i',reg(2));ret()
@@ -115,16 +124,23 @@ def call(name,*args):
     return u.reg_read(UC_ARM64_REG_W0)
 def packet(v,p):a=alloc(len(p));u.mem_write(a,bytes(p));return call('_AGNativeWatchPacket',ENV,v,a,len(p))
 trace=json.loads((NATIVE_ROOT/'testdata/watch-pvp.json').read_text())
+def observe(v,cmd,data):
+    at=alloc(len(data));u.mem_write(at,data)
+    return call('_AGNativeWatchObserve',v,cmd,at,len(data))
 sp=[base64.b64decode(p) for c,p in trace if c==-102 and base64.b64decode(p)[3]in(3,4,5,7)]
 assert call('_AGNativeWatchAvailable')==1
 for v in range(6):
     before=tileCount
-    for p in sp:assert packet(v,p)==1,(v,p[:5])
+    for cmd,encoded in trace:
+        p=base64.b64decode(encoded)
+        if cmd==-102 and p[3] in (3,4,5,7):assert packet(v,p)==1,(v,p[:5])
+        elif cmd in (8,24):observe(v,cmd,p)
     assert tileCount-before==52
     a,c,g,cam,back,oldMap,oldTiles=objects[v]
     assert get(c+0xb8,'<Q')==get(a+0xe8,'<Q')!=0
     assert get(a+0xc8,'<Q')!=oldMap and get(g+0xb8,'<Q')!=oldTiles
     p=next(p for p in sp if p[3]==7);clock=get(a+0x110,'<Q');assert get(clock+0x18,'<i')==p[4]
+    assert get(cam+0xa4,'<i')==241 and get(cam+0xbc,'<B')==1
     # Camera can move left and right, then restore follow mode.
     call('_AGNativeWatchCamera',v,0,-7);call('_AGNativeWatchCamera',v,0,-4);call('_AGNativeWatchTick',ENV,v)
     x=get(cam+0xa4,'<i');assert x>0

@@ -107,6 +107,7 @@ CGRect AGGameRect(UIView *view){
 }
 @implementation AGGameWindow
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event{
+    if(self.passesGameTouches)return nil;
     if(self.passesGameKeys&&!self.rootViewController.presentedViewController&&point.y>=self.gameBottom)return nil;
     return [super hitTest:point withEvent:event];
 }
