@@ -6,7 +6,19 @@ function ints(r){const n=r.u8();if(n>64)throw Error('Bảng chỉ số quá dài
 function gear(r){return {id:r.i16(),name:r.utf(),upgrade:r.u8(),tier:r.u8(),gems:ints(r)};}
 function look(r){return {character:r.u8(),parts:Array.from({length:5},()=>r.i16())};}
 function rankedLook(r){return {...look(r),percent:r.i8(),aura:r.i32()};}
-function readWallet(r){return ((BigInt(r.i32())<<32n)|BigInt(r.view.getUint32(r.take(4)))).toString();}
+function readWallet(r){
+    let high=r.i32(),low=r.view.getUint32(r.take(4));
+    const negative=high<0;
+    if(negative){low=(~low+1)>>>0;high=(~high+(low===0?1:0))>>>0;}
+    // Divide the 64-bit magnitude by 10 using two exact 32-bit words.
+    let text='';
+    do{
+        const rest=(high%10)*4294967296+low;
+        text=(rest%10)+text;
+        high=Math.floor(high/10);low=Math.floor(rest/10);
+    }while(high||low);
+    return negative?'-'+text:text;
+}
 
 // Package 90, subtype 4 is also used by the game's own Trang bị screen.
 // The item ID is distinct from its row in the 16px icon atlas.

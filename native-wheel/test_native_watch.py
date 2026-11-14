@@ -130,13 +130,14 @@ def observe(v,cmd,data):
 sp=[base64.b64decode(p) for c,p in trace if c==-102 and base64.b64decode(p)[3]in(3,4,5,7)]
 assert call('_AGNativeWatchAvailable')==1
 for v in range(6):
+    a,c,g,cam,back,oldMap,oldTiles=objects[v]
+    put(cam+0xa4,'<6iB',3,7,3,7,0,0,0)
     before=tileCount
     for cmd,encoded in trace:
         p=base64.b64decode(encoded)
         if cmd==-102 and p[3] in (3,4,5,7):assert packet(v,p)==1,(v,p[:5])
         elif cmd in (8,24):observe(v,cmd,p)
     assert tileCount-before==52
-    a,c,g,cam,back,oldMap,oldTiles=objects[v]
     assert get(c+0xb8,'<Q')==get(a+0xe8,'<Q')!=0
     assert get(a+0xc8,'<Q')!=oldMap and get(g+0xb8,'<Q')!=oldTiles
     p=next(p for p in sp if p[3]==7);clock=get(a+0x110,'<Q');assert get(clock+0x18,'<i')==p[4]
@@ -149,6 +150,7 @@ for v in range(6):
     call('_AGNativeWatchCamera',v,0,-7);call('_AGNativeWatchTick',ENV,v);assert get(cam+0xbc,'<B')==1
     call('_AGNativeWatchEnd',ENV,v);call('_AGNativeWatchEnd',ENV,v)
     assert get(c+0xb8,'<Q')==back and get(a+0xc8,'<Q')==oldMap and get(g+0xb8,'<Q')==oldTiles and get(a+0x266,'<B')==7
+    assert get(cam+0xa4,'<i')==3 and get(cam+0xa8,'<i')==7 and get(cam+0xbc,'<B')==0
     assert packet(v,sp[0])==1
     assert packet(v,next(p for p in sp if p[3]==5))==0,'Incomplete terrain cannot start'
     tile=next(p for p in sp if p[3]==4);bad=bytearray(tile);bad[19:23]=(24000).to_bytes(4,'big');assert packet(v,bad)==0

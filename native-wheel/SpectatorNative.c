@@ -29,8 +29,9 @@ extern int AGWheelGuard(void *,int (*)(void *,void *),void *,void *);
 typedef struct {
     int active,started,prepared,v,map,width,height,bricks,next,id,x,y,solid,total,received;
     int roster,turn,first,oldWidth,oldHeight;
+    int oldCamera[6];
     uint8_t *bytes,*back,*oldMap,*oldTiles;
-    uint8_t oldLocal,oldBackground,oldMode;
+    uint8_t oldLocal,oldBackground,oldMode,oldCameraMode,restoreCamera;
     uint64_t moveAt;
 } Watch;
 static Watch watches[6];
@@ -101,6 +102,11 @@ __attribute__((noinline,optnone)) static int prepare(void *e,void *opaque){
     if(!a||!canvas)return 0;
     w->back=pin(e,*(void **)(canvas+0xb8));
     w->oldLocal=a[0x266];w->oldMode=a[0x265];w->oldMap=pin(e,*(void **)(a+0xc8));
+    uint8_t *camera=global(m->cameraClass);
+    if(camera){
+        memcpy(w->oldCamera,camera+0xa4,sizeof w->oldCamera);
+        w->oldCameraMode=camera[0xbc];w->restoreCamera=1;
+    }
     uint8_t *volatile map=((void *(*)(void *))(b+m->mapNew))(e);
     ((void (*)(void *,void *))(b+m->mapInit))(e,map);
     uint8_t *g=global(AGBossNativeMaps[v].mapClass);
@@ -163,6 +169,8 @@ static int restore(void *e,void *opaque){
     uint8_t *g=global(AGBossNativeMaps[v].mapClass);
     if(a){a[0x266]=w->oldLocal;a[0x265]=w->oldMode;*(void **)(a+0xc8)=w->oldMap;}
     if(g){*(void **)(g+0xb8)=w->oldTiles;*(int *)(g+0xd8)=w->oldWidth;*(int *)(g+0xdc)=w->oldHeight;g[0xe0]=w->oldBackground;}
+    uint8_t *camera=global(AGSpectatorMaps[v].cameraClass);
+    if(camera&&w->restoreCamera){memcpy(camera+0xa4,w->oldCamera,sizeof w->oldCamera);camera[0xbc]=w->oldCameraMode;}
     ((void (*)(void *))(base()+AGBossNativeMaps[v].resetInput))(e);
     uint8_t *canvas=global(AGNotesMaps[v].canvas);
     if(w->started&&w->back&&canvas&&a&&*(void **)(canvas+0xb8)==*(void **)(a+0xe8))
@@ -218,8 +226,8 @@ static int packetNative(void *e,int v,const uint8_t *p,size_t n){
     if(p[3]==4){
         if(w->started||n<25)return 0;
         int index=u16(p+4),id=u32(p+6),x=be16(p+10),y=be16(p+12),solid=p[14];
-        uint32_t total=u32(p+15),offset=u32(p+19);int size=u16(p+23);
-        if(index!=w->next||index>=w->bricks||!total||total>8000000||size>24000||n!=25+(size_t)size||offset>total||size>total-offset)return 0;
+        uint32_t total=u32(p+15),offset=u32(p+19),size=u16(p+23);
+        if(index!=w->next||index>=w->bricks||!total||total>8000000||size>24000||n!=25+size||offset>total||size>total-offset)return 0;
         if(!offset){if(w->bytes)return 0;w->bytes=malloc(total);if(!w->bytes)return 0;w->total=total;w->received=0;w->id=id;w->x=x;w->y=y;w->solid=solid;}
         if(!w->bytes||w->total!=(int)total||offset!=(unsigned)w->received||w->id!=id||w->x!=x||w->y!=y||w->solid!=solid)return 0;
         memcpy(w->bytes+offset,p+25,size);w->received+=size;

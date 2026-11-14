@@ -118,6 +118,7 @@ static void leave(ArmyWatch *w) {
     w.action = w.phase==Offered ? NoAction : (w.phase==WaitingForMatch && w.action==Accept) ? Refresh : Leave;
     if(w.action==NoAction){finish(w);return;}
     w.phase=Leaving;w.deadline=now()+5;
+    for(int key=-4;key<=-1;key++)AGNativeWatchCamera(w.variant,1,key);
     [w.pending removeAllObjects];w.pendingBytes=0;
     screen(w);
 }
@@ -267,11 +268,12 @@ void AGViewerTick(void *env,int variant) {
         @synchronized(ArmyWatch.class){
             if(current!=w)return;
             if(connection!=w.connection){finish(w);return;}
-            if(w.phase==InMatch&&w.nativeReadyAt&&now()>=w.nativeReadyAt){
+            double time=now();
+            if(w.phase==InMatch&&w.nativeReadyAt&&time>=w.nativeReadyAt){
                 w.snapshotReceived=YES;w.nativeReadyAt=0;w.deadline=0;
                 screen(w);
             }
-            if(w.deadline&&now()>w.deadline){
+            if(w.deadline&&time>w.deadline){
                 if(w.endReceived){finish(w);return;}
                 if(w.phase==Leaving)w.action=Refresh;
                 else {
