@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   framework:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 20
     permissions:
       contents: write

@@ -42,6 +42,7 @@ static uint32_t nextFieldSerial;
 static AGLobby *activePanel;
 static NSData *gearAtlas[6];
 static uintptr_t atlasConnection[6];
+static uintptr_t atlasRequest[6];
 enum { NoFieldResult = 256 };
 
 void AGLobbyWatchFinished(int v,uintptr_t connection){
@@ -54,6 +55,7 @@ void AGLobbyWatchFinished(int v,uintptr_t connection){
     }
     dispatch_async(dispatch_get_main_queue(),^{
         if(!panel.overlay||panel.closing)return;
+        AGViewportWheelVisible(1);
         [panel.overlay makeKeyAndVisible];
         [panel.web evaluateJavaScript:@"lobbyWatchReturned()" completionHandler:nil];
     });
@@ -140,6 +142,7 @@ void AGLobbyTick(void *env,int v,uintptr_t connection){
     @synchronized(AGLobby.class){
         connections[v]=connection;
         if(atlasConnection[v]!=connection){atlasConnection[v]=0;gearAtlas[v]=nil;}
+        if(atlasRequest[v]!=connection)atlasRequest[v]=0;
         if(battlefield[v]!=connection)battlefield[v]=0;
         if(returnToBoard[v]!=connection)returnToBoard[v]=0;
         active=activePanel;
@@ -161,14 +164,17 @@ void AGLobbyTick(void *env,int v,uintptr_t connection){
         if(active&&active.variant==v&&!active.closing){
             body=active.outgoing;cmd=active.command;active.outgoing=nil;
             if(!body&&active.loaded&&active.tab==AGLobbyField&&!active.requestedGearAtlas&&atlasConnection[v]!=connection){
-                active.requestedGearAtlas=YES;requestAtlas=YES;
+                active.requestedGearAtlas=YES;
+                if(!atlasRequest[v]){atlasRequest[v]=connection;requestAtlas=YES;}
             }
         }
     }
     if(reopen)openLobby(env,v,AGLobbyField,outcome);
     if(requestAtlas){
         const uint8_t package[]={4,255};
-        AGLobbySend(env,v,connection,90,package,sizeof package);
+        if(!AGLobbySend(env,v,connection,90,package,sizeof package)){
+            @synchronized(AGLobby.class){if(atlasRequest[v]==connection)atlasRequest[v]=0;}
+        }
     }
     if(body && !AGLobbySend(env,v,connection,cmd,body.bytes,body.length)){
         dispatch_async(dispatch_get_main_queue(),^{
@@ -186,10 +192,10 @@ int AGLobbyReceive(void *env,void *message,int v){
     int cmd=*(int8_t *)((uint8_t *)message+0x30);
     if(cmd!=-120&&cmd!=-121&&cmd!=-14&&cmd!=105&&cmd!=90)return 0;
     AGLobby *active;
-    uintptr_t fight;
-    @synchronized(AGLobby.class){active=activePanel;fight=battlefield[v];}
+    uintptr_t fight,request;
+    @synchronized(AGLobby.class){active=activePanel;fight=battlefield[v];request=atlasRequest[v];}
     if(cmd==105&&(!active||active.variant!=v||active.tab!=AGLobbyMarket))return 0;
-    uintptr_t connection=active&&active.variant==v?active.connection:fight;
+    uintptr_t connection=cmd==90?request:active&&active.variant==v?active.connection:fight;
     if(!connection || connection!=AGViewerConnection(env,v))return 0;
     uint8_t *in=*(uint8_t **)((uint8_t *)message+0x20);
     if(!in)return cmd!=105&&cmd!=90;
@@ -200,17 +206,21 @@ int AGLobbyReceive(void *env,void *message,int v){
     const uint8_t *payload=array+0x14+pos;
     if(cmd==90){
         size_t n=count-pos;
-        if(n<6||payload[0]!=4||!active.requestedGearAtlas)return 0;
+        if(n<6||payload[0]!=4)return 0;
         uint32_t len=(uint32_t)payload[2]<<24|(uint32_t)payload[3]<<16|(uint32_t)payload[4]<<8|payload[5];
         if(len!=n-6)return 0;
         NSData *data=[NSData dataWithBytes:payload+6 length:len];
         @synchronized(AGLobby.class){
-            if(activePanel!=active||active.connection!=connection||atlasConnection[v]==connection)return 0;
+            if(atlasRequest[v]!=connection)return 0;
+            atlasRequest[v]=0;
             atlasConnection[v]=connection;gearAtlas[v]=data;
         }
         NSString *encoded=[data base64EncodedStringWithOptions:0];
         dispatch_async(dispatch_get_main_queue(),^{
-            [active.web evaluateJavaScript:[NSString stringWithFormat:@"lobbyGearAtlas('%@')",encoded] completionHandler:nil];
+            AGLobby *panel;
+            @synchronized(AGLobby.class){panel=activePanel;}
+            if(panel.variant==v&&panel.tab==AGLobbyField&&panel.connection==connection)
+                [panel.web evaluateJavaScript:[NSString stringWithFormat:@"lobbyGearAtlas('%@')",encoded] completionHandler:nil];
         });
         return 1;
     }
